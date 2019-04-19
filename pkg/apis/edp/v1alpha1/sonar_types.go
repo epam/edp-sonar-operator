@@ -1,7 +1,9 @@
 package v1alpha1
 
 import (
+	apiv1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"time"
 )
 
 // EDIT THIS FILE!  THIS IS SCAFFOLDING FOR YOU TO OWN!
@@ -13,6 +15,9 @@ type SonarSpec struct {
 	// INSERT ADDITIONAL SPEC FIELDS - desired state of cluster
 	// Important: Run "operator-sdk generate k8s" to regenerate code after modifying this file
 	// Add custom validation using kubebuilder tags: https://book.kubebuilder.io/beyond_basics/generating_crd.html
+	Type    string         `json:"type"`
+	Version string         `json:"version"`
+	Volumes []apiv1.Volume `json:"volumes,omitempty"`
 }
 
 // SonarStatus defines the observed state of Sonar
@@ -21,6 +26,10 @@ type SonarStatus struct {
 	// INSERT ADDITIONAL STATUS FIELD - define observed state of cluster
 	// Important: Run "operator-sdk generate k8s" to regenerate code after modifying this file
 	// Add custom validation using kubebuilder tags: https://book.kubebuilder.io/beyond_basics/generating_crd.html
+	Available       bool      `json:"available"`
+	LastTimeUpdated time.Time `json:"lastTimeUpdated"`
+	Status          string    `json:"status"`
+	ExternalUrl     string    `json:"externalUrl"`
 }
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object

@@ -2,6 +2,7 @@ package sonar
 
 import (
 	"context"
+	"sonar-operator/pkg/service"
 
 	edpv1alpha1 "sonar-operator/pkg/apis/edp/v1alpha1"
 
@@ -31,7 +32,12 @@ func Add(mgr manager.Manager) error {
 
 // newReconciler returns a new reconcile.Reconciler
 func newReconciler(mgr manager.Manager) reconcile.Reconciler {
-	return &ReconcileSonar{client: mgr.GetClient(), scheme: mgr.GetScheme()}
+	platformService, _ := service.NewPlatformService()
+	sonarService := service.NewSonarService(platformService)
+	return &ReconcileSonar{client: mgr.GetClient(),
+		scheme:  mgr.GetScheme(),
+		service: sonarService,
+	}
 }
 
 // add adds a new Controller to mgr with r as the reconcile.Reconciler
@@ -57,8 +63,9 @@ var _ reconcile.Reconciler = &ReconcileSonar{}
 type ReconcileSonar struct {
 	// This client, initialized using mgr.Client() above, is a split client
 	// that reads objects from the cache and writes to the apiserver
-	client client.Client
-	scheme *runtime.Scheme
+	client  client.Client
+	scheme  *runtime.Scheme
+	service service.SonarService
 }
 
 // Reconcile reads that state of the cluster for a Sonar object and makes changes based on the state read
@@ -80,5 +87,7 @@ func (r *ReconcileSonar) Reconcile(request reconcile.Request) (reconcile.Result,
 		// Error reading the object - requeue the request.
 		return reconcile.Result{}, err
 	}
+
+	_ = r.service.Install(*instance)
 	return reconcile.Result{}, nil
 }
