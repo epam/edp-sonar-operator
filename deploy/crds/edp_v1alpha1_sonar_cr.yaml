@@ -1,0 +1,13 @@
+apiVersion: edp.epam.com/v1alpha1
+kind: Sonar
+metadata:
+  name: example-sonar
+spec:
+  version: '7.1'
+  volumes:
+  - name: "data"
+    storage_class: "gp2"
+    capacity: "1Gi"
+  - name: "db"
+    storage_class: "gp2"
+    capacity: "1Gi"
