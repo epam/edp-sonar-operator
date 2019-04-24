@@ -3,6 +3,7 @@ kind: Sonar
 metadata:
   name: example-sonar
 spec:
+  type: "Sonar"
   version: '7.1'
   volumes:
   - name: "data"

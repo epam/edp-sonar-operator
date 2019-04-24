@@ -1,7 +1,7 @@
 package v1alpha1
 
 import (
-	apiv1 "k8s.io/api/core/v1"
+	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"time"
 )
@@ -11,13 +11,14 @@ import (
 
 // SonarSpec defines the desired state of Sonar
 // +k8s:openapi-gen=true
+
 type SonarSpec struct {
 	// INSERT ADDITIONAL SPEC FIELDS - desired state of cluster
 	// Important: Run "operator-sdk generate k8s" to regenerate code after modifying this file
 	// Add custom validation using kubebuilder tags: https://book.kubebuilder.io/beyond_basics/generating_crd.html
-	Type    string         `json:"type"`
-	Version string         `json:"version"`
-	Volumes []apiv1.Volume `json:"volumes,omitempty"`
+	Type    string                    `json:"type"`
+	Version string                    `json:"version"`
+	Volumes []corev1.PersistentVolume `json:"volumes,omitempty"`
 }
 
 // SonarStatus defines the observed state of Sonar

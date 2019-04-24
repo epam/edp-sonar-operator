@@ -55,13 +55,13 @@ spec:
               type: boolean
             externalUrl:
               type: string
-            lastTimeUpdate:
+            lastTimeUpdated:
               type: object
             status:
               type: string
           required:
           - available
-          - lastTimeUpdate
+          - lastTimeUpdated
           - status
           - externalUrl
           type: object

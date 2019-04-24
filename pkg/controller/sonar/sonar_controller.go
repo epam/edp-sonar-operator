@@ -8,6 +8,7 @@ import (
 
 	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/runtime"
+	logPrint "log"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/controller"
 	"sigs.k8s.io/controller-runtime/pkg/handler"
@@ -32,7 +33,7 @@ func Add(mgr manager.Manager) error {
 
 // newReconciler returns a new reconcile.Reconciler
 func newReconciler(mgr manager.Manager) reconcile.Reconciler {
-	platformService, _ := service.NewPlatformService()
+	platformService, _ := service.NewPlatformService(*mgr.GetScheme())
 	sonarService := service.NewSonarService(platformService)
 	return &ReconcileSonar{client: mgr.GetClient(),
 		scheme:  mgr.GetScheme(),
@@ -89,5 +90,7 @@ func (r *ReconcileSonar) Reconcile(request reconcile.Request) (reconcile.Result,
 	}
 
 	_ = r.service.Install(*instance)
+	logPrint.Printf("Reconciling StaticAnalysisTool %s/%s has been finished", request.Namespace, request.Name)
+	reqLogger.Info("Reconciling Sonar component %s/%s has been finished", request.Namespace, request.Name)
 	return reconcile.Result{}, nil
 }

@@ -14,7 +14,6 @@ import (
 func GetOpenAPIDefinitions(ref common.ReferenceCallback) map[string]common.OpenAPIDefinition {
 	return map[string]common.OpenAPIDefinition{
 		"sonar-operator/pkg/apis/edp/v1alpha1.Sonar":       schema_pkg_apis_edp_v1alpha1_Sonar(ref),
-		"sonar-operator/pkg/apis/edp/v1alpha1.SonarSpec":   schema_pkg_apis_edp_v1alpha1_SonarSpec(ref),
 		"sonar-operator/pkg/apis/edp/v1alpha1.SonarStatus": schema_pkg_apis_edp_v1alpha1_SonarStatus(ref),
 	}
 }
@@ -62,46 +61,6 @@ func schema_pkg_apis_edp_v1alpha1_Sonar(ref common.ReferenceCallback) common.Ope
 	}
 }
 
-func schema_pkg_apis_edp_v1alpha1_SonarSpec(ref common.ReferenceCallback) common.OpenAPIDefinition {
-	return common.OpenAPIDefinition{
-		Schema: spec.Schema{
-			SchemaProps: spec.SchemaProps{
-				Description: "SonarSpec defines the desired state of Sonar",
-				Properties: map[string]spec.Schema{
-					"type": {
-						SchemaProps: spec.SchemaProps{
-							Description: "INSERT ADDITIONAL SPEC FIELDS - desired state of cluster Important: Run \"operator-sdk generate k8s\" to regenerate code after modifying this file Add custom validation using kubebuilder tags: https://book.kubebuilder.io/beyond_basics/generating_crd.html",
-							Type:        []string{"string"},
-							Format:      "",
-						},
-					},
-					"version": {
-						SchemaProps: spec.SchemaProps{
-							Type:   []string{"string"},
-							Format: "",
-						},
-					},
-					"volumes": {
-						SchemaProps: spec.SchemaProps{
-							Type: []string{"array"},
-							Items: &spec.SchemaOrArray{
-								Schema: &spec.Schema{
-									SchemaProps: spec.SchemaProps{
-										Ref: ref("k8s.io/api/core/v1.Volume"),
-									},
-								},
-							},
-						},
-					},
-				},
-				Required: []string{"type", "version"},
-			},
-		},
-		Dependencies: []string{
-			"k8s.io/api/core/v1.Volume"},
-	}
-}
-
 func schema_pkg_apis_edp_v1alpha1_SonarStatus(ref common.ReferenceCallback) common.OpenAPIDefinition {
 	return common.OpenAPIDefinition{
 		Schema: spec.Schema{
@@ -115,7 +74,7 @@ func schema_pkg_apis_edp_v1alpha1_SonarStatus(ref common.ReferenceCallback) comm
 							Format:      "",
 						},
 					},
-					"lastTimeUpdate": {
+					"lastTimeUpdated": {
 						SchemaProps: spec.SchemaProps{
 							Type:   []string{"string"},
 							Format: "date-time",
@@ -134,7 +93,7 @@ func schema_pkg_apis_edp_v1alpha1_SonarStatus(ref common.ReferenceCallback) comm
 						},
 					},
 				},
-				Required: []string{"available", "lastTimeUpdate", "status", "externalUrl"},
+				Required: []string{"available", "lastTimeUpdated", "status", "externalUrl"},
 			},
 		},
 		Dependencies: []string{},
