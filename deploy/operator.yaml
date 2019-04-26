@@ -23,8 +23,5 @@ spec:
           env:
             - name: WATCH_NAMESPACE
               value: REPLACE_VALUE
-              valueFrom:
-                fieldRef:
-                  fieldPath: metadata.name
             - name: OPERATOR_NAME
               value: "sonar-operator"
