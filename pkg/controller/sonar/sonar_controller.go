@@ -33,10 +33,14 @@ func Add(mgr manager.Manager) error {
 
 // newReconciler returns a new reconcile.Reconciler
 func newReconciler(mgr manager.Manager) reconcile.Reconciler {
-	platformService, _ := service.NewPlatformService(*mgr.GetScheme())
-	sonarService := service.NewSonarService(platformService)
-	return &ReconcileSonar{client: mgr.GetClient(),
-		scheme:  mgr.GetScheme(),
+	scheme := mgr.GetScheme()
+	client := mgr.GetClient()
+	platformService, _ := service.NewPlatformService(scheme)
+
+	sonarService := service.NewSonarService(platformService, client)
+	return &ReconcileSonar{
+		client:  client,
+		scheme:  scheme,
 		service: sonarService,
 	}
 }
@@ -89,7 +93,8 @@ func (r *ReconcileSonar) Reconcile(request reconcile.Request) (reconcile.Result,
 		return reconcile.Result{}, err
 	}
 
-	_ = r.service.Install(*instance)
+	_ = r.service.Install(instance)
+
 	logPrint.Printf("Reconciling StaticAnalysisTool %s/%s has been finished", request.Namespace, request.Name)
 	reqLogger.Info("Reconciling Sonar component %s/%s has been finished", request.Namespace, request.Name)
 	return reconcile.Result{}, nil

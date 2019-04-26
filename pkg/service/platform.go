@@ -18,7 +18,7 @@ type PlatformService interface {
 	CreateDeployConf(sonar v1alpha1.Sonar) error
 }
 
-func NewPlatformService(scheme runtime.Scheme) (PlatformService, error) {
+func NewPlatformService(scheme *runtime.Scheme) (PlatformService, error) {
 
 	config := clientcmd.NewNonInteractiveDeferredLoadingClientConfig(
 		clientcmd.NewDefaultClientConfigLoadingRules(),

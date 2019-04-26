@@ -45,7 +45,7 @@ type OpenshiftService struct {
 	routeClient    routeV1Client.RouteV1Client
 }
 
-func (platformService OpenshiftService) Init(config *rest.Config, scheme runtime.Scheme) error {
+func (platformService OpenshiftService) Init(config *rest.Config, scheme *runtime.Scheme) error {
 
 	err := platformService.K8SService.Init(config, scheme)
 	if err != nil {

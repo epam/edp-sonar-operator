@@ -15,22 +15,22 @@ import (
 )
 
 type K8SService struct {
-	coreClient coreV1Client.CoreV1Client
 	scheme     *runtime.Scheme
+	coreClient coreV1Client.CoreV1Client
 }
 
-func (plaformService K8SService) Init(config *rest.Config, scheme runtime.Scheme) error {
+func (plaformService K8SService) Init(config *rest.Config, scheme *runtime.Scheme) error {
 
 	coreClient, err := coreV1Client.NewForConfig(config)
 	if err != nil {
 		return logErrorAndReturn(err)
 	}
 	plaformService.coreClient = *coreClient
-	plaformService.scheme = &scheme
+	plaformService.scheme = scheme
 	return nil
 }
 
-func (service K8SService) CreateSecret(sonar v1alpha1.Sonar) error {
+func (plaformService K8SService) CreateSecret(sonar v1alpha1.Sonar) error {
 
 	labels := generateLabels(sonar.Name)
 
@@ -46,16 +46,16 @@ func (service K8SService) CreateSecret(sonar v1alpha1.Sonar) error {
 		},
 	}
 
-	if err := controllerutil.SetControllerReference(&sonar, sonarSecretObject, service.scheme); err != nil {
+	if err := controllerutil.SetControllerReference(&sonar, sonarSecretObject, plaformService.scheme); err != nil {
 		return logErrorAndReturn(err)
 	}
 
-	sonarSecret, err := service.coreClient.Secrets(sonarSecretObject.Namespace).Get(sonarSecretObject.Name, metav1.GetOptions{})
+	sonarSecret, err := plaformService.coreClient.Secrets(sonarSecretObject.Namespace).Get(sonarSecretObject.Name, metav1.GetOptions{})
 
 	if err != nil && k8serr.IsNotFound(err) {
 		log.Printf("Creating a new Secret %s/%s for static analisysis tool %s", sonarSecretObject.Namespace, sonarSecretObject.Name, sonar.Name)
 
-		sonarSecret, err = service.coreClient.Secrets(sonarSecretObject.Namespace).Create(sonarSecretObject)
+		sonarSecret, err = plaformService.coreClient.Secrets(sonarSecretObject.Namespace).Create(sonarSecretObject)
 
 		if err != nil {
 			return logErrorAndReturn(err)
