@@ -12,7 +12,7 @@ spec:
       labels:
         name: sonar-operator
     spec:
-      serviceAccountName: sonar-operator
+      serviceAccountName: edp
       containers:
         - name: sonar-operator
           # Replace this with the built image name
@@ -23,5 +23,9 @@ spec:
           env:
             - name: WATCH_NAMESPACE
               value: REPLACE_VALUE
+            - name: POD_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.name
             - name: OPERATOR_NAME
               value: "sonar-operator"
