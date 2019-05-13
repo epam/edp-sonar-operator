@@ -136,7 +136,7 @@ func (service K8SService) CreateServiceAccount(sonar v1alpha1.Sonar) (*coreV1Api
 	sonarServiceAccount, err := service.coreClient.ServiceAccounts(sonarServiceAccountObject.Namespace).Get(sonarServiceAccountObject.Name, metav1.GetOptions{})
 
 	if err != nil && k8serr.IsNotFound(err) {
-		log.Printf("Creating a new ServiceAccount %s/%s for static analisysis tool %s", sonarServiceAccountObject.Namespace, sonarServiceAccountObject.Name, sonar.Name)
+		log.Printf("Creating a new ServiceAccount %s/%s for Sonar %s", sonarServiceAccountObject.Namespace, sonarServiceAccountObject.Name, sonar.Name)
 
 		sonarServiceAccount, err = service.coreClient.ServiceAccounts(sonarServiceAccountObject.Namespace).Create(sonarServiceAccountObject)
 
@@ -175,7 +175,7 @@ func (service K8SService) CreateService(sonar v1alpha1.Sonar) error {
 		sonarService, err := service.coreClient.Services(sonarServiceObject.Namespace).Get(sonarServiceObject.Name, metav1.GetOptions{})
 
 		if err != nil && k8serr.IsNotFound(err) {
-			log.Printf("Creating a new service %s/%s for static analisysis tool %s", sonarServiceObject.Namespace, sonarServiceObject.Name, sonar.Name)
+			log.Printf("Creating a new service %s/%s for sonar %s", sonarService.Namespace, sonarService.Name, sonar.Name)
 
 			sonarService, err = service.coreClient.Services(sonarServiceObject.Namespace).Create(sonarServiceObject)
 

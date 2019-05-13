@@ -32,16 +32,29 @@ func (s SonarServiceImpl) Install(instance v1alpha1.Sonar) error {
 		return err
 	}
 
-	//sa, err := s.platformService.CreateServiceAccount(instance)
-	//_ = s.platformService.CreateSecurityContext(instance, sa)
 	err = s.platformService.CreateService(instance)
-	err = s.platformService.CreateDbDeployConf(instance)
-	//_ = s.platformService.CreateDeployConf(instance)
-	//_ = s.platformService.CreateExternalEndpoint(instance)
-	//_ = s.platformService.CreateVolume(instance)
 	if err != nil {
 		return err
 	}
+
+	err = s.platformService.CreateDbDeployConf(instance)
+	if err != nil {
+		return err
+	}
+
+	sa, err := s.platformService.CreateServiceAccount(instance)
+	if err != nil {
+		return err
+	}
+
+	err = s.platformService.CreateSecurityContext(instance, sa)
+	if err != nil {
+		return err
+	}
+
+	//_ = s.platformService.CreateDeployConf(instance)
+	//_ = s.platformService.CreateExternalEndpoint(instance)
+	//_ = s.platformService.CreateVolume(instance)
 
 	log.Printf("Installing Sonar component has been finished")
 	return nil

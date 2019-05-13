@@ -145,7 +145,7 @@ func (service OpenshiftService) CreateSecurityContext(sonar v1alpha1.Sonar, sa *
 
 	sonarSCC, err := service.securityClient.SecurityContextConstraints().Get(sonarSccObject.Name, metav1.GetOptions{})
 	if err != nil && k8serrors.IsNotFound(err) {
-		log.Printf("Creating a new Security Context Constraint %s for static analysis tool %s", sonarSccObject.Name, sonar.Name)
+		log.Printf("Creating a new Security Context Constraint %s for Sonar %s", sonarSccObject.Name, sonar.Name)
 
 		sonarSCC, err = service.securityClient.SecurityContextConstraints().Create(sonarSccObject)
 
@@ -163,7 +163,7 @@ func (service OpenshiftService) CreateSecurityContext(sonar v1alpha1.Sonar, sa *
 			sonarSCC, err = service.securityClient.SecurityContextConstraints().Update(sonarSccObject)
 
 			if err != nil {
-				log.Fatalf("[ERROR] Couldn't update Security Context Constraint %s. Reason - %s", sonarSccObject.Name, err)
+				return logErrorAndReturn(err)
 			}
 
 			log.Printf("Security Context Constraint %s has been updated", sonarSCC.Name)
