@@ -45,9 +45,9 @@ type OpenshiftService struct {
 	routeClient    routeV1Client.RouteV1Client
 }
 
-func (platformService *OpenshiftService) Init(config *rest.Config, scheme *runtime.Scheme) error {
+func (service *OpenshiftService) Init(config *rest.Config, scheme *runtime.Scheme) error {
 
-	err := platformService.K8SService.Init(config, scheme)
+	err := service.K8SService.Init(config, scheme)
 	if err != nil {
 		return logErrorAndReturn(err)
 	}
@@ -57,30 +57,30 @@ func (platformService *OpenshiftService) Init(config *rest.Config, scheme *runti
 		return logErrorAndReturn(err)
 	}
 
-	platformService.templateClient = *templateClient
+	service.templateClient = *templateClient
 	projectClient, err := projectV1Client.NewForConfig(config)
 	if err != nil {
 		return logErrorAndReturn(err)
 	}
 
-	platformService.projectClient = *projectClient
+	service.projectClient = *projectClient
 	securityClient, err := securityV1Client.NewForConfig(config)
 	if err != nil {
 		return logErrorAndReturn(err)
 	}
 
-	platformService.securityClient = *securityClient
+	service.securityClient = *securityClient
 	appClient, err := appsV1client.NewForConfig(config)
 	if err != nil {
 		return logErrorAndReturn(err)
 	}
 
-	platformService.appClient = *appClient
+	service.appClient = *appClient
 	routeClient, err := routeV1Client.NewForConfig(config)
 	if err != nil {
 		return logErrorAndReturn(err)
 	}
-	platformService.routeClient = *routeClient
+	service.routeClient = *routeClient
 
 	return nil
 }
@@ -139,7 +139,7 @@ func (service OpenshiftService) CreateSecurityContext(sonar v1alpha1.Sonar, sa *
 		},
 	}
 
-	if err := controllerutil.SetControllerReference(&sonar, sonarSccObject, service.Scheme); err != nil {
+	if err := controllerutil.SetControllerReference(&sonar, sonarSccObject, service.scheme); err != nil {
 		return logErrorAndReturn(err)
 	}
 
@@ -190,12 +190,12 @@ func (service OpenshiftService) CreateExternalEndpoint(sonar v1alpha1.Sonar) err
 			},
 			To: routeV1Api.RouteTargetReference{
 				Name: sonar.Name,
-				Kind: "Service",
+				Kind: "service",
 			},
 		},
 	}
 
-	if err := controllerutil.SetControllerReference(&sonar, sonarRouteObject, service.Scheme); err != nil {
+	if err := controllerutil.SetControllerReference(&sonar, sonarRouteObject, service.scheme); err != nil {
 		return logErrorAndReturn(err)
 	}
 
@@ -326,7 +326,7 @@ func (service OpenshiftService) CreateDbDeployConf(sonar v1alpha1.Sonar) error {
 		},
 	}
 
-	if err := controllerutil.SetControllerReference(&sonar, sonarDbDcObject, service.Scheme); err != nil {
+	if err := controllerutil.SetControllerReference(&sonar, sonarDbDcObject, service.scheme); err != nil {
 		return logErrorAndReturn(err)
 	}
 
@@ -453,7 +453,7 @@ func (service OpenshiftService) CreateDeployConf(sonar v1alpha1.Sonar) error {
 		},
 	}
 
-	if err := controllerutil.SetControllerReference(&sonar, sonarDcObject, service.Scheme); err != nil {
+	if err := controllerutil.SetControllerReference(&sonar, sonarDcObject, service.scheme); err != nil {
 		return logErrorAndReturn(err)
 	}
 

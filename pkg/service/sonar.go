@@ -27,14 +27,19 @@ type SonarServiceImpl struct {
 func (s SonarServiceImpl) Install(instance v1alpha1.Sonar) error {
 	log.Printf("Installing Sonar component has been started")
 	s.updateStatus(instance, true)
-	//_ = s.platformService.CreateSecret(instance)
-	//sa, _ := s.platformService.CreateServiceAccount(instance)
+	err := s.platformService.CreateSecret(instance)
+	if err != nil {
+		return err
+	}
+
+	//sa, err := s.platformService.CreateServiceAccount(instance)
 	//_ = s.platformService.CreateSecurityContext(instance, sa)
 	//_ = s.platformService.CreateDbDeployConf(instance)
 	//_ = s.platformService.CreateDeployConf(instance)
 	//_ = s.platformService.CreateExternalEndpoint(instance)
 	//_ = s.platformService.CreateVolume(instance)
-	err := s.platformService.CreateService(instance)
+
+	err = s.platformService.CreateService(instance)
 	if err != nil {
 		return err
 	}

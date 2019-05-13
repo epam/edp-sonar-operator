@@ -15,22 +15,23 @@ import (
 )
 
 type K8SService struct {
-	Scheme     *runtime.Scheme
+	scheme     *runtime.Scheme
 	coreClient coreV1Client.CoreV1Client
 }
 
-func (plaformService *K8SService) Init(config *rest.Config, scheme *runtime.Scheme) error {
+
+func (service *K8SService) Init(config *rest.Config, scheme *runtime.Scheme) error {
 
 	coreClient, err := coreV1Client.NewForConfig(config)
 	if err != nil {
 		return logErrorAndReturn(err)
 	}
-	plaformService.coreClient = *coreClient
-	plaformService.Scheme = scheme
+	service.coreClient = *coreClient
+	service.scheme = scheme
 	return nil
 }
 
-func (plaformService K8SService) CreateSecret(sonar v1alpha1.Sonar) error {
+func (service K8SService) CreateSecret(sonar v1alpha1.Sonar) error {
 
 	labels := generateLabels(sonar.Name)
 
@@ -44,24 +45,25 @@ func (plaformService K8SService) CreateSecret(sonar v1alpha1.Sonar) error {
 			"database-user":     []byte("admin"),
 			"database-password": []byte("admin"),
 		},
+		Type: "Opaque",
 	}
 
-	if err := controllerutil.SetControllerReference(&sonar, sonarSecretObject, plaformService.Scheme); err != nil {
+	if err := controllerutil.SetControllerReference(&sonar, sonarSecretObject, service.scheme); err != nil {
 		return logErrorAndReturn(err)
 	}
 
-	sonarSecret, err := plaformService.coreClient.Secrets(sonarSecretObject.Namespace).Get(sonarSecretObject.Name, metav1.GetOptions{})
+	sonarSecret, err := service.coreClient.Secrets(sonarSecretObject.Namespace).Get(sonarSecretObject.Name, metav1.GetOptions{})
 
 	if err != nil && k8serr.IsNotFound(err) {
-		log.Printf("Creating a new Secret %s/%s for static analisysis tool %s", sonarSecretObject.Namespace, sonarSecretObject.Name, sonar.Name)
+		log.Printf("Creating a new Secret %s/%s for Sonar %s", sonarSecretObject.Namespace, sonarSecretObject.Name, sonar.Name)
 
-		sonarSecret, err = plaformService.coreClient.Secrets(sonarSecretObject.Namespace).Create(sonarSecretObject)
+		sonarSecret, err = service.coreClient.Secrets(sonarSecretObject.Namespace).Create(sonarSecretObject)
 
 		if err != nil {
 			return logErrorAndReturn(err)
 		}
-
 		log.Printf("Secret %s/%s has been created", sonarSecret.Namespace, sonarSecret.Name)
+
 	} else if err != nil {
 		return logErrorAndReturn(err)
 	}
@@ -92,7 +94,7 @@ func (service K8SService) CreateVolume(sonar v1alpha1.Sonar) error {
 			},
 		}
 
-		if err := controllerutil.SetControllerReference(&sonar, sonarVolumeObject, service.Scheme); err != nil {
+		if err := controllerutil.SetControllerReference(&sonar, sonarVolumeObject, service.scheme); err != nil {
 			return logErrorAndReturn(err)
 		}
 
@@ -127,7 +129,7 @@ func (service K8SService) CreateServiceAccount(sonar v1alpha1.Sonar) (*coreV1Api
 		},
 	}
 
-	if err := controllerutil.SetControllerReference(&sonar, sonarServiceAccountObject, service.Scheme); err != nil {
+	if err := controllerutil.SetControllerReference(&sonar, sonarServiceAccountObject, service.scheme); err != nil {
 		return nil, logErrorAndReturn(err)
 	}
 
@@ -166,14 +168,14 @@ func (service K8SService) CreateService(sonar v1alpha1.Sonar) error {
 
 		sonarServiceObject, err := newSonarInternalBalancingService(serviceName, sonar.Namespace, labels, portMap[serviceName])
 
-		if err := controllerutil.SetControllerReference(&sonar, sonarServiceObject, service.Scheme); err != nil {
+		if err := controllerutil.SetControllerReference(&sonar, sonarServiceObject, service.scheme); err != nil {
 			return logErrorAndReturn(err)
 		}
 
 		sonarService, err := service.coreClient.Services(sonarServiceObject.Namespace).Get(sonarServiceObject.Name, metav1.GetOptions{})
 
 		if err != nil && k8serr.IsNotFound(err) {
-			log.Printf("Creating a new service %s/%s for static analysis tool %s", sonarServiceObject.Namespace, sonarServiceObject.Name, sonar.Name)
+			log.Printf("Creating a new service %s/%s for static analisysis tool %s", sonarServiceObject.Namespace, sonarServiceObject.Name, sonar.Name)
 
 			sonarService, err = service.coreClient.Services(sonarServiceObject.Namespace).Create(sonarServiceObject)
 
@@ -181,7 +183,7 @@ func (service K8SService) CreateService(sonar v1alpha1.Sonar) error {
 				return logErrorAndReturn(err)
 			}
 
-			log.Printf("Service %s/%s has been created", sonarService.Namespace, sonarService.Name)
+			log.Printf("service %s/%s has been created", sonarService.Namespace, sonarService.Name)
 		} else if err != nil {
 			return logErrorAndReturn(err)
 		}
