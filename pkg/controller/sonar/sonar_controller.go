@@ -100,7 +100,6 @@ func (r *ReconcileSonar) Reconcile(request reconcile.Request) (reconcile.Result,
 		return reconcile.Result{RequeueAfter: 10 * time.Second}, nil
 	}
 
-	logPrint.Printf("Reconciling StaticAnalysisTool %s/%s has been finished", request.Namespace, request.Name)
 	reqLogger.Info("Reconciling Sonar component %s/%s has been finished", request.Namespace, request.Name)
 	return reconcile.Result{Requeue: false}, nil
 }

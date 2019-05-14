@@ -9,7 +9,7 @@ import (
 )
 
 type SonarService interface {
-	// This is an entry point for service package. Invoked in err = r.service.Install(*instance) staticanalysistool_controller.go, Reconcile method.
+	// This is an entry point for service package. Invoked in err = r.service.Install(*instance) sonar_controller.go, Reconcile method.
 	Install(instance v1alpha1.Sonar) error
 }
 
@@ -27,7 +27,28 @@ type SonarServiceImpl struct {
 func (s SonarServiceImpl) Install(instance v1alpha1.Sonar) error {
 	log.Printf("Installing Sonar component has been started")
 	s.updateStatus(instance, true)
+
 	err := s.platformService.CreateSecret(instance)
+	if err != nil {
+		return err
+	}
+
+	sa, err := s.platformService.CreateServiceAccount(instance)
+
+	if err != nil {
+		return err
+	}
+
+	err = s.platformService.CreateSecurityContext(instance, sa)
+
+	if err != nil {
+		return err
+	}
+
+	//_ = s.platformService.CreateDeployConf(instance)
+	//_ = s.platformService.CreateExternalEndpoint(instance)
+
+	err = s.platformService.CreateVolume(instance)
 	if err != nil {
 		return err
 	}
@@ -41,20 +62,6 @@ func (s SonarServiceImpl) Install(instance v1alpha1.Sonar) error {
 	if err != nil {
 		return err
 	}
-
-	sa, err := s.platformService.CreateServiceAccount(instance)
-	if err != nil {
-		return err
-	}
-
-	err = s.platformService.CreateSecurityContext(instance, sa)
-	if err != nil {
-		return err
-	}
-
-	//_ = s.platformService.CreateDeployConf(instance)
-	//_ = s.platformService.CreateExternalEndpoint(instance)
-	//_ = s.platformService.CreateVolume(instance)
 
 	log.Printf("Installing Sonar component has been finished")
 	return nil

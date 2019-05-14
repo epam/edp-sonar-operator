@@ -4,6 +4,7 @@ import (
 	"fmt"
 	coreV1Api "k8s.io/api/core/v1"
 	k8serr "k8s.io/apimachinery/pkg/api/errors"
+	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/util/intstr"
@@ -87,9 +88,11 @@ func (service K8SService) CreateVolume(sonar v1alpha1.Sonar) error {
 				AccessModes: []coreV1Api.PersistentVolumeAccessMode{
 					coreV1Api.ReadWriteOnce,
 				},
-				StorageClassName: &volume.Spec.StorageClassName,
+				StorageClassName: &volume.StorageClass,
 				Resources: coreV1Api.ResourceRequirements{
-					Requests: volume.Spec.Capacity,
+					Requests: map[coreV1Api.ResourceName]resource.Quantity{
+						coreV1Api.ResourceStorage: resource.MustParse(volume.Capacity),
+					},
 				},
 			},
 		}

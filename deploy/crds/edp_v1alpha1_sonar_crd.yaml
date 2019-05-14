@@ -39,6 +39,14 @@ spec:
               type: string
             volumes:
               items:
+                properties:
+                  capacity:
+                    type: string
+                  name:
+                    type: string
+                required:
+                - name
+                - capacity
                 type: object
               type: array
           required:
