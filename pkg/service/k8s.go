@@ -15,18 +15,18 @@ import (
 )
 
 type K8SService struct {
-	scheme     *runtime.Scheme
+	Scheme     *runtime.Scheme
 	coreClient coreV1Client.CoreV1Client
 }
 
-func (plaformService K8SService) Init(config *rest.Config, scheme *runtime.Scheme) error {
+func (plaformService *K8SService) Init(config *rest.Config, scheme *runtime.Scheme) error {
 
 	coreClient, err := coreV1Client.NewForConfig(config)
 	if err != nil {
 		return logErrorAndReturn(err)
 	}
 	plaformService.coreClient = *coreClient
-	plaformService.scheme = scheme
+	plaformService.Scheme = scheme
 	return nil
 }
 
@@ -46,7 +46,7 @@ func (plaformService K8SService) CreateSecret(sonar v1alpha1.Sonar) error {
 		},
 	}
 
-	if err := controllerutil.SetControllerReference(&sonar, sonarSecretObject, plaformService.scheme); err != nil {
+	if err := controllerutil.SetControllerReference(&sonar, sonarSecretObject, plaformService.Scheme); err != nil {
 		return logErrorAndReturn(err)
 	}
 
@@ -92,7 +92,7 @@ func (service K8SService) CreateVolume(sonar v1alpha1.Sonar) error {
 			},
 		}
 
-		if err := controllerutil.SetControllerReference(&sonar, sonarVolumeObject, service.scheme); err != nil {
+		if err := controllerutil.SetControllerReference(&sonar, sonarVolumeObject, service.Scheme); err != nil {
 			return logErrorAndReturn(err)
 		}
 
@@ -127,7 +127,7 @@ func (service K8SService) CreateServiceAccount(sonar v1alpha1.Sonar) (*coreV1Api
 		},
 	}
 
-	if err := controllerutil.SetControllerReference(&sonar, sonarServiceAccountObject, service.scheme); err != nil {
+	if err := controllerutil.SetControllerReference(&sonar, sonarServiceAccountObject, service.Scheme); err != nil {
 		return nil, logErrorAndReturn(err)
 	}
 
@@ -156,39 +156,24 @@ func (service K8SService) CreateExternalEndpoint(sonar v1alpha1.Sonar) error {
 }
 
 func (service K8SService) CreateService(sonar v1alpha1.Sonar) error {
-
 	portMap := map[string]int32{
-		sonar.Name:         9000,
-		sonar.Name + "-db": 5432,
+		sonar.Name:         Port,
+		sonar.Name + "-db": DBPort,
 	}
 	for _, serviceName := range []string{sonar.Name, sonar.Name + "-db"} {
+		log.Printf("Start creating sonar service %v in namespace %v", serviceName, sonar.Namespace)
 		labels := generateLabels(serviceName)
 
-		sonarServiceObject := &coreV1Api.Service{
-			ObjectMeta: metav1.ObjectMeta{
-				Name:      serviceName,
-				Namespace: sonar.Namespace,
-				Labels:    labels,
-			},
-			Spec: coreV1Api.ServiceSpec{
-				Selector: labels,
-				Ports: []coreV1Api.ServicePort{
-					{
-						TargetPort: intstr.IntOrString{StrVal: serviceName},
-						Port:       portMap[serviceName],
-					},
-				},
-			},
-		}
+		sonarServiceObject, err := newSonarInternalBalancingService(serviceName, sonar.Namespace, labels, portMap[serviceName])
 
-		if err := controllerutil.SetControllerReference(&sonar, sonarServiceObject, service.scheme); err != nil {
+		if err := controllerutil.SetControllerReference(&sonar, sonarServiceObject, service.Scheme); err != nil {
 			return logErrorAndReturn(err)
 		}
 
 		sonarService, err := service.coreClient.Services(sonarServiceObject.Namespace).Get(sonarServiceObject.Name, metav1.GetOptions{})
 
 		if err != nil && k8serr.IsNotFound(err) {
-			log.Printf("Creating a new Service %s/%s for static analisysis tool %s", sonarServiceObject.Namespace, sonarServiceObject.Name, sonar.Name)
+			log.Printf("Creating a new service %s/%s for static analysis tool %s", sonarServiceObject.Namespace, sonarServiceObject.Name, sonar.Name)
 
 			sonarService, err = service.coreClient.Services(sonarServiceObject.Namespace).Create(sonarServiceObject)
 
@@ -203,6 +188,25 @@ func (service K8SService) CreateService(sonar v1alpha1.Sonar) error {
 	}
 
 	return nil
+}
+
+func newSonarInternalBalancingService(serviceName string, namespace string, labels map[string]string, port int32) (*coreV1Api.Service, error) {
+	return &coreV1Api.Service{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      serviceName,
+			Namespace: namespace,
+			Labels:    labels,
+		},
+		Spec: coreV1Api.ServiceSpec{
+			Selector: labels,
+			Ports: []coreV1Api.ServicePort{
+				{
+					TargetPort: intstr.IntOrString{StrVal: serviceName},
+					Port:       port,
+				},
+			},
+		},
+	}, nil
 }
 
 func logErrorAndReturn(err error) error {

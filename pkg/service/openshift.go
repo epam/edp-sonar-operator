@@ -45,7 +45,7 @@ type OpenshiftService struct {
 	routeClient    routeV1Client.RouteV1Client
 }
 
-func (platformService OpenshiftService) Init(config *rest.Config, scheme *runtime.Scheme) error {
+func (platformService *OpenshiftService) Init(config *rest.Config, scheme *runtime.Scheme) error {
 
 	err := platformService.K8SService.Init(config, scheme)
 	if err != nil {
@@ -139,7 +139,7 @@ func (service OpenshiftService) CreateSecurityContext(sonar v1alpha1.Sonar, sa *
 		},
 	}
 
-	if err := controllerutil.SetControllerReference(&sonar, sonarSccObject, service.scheme); err != nil {
+	if err := controllerutil.SetControllerReference(&sonar, sonarSccObject, service.Scheme); err != nil {
 		return logErrorAndReturn(err)
 	}
 
@@ -195,7 +195,7 @@ func (service OpenshiftService) CreateExternalEndpoint(sonar v1alpha1.Sonar) err
 		},
 	}
 
-	if err := controllerutil.SetControllerReference(&sonar, sonarRouteObject, service.scheme); err != nil {
+	if err := controllerutil.SetControllerReference(&sonar, sonarRouteObject, service.Scheme); err != nil {
 		return logErrorAndReturn(err)
 	}
 
@@ -326,7 +326,7 @@ func (service OpenshiftService) CreateDbDeployConf(sonar v1alpha1.Sonar) error {
 		},
 	}
 
-	if err := controllerutil.SetControllerReference(&sonar, sonarDbDcObject, service.scheme); err != nil {
+	if err := controllerutil.SetControllerReference(&sonar, sonarDbDcObject, service.Scheme); err != nil {
 		return logErrorAndReturn(err)
 	}
 
@@ -453,7 +453,7 @@ func (service OpenshiftService) CreateDeployConf(sonar v1alpha1.Sonar) error {
 		},
 	}
 
-	if err := controllerutil.SetControllerReference(&sonar, sonarDcObject, service.scheme); err != nil {
+	if err := controllerutil.SetControllerReference(&sonar, sonarDcObject, service.Scheme); err != nil {
 		return logErrorAndReturn(err)
 	}
 
