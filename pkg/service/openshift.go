@@ -28,9 +28,9 @@ const (
 	DbImage               = "postgres:9.6"
 	Port                  = 9000
 	DBPort                = 5432
-	LinvessProbeDelay     = 180
+	LivenessProbeDelay    = 180
 	ReadinessProbeDelay   = 60
-	DbLinvessProbeDelay   = 60
+	DbLivenessProbeDelay  = 60
 	DbReadinessProbeDelay = 60
 	MemoryRequest         = "500Mi"
 )
@@ -145,7 +145,7 @@ func (service OpenshiftService) CreateSecurityContext(sonar v1alpha1.Sonar, sa *
 
 	sonarSCC, err := service.securityClient.SecurityContextConstraints().Get(sonarSccObject.Name, metav1.GetOptions{})
 	if err != nil && k8serrors.IsNotFound(err) {
-		log.Printf("Creating a new Security Context Constraint %s for static analisysis tool %s", sonarSccObject.Name, sonar.Name)
+		log.Printf("Creating a new Security Context Constraint %s for static analysis tool %s", sonarSccObject.Name, sonar.Name)
 
 		sonarSCC, err = service.securityClient.SecurityContextConstraints().Create(sonarSccObject)
 
@@ -202,7 +202,7 @@ func (service OpenshiftService) CreateExternalEndpoint(sonar v1alpha1.Sonar) err
 	sonarRoute, err := service.routeClient.Routes(sonarRouteObject.Namespace).Get(sonarRouteObject.Name, metav1.GetOptions{})
 
 	if err != nil && k8serrors.IsNotFound(err) {
-		log.Printf("Creating a new Route %s/%s for static analisysis tool %s", sonarRouteObject.Namespace, sonarRouteObject.Name, sonar.Name)
+		log.Printf("Creating a new Route %s/%s for static analysis tool %s", sonarRouteObject.Namespace, sonarRouteObject.Name, sonar.Name)
 		sonarRoute, err = service.routeClient.Routes(sonarRouteObject.Namespace).Create(sonarRouteObject)
 
 		if err != nil {
@@ -218,112 +218,14 @@ func (service OpenshiftService) CreateExternalEndpoint(sonar v1alpha1.Sonar) err
 }
 
 func (service OpenshiftService) CreateDbDeployConf(sonar v1alpha1.Sonar) error {
-
+	log.Printf("Start creating database deployment config for sonar %v %v in namespace %v", sonar.Name,
+		sonar.Spec.Version, sonar.Namespace)
 	labels := generateLabels(sonar.Name)
+	name := sonar.Name + "-db"
 
-	sonarDbDcObject := &appsV1Api.DeploymentConfig{
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      sonar.Name + "-db",
-			Namespace: sonar.Namespace,
-			Labels:    labels,
-		},
-		Spec: appsV1Api.DeploymentConfigSpec{
-			Replicas: 1,
-			Triggers: []appsV1Api.DeploymentTriggerPolicy{
-				{
-					Type: appsV1Api.DeploymentTriggerOnConfigChange,
-				},
-			},
-			Strategy: appsV1Api.DeploymentStrategy{
-				Type: appsV1Api.DeploymentStrategyTypeRolling,
-			},
-			Selector: generateLabels(sonar.Name + "-db"),
-			Template: &coreV1Api.PodTemplateSpec{
-				ObjectMeta: metav1.ObjectMeta{
-					Labels: generateLabels(sonar.Name + "-db"),
-				},
-				Spec: coreV1Api.PodSpec{
-					Containers: []coreV1Api.Container{
-						{
-							Name:            sonar.Name + "-db",
-							Image:           DbImage,
-							ImagePullPolicy: coreV1Api.PullIfNotPresent,
-							Env: []coreV1Api.EnvVar{
-								{
-									Name:  "PGDATA",
-									Value: "/var/lib/postgresql/data/pgdata",
-								},
-								{
-									Name:  "POSTGRES_DB",
-									Value: sonar.Name,
-								},
-								{
-									Name: "POD_IP",
-									ValueFrom: &coreV1Api.EnvVarSource{
-										FieldRef: &coreV1Api.ObjectFieldSelector{
-											FieldPath: "status.podIP",
-										},
-									},
-								},
-								{
-									Name: "POSTGRES_USER",
-									ValueFrom: &coreV1Api.EnvVarSource{
-										SecretKeyRef: &coreV1Api.SecretKeySelector{
-											LocalObjectReference: coreV1Api.LocalObjectReference{
-												Name: sonar.Name + "-db",
-											},
-											Key: "database-user",
-										},
-									},
-								},
-								{
-									Name: "POSTGRES_PASSWORD",
-									ValueFrom: &coreV1Api.EnvVarSource{
-										SecretKeyRef: &coreV1Api.SecretKeySelector{
-											LocalObjectReference: coreV1Api.LocalObjectReference{
-												Name: sonar.Name + "-db",
-											},
-											Key: "database-password",
-										},
-									},
-								},
-							},
-							Ports: []coreV1Api.ContainerPort{
-								{
-									Name:          sonar.Name + "-db",
-									ContainerPort: DBPort,
-								},
-							},
-							LivenessProbe:          generateDbProbe(DbLinvessProbeDelay),
-							ReadinessProbe:         generateDbProbe(DbReadinessProbeDelay),
-							TerminationMessagePath: "/dev/termination-log",
-							Resources: coreV1Api.ResourceRequirements{
-								Requests: map[coreV1Api.ResourceName]resource.Quantity{
-									coreV1Api.ResourceMemory: resource.MustParse(MemoryRequest),
-								},
-							},
-							VolumeMounts: []coreV1Api.VolumeMount{
-								{
-									MountPath: "/var/lib/postgresql/data",
-									Name:      "data",
-								},
-							},
-						},
-					},
-					ServiceAccountName: sonar.Name,
-					Volumes: []coreV1Api.Volume{
-						{
-							Name: "data",
-							VolumeSource: coreV1Api.VolumeSource{
-								PersistentVolumeClaim: &coreV1Api.PersistentVolumeClaimVolumeSource{
-									ClaimName: sonar.Name + "-db",
-								},
-							},
-						},
-					},
-				},
-			},
-		},
+	sonarDbDcObject, err := newSonarDatabaseDeploymentConfig(name, sonar.Namespace, labels)
+	if err != nil {
+		return err
 	}
 
 	if err := controllerutil.SetControllerReference(&sonar, sonarDbDcObject, service.scheme); err != nil {
@@ -333,7 +235,7 @@ func (service OpenshiftService) CreateDbDeployConf(sonar v1alpha1.Sonar) error {
 	sonarDbDc, err := service.appClient.DeploymentConfigs(sonarDbDcObject.Namespace).Get(sonarDbDcObject.Name, metav1.GetOptions{})
 
 	if err != nil && k8serrors.IsNotFound(err) {
-		log.Printf("Creating a new DeploymentConfig %s/%s for static analisysis tool %s", sonarDbDcObject.Namespace, sonarDbDcObject.Name, sonar.Name)
+		log.Printf("Creating a new DeploymentConfig %s/%s for static analysis tool %s", sonarDbDcObject.Namespace, sonarDbDcObject.Name, sonar.Name)
 
 		sonarDbDc, err = service.appClient.DeploymentConfigs(sonarDbDcObject.Namespace).Create(sonarDbDcObject)
 
@@ -421,7 +323,7 @@ func (service OpenshiftService) CreateDeployConf(sonar v1alpha1.Sonar) error {
 									ContainerPort: Port,
 								},
 							},
-							LivenessProbe:          generateProbe(LinvessProbeDelay),
+							LivenessProbe:          generateProbe(LivenessProbeDelay),
 							ReadinessProbe:         generateProbe(ReadinessProbeDelay),
 							TerminationMessagePath: "/dev/termination-log",
 							Resources: coreV1Api.ResourceRequirements{
@@ -460,7 +362,7 @@ func (service OpenshiftService) CreateDeployConf(sonar v1alpha1.Sonar) error {
 	sonarDc, err := service.appClient.DeploymentConfigs(sonarDcObject.Namespace).Get(sonarDcObject.Name, metav1.GetOptions{})
 
 	if err != nil && k8serrors.IsNotFound(err) {
-		log.Printf("Creating a new DeploymentConfig %s/%s for static analisysis tool %s", sonarDcObject.Namespace, sonarDcObject.Name, sonar.Name)
+		log.Printf("Creating a new DeploymentConfig %s/%s for static analysis tool %s", sonarDcObject.Namespace, sonarDcObject.Name, sonar.Name)
 
 		sonarDc, err = service.appClient.DeploymentConfigs(sonarDcObject.Namespace).Create(sonarDcObject)
 
@@ -513,4 +415,110 @@ func generateDbProbe(delay int32) *coreV1Api.Probe {
 		},
 		TimeoutSeconds: 5,
 	}
+}
+
+func newSonarDatabaseDeploymentConfig(name string, namespace string, labels map[string]string) (*appsV1Api.DeploymentConfig, error) {
+	return &appsV1Api.DeploymentConfig{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      name,
+			Namespace: namespace,
+			Labels:    labels,
+		},
+		Spec: appsV1Api.DeploymentConfigSpec{
+			Replicas: 1,
+			Triggers: []appsV1Api.DeploymentTriggerPolicy{
+				{
+					Type: appsV1Api.DeploymentTriggerOnConfigChange,
+				},
+			},
+			Strategy: appsV1Api.DeploymentStrategy{
+				Type: appsV1Api.DeploymentStrategyTypeRolling,
+			},
+			Selector: generateLabels(name),
+			Template: &coreV1Api.PodTemplateSpec{
+				ObjectMeta: metav1.ObjectMeta{
+					Labels: generateLabels(name),
+				},
+				Spec: coreV1Api.PodSpec{
+					Containers: []coreV1Api.Container{
+						{
+							Name:            name,
+							Image:           DbImage,
+							ImagePullPolicy: coreV1Api.PullIfNotPresent,
+							Env: []coreV1Api.EnvVar{
+								{
+									Name:  "PGDATA",
+									Value: "/var/lib/postgresql/data/pgdata",
+								},
+								{
+									Name:  "POSTGRES_DB",
+									Value: name,
+								},
+								{
+									Name: "POD_IP",
+									ValueFrom: &coreV1Api.EnvVarSource{
+										FieldRef: &coreV1Api.ObjectFieldSelector{
+											FieldPath: "status.podIP",
+										},
+									},
+								},
+								{
+									Name: "POSTGRES_USER",
+									ValueFrom: &coreV1Api.EnvVarSource{
+										SecretKeyRef: &coreV1Api.SecretKeySelector{
+											LocalObjectReference: coreV1Api.LocalObjectReference{
+												Name: name,
+											},
+											Key: "database-user",
+										},
+									},
+								},
+								{
+									Name: "POSTGRES_PASSWORD",
+									ValueFrom: &coreV1Api.EnvVarSource{
+										SecretKeyRef: &coreV1Api.SecretKeySelector{
+											LocalObjectReference: coreV1Api.LocalObjectReference{
+												Name: name,
+											},
+											Key: "database-password",
+										},
+									},
+								},
+							},
+							Ports: []coreV1Api.ContainerPort{
+								{
+									ContainerPort: DBPort,
+								},
+							},
+							LivenessProbe:          generateDbProbe(DbLivenessProbeDelay),
+							ReadinessProbe:         generateDbProbe(DbReadinessProbeDelay),
+							TerminationMessagePath: "/dev/termination-log",
+							Resources: coreV1Api.ResourceRequirements{
+								Requests: map[coreV1Api.ResourceName]resource.Quantity{
+									coreV1Api.ResourceMemory: resource.MustParse(MemoryRequest),
+								},
+							},
+							VolumeMounts: []coreV1Api.VolumeMount{
+								{
+									MountPath: "/var/lib/postgresql/data",
+									Name:      "data",
+								},
+							},
+						},
+					},
+					ServiceAccountName: name,
+					Volumes: []coreV1Api.Volume{
+						{
+							Name: "data",
+							VolumeSource: coreV1Api.VolumeSource{
+								PersistentVolumeClaim: &coreV1Api.PersistentVolumeClaimVolumeSource{
+									ClaimName: name,
+								},
+							},
+						},
+					},
+				},
+			},
+		},
+	}, nil
 }

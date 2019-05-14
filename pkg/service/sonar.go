@@ -34,12 +34,11 @@ func (s SonarServiceImpl) Install(instance v1alpha1.Sonar) error {
 
 	//sa, err := s.platformService.CreateServiceAccount(instance)
 	//_ = s.platformService.CreateSecurityContext(instance, sa)
-	//_ = s.platformService.CreateDbDeployConf(instance)
+	err = s.platformService.CreateService(instance)
+	err = s.platformService.CreateDbDeployConf(instance)
 	//_ = s.platformService.CreateDeployConf(instance)
 	//_ = s.platformService.CreateExternalEndpoint(instance)
 	//_ = s.platformService.CreateVolume(instance)
-
-	err = s.platformService.CreateService(instance)
 	if err != nil {
 		return err
 	}
