@@ -3,6 +3,7 @@ package sonar
 import (
 	"context"
 	"sonar-operator/pkg/service"
+	"time"
 
 	edpv1alpha1 "sonar-operator/pkg/apis/edp/v1alpha1"
 
@@ -93,7 +94,11 @@ func (r *ReconcileSonar) Reconcile(request reconcile.Request) (reconcile.Result,
 		return reconcile.Result{}, err
 	}
 
-	_ = r.service.Install(instance)
+	err = r.service.Install(instance)
+	if err != nil {
+		logPrint.Printf("[ERROR] Cannot install Sonar %s %s. The reason: %s", instance.Name, instance.Spec.Version, err)
+		return reconcile.Result{RequeueAfter: 10 * time.Second}, nil
+	}
 
 	logPrint.Printf("Reconciling StaticAnalysisTool %s/%s has been finished", request.Namespace, request.Name)
 	reqLogger.Info("Reconciling Sonar component %s/%s has been finished", request.Namespace, request.Name)
