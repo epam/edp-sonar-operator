@@ -223,10 +223,7 @@ func (service OpenshiftService) CreateDbDeployConf(sonar v1alpha1.Sonar) error {
 	labels := generateLabels(sonar.Name)
 	name := sonar.Name + "-db"
 
-	sonarDbDcObject, err := newSonarDatabaseDeploymentConfig(name, sonar.Namespace, labels)
-	if err != nil {
-		return err
-	}
+	sonarDbDcObject := newSonarDatabaseDeploymentConfig(name, sonar.Namespace, labels)
 
 	if err := controllerutil.SetControllerReference(&sonar, sonarDbDcObject, service.scheme); err != nil {
 		return logErrorAndReturn(err)
@@ -252,133 +249,34 @@ func (service OpenshiftService) CreateDbDeployConf(sonar v1alpha1.Sonar) error {
 }
 
 func (service OpenshiftService) CreateDeployConf(sonar v1alpha1.Sonar) error {
-
+	log.Printf("Start creating deployment config for sonar %v %v in namespace %v", sonar.Name,
+		sonar.Spec.Version, sonar.Namespace)
 	labels := generateLabels(sonar.Name)
 
-	sonarDcObject := &appsV1Api.DeploymentConfig{
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      sonar.Name,
-			Namespace: sonar.Namespace,
-			Labels:    labels,
-		},
-		Spec: appsV1Api.DeploymentConfigSpec{
-			Replicas: 1,
-			Triggers: []appsV1Api.DeploymentTriggerPolicy{
-				{
-					Type: appsV1Api.DeploymentTriggerOnConfigChange,
-				},
-			},
-			Strategy: appsV1Api.DeploymentStrategy{
-				Type: appsV1Api.DeploymentStrategyTypeRolling,
-			},
-			Selector: labels,
-			Template: &coreV1Api.PodTemplateSpec{
-				ObjectMeta: metav1.ObjectMeta{
-					Labels: labels,
-				},
-				Spec: coreV1Api.PodSpec{
-					InitContainers: []coreV1Api.Container{
-						{
-							Name:    sonar.Name + "init",
-							Image:   "busybox",
-							Command: []string{"sh", "-c", "while ! nc -w 1 " + sonar.Name + "-db " + strconv.Itoa(DBPort) + " </dev/null; do echo waiting for " + sonar.Name + "-db; sleep 10; done;"},
-						},
-					},
-					Containers: []coreV1Api.Container{
-						{
-							Name:            sonar.Name,
-							Image:           Image + ":" + sonar.Spec.Version,
-							ImagePullPolicy: coreV1Api.PullIfNotPresent,
-							Env: []coreV1Api.EnvVar{
-								{
-									Name: "SONARQUBE_JDBC_USERNAME",
-									ValueFrom: &coreV1Api.EnvVarSource{
-										SecretKeyRef: &coreV1Api.SecretKeySelector{
-											LocalObjectReference: coreV1Api.LocalObjectReference{
-												Name: sonar.Name + "-db",
-											},
-											Key: "database-user",
-										},
-									},
-								},
-								{
-									Name: "SONARQUBE_JDBC_PASSWORD",
-									ValueFrom: &coreV1Api.EnvVarSource{
-										SecretKeyRef: &coreV1Api.SecretKeySelector{
-											LocalObjectReference: coreV1Api.LocalObjectReference{
-												Name: sonar.Name + "-db",
-											},
-											Key: "database-password",
-										},
-									},
-								},
-								{
-									Name:  "SONARQUBE_JDBC_URL",
-									Value: "jdbc:postgresql://" + sonar.Name + "-db/sonar",
-								},
-							},
-							Ports: []coreV1Api.ContainerPort{
-								{
-									Name:          sonar.Name,
-									ContainerPort: Port,
-								},
-							},
-							LivenessProbe:          generateProbe(LivenessProbeDelay),
-							ReadinessProbe:         generateProbe(ReadinessProbeDelay),
-							TerminationMessagePath: "/dev/termination-log",
-							Resources: coreV1Api.ResourceRequirements{
-								Requests: map[coreV1Api.ResourceName]resource.Quantity{
-									coreV1Api.ResourceMemory: resource.MustParse(MemoryRequest),
-								},
-							},
-							VolumeMounts: []coreV1Api.VolumeMount{
-								{
-									MountPath: "/opt/sonarqube/extensions/plugins",
-									Name:      "data",
-								},
-							},
-						},
-					},
-					ServiceAccountName: sonar.Name,
-					Volumes: []coreV1Api.Volume{
-						{
-							Name: "data",
-							VolumeSource: coreV1Api.VolumeSource{
-								PersistentVolumeClaim: &coreV1Api.PersistentVolumeClaimVolumeSource{
-									ClaimName: sonar.Name + "-data",
-								},
-							},
-						},
-					},
-				},
-			},
-		},
-	}
-
+	sonarDcObject := newSonarDeploymentConfig(sonar.Name, sonar.Namespace, sonar.Spec.Version, labels)
 	if err := controllerutil.SetControllerReference(&sonar, sonarDcObject, service.scheme); err != nil {
 		return logErrorAndReturn(err)
 	}
 
 	sonarDc, err := service.appClient.DeploymentConfigs(sonarDcObject.Namespace).Get(sonarDcObject.Name, metav1.GetOptions{})
-
 	if err != nil && k8serrors.IsNotFound(err) {
 		log.Printf("Creating a new DeploymentConfig %s/%s for static analysis tool %s", sonarDcObject.Namespace, sonarDcObject.Name, sonar.Name)
 
 		sonarDc, err = service.appClient.DeploymentConfigs(sonarDcObject.Namespace).Create(sonarDcObject)
-
 		if err != nil {
 			return logErrorAndReturn(err)
 		}
 
-		log.Printf("DeploymentConfig %s/%s has been created", sonarDcObject.Namespace, sonarDcObject.Name)
+		log.Printf("DeploymentConfig for static analysis tool %s/%s has been created in namespace %v",
+			sonarDcObject.Name, sonar.Spec.Version, sonarDcObject.Namespace)
 	} else if err != nil {
 		return logErrorAndReturn(err)
 	}
 
 	if sonarDc.Status.AvailableReplicas > 0 {
-		log.Printf("DeploymentConfig has been created")
+		log.Printf("DeploymentConfig for sonar has been created")
 	} else {
-		log.Printf("DeploymentConfig has not been created")
+		log.Printf("DeploymentConfig for sonar has not been created")
 	}
 
 	return nil
@@ -417,7 +315,109 @@ func generateDbProbe(delay int32) *coreV1Api.Probe {
 	}
 }
 
-func newSonarDatabaseDeploymentConfig(name string, namespace string, labels map[string]string) (*appsV1Api.DeploymentConfig, error) {
+func newSonarDeploymentConfig(name string, namespace string, version string, labels map[string]string) (*appsV1Api.DeploymentConfig) {
+	return &appsV1Api.DeploymentConfig{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      name,
+			Namespace: namespace,
+			Labels:    labels,
+		},
+		Spec: appsV1Api.DeploymentConfigSpec{
+			Replicas: 1,
+			Triggers: []appsV1Api.DeploymentTriggerPolicy{
+				{
+					Type: appsV1Api.DeploymentTriggerOnConfigChange,
+				},
+			},
+			Strategy: appsV1Api.DeploymentStrategy{
+				Type: appsV1Api.DeploymentStrategyTypeRolling,
+			},
+			Selector: labels,
+			Template: &coreV1Api.PodTemplateSpec{
+				ObjectMeta: metav1.ObjectMeta{
+					Labels: labels,
+				},
+				Spec: coreV1Api.PodSpec{
+					InitContainers: []coreV1Api.Container{
+						{
+							Name:    name + "init",
+							Image:   "busybox",
+							Command: []string{"sh", "-c", "while ! nc -w 1 " + name + "-db " + strconv.Itoa(DBPort) + " </dev/null; do echo waiting for " + name + "-db; sleep 10; done;"},
+						},
+					},
+					Containers: []coreV1Api.Container{
+						{
+							Name:            name,
+							Image:           Image + ":" + version,
+							ImagePullPolicy: coreV1Api.PullIfNotPresent,
+							Env: []coreV1Api.EnvVar{
+								{
+									Name: "SONARQUBE_JDBC_USERNAME",
+									ValueFrom: &coreV1Api.EnvVarSource{
+										SecretKeyRef: &coreV1Api.SecretKeySelector{
+											LocalObjectReference: coreV1Api.LocalObjectReference{
+												Name: name + "-db",
+											},
+											Key: "database-user",
+										},
+									},
+								},
+								{
+									Name: "SONARQUBE_JDBC_PASSWORD",
+									ValueFrom: &coreV1Api.EnvVarSource{
+										SecretKeyRef: &coreV1Api.SecretKeySelector{
+											LocalObjectReference: coreV1Api.LocalObjectReference{
+												Name: name + "-db",
+											},
+											Key: "database-password",
+										},
+									},
+								},
+								{
+									Name:  "SONARQUBE_JDBC_URL",
+									Value: "jdbc:postgresql://" + name + "-db/sonar",
+								},
+							},
+							Ports: []coreV1Api.ContainerPort{
+								{
+									Name:          name,
+									ContainerPort: Port,
+								},
+							},
+							LivenessProbe:          generateProbe(LivenessProbeDelay),
+							ReadinessProbe:         generateProbe(ReadinessProbeDelay),
+							TerminationMessagePath: "/dev/termination-log",
+							Resources: coreV1Api.ResourceRequirements{
+								Requests: map[coreV1Api.ResourceName]resource.Quantity{
+									coreV1Api.ResourceMemory: resource.MustParse(MemoryRequest),
+								},
+							},
+							VolumeMounts: []coreV1Api.VolumeMount{
+								{
+									MountPath: "/opt/sonarqube/extensions/plugins",
+									Name:      "data",
+								},
+							},
+						},
+					},
+					ServiceAccountName: name,
+					Volumes: []coreV1Api.Volume{
+						{
+							Name: "data",
+							VolumeSource: coreV1Api.VolumeSource{
+								PersistentVolumeClaim: &coreV1Api.PersistentVolumeClaimVolumeSource{
+									ClaimName: name + "-data",
+								},
+							},
+						},
+					},
+				},
+			},
+		},
+	}
+}
+
+func newSonarDatabaseDeploymentConfig(name string, namespace string, labels map[string]string) (*appsV1Api.DeploymentConfig) {
 	return &appsV1Api.DeploymentConfig{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      name,
@@ -520,5 +520,5 @@ func newSonarDatabaseDeploymentConfig(name string, namespace string, labels map[
 				},
 			},
 		},
-	}, nil
+	}
 }

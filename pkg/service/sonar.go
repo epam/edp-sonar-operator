@@ -26,26 +26,30 @@ type SonarServiceImpl struct {
 // Invoking install method against SonarServiceImpl object should trigger list of methods, stored in client edp.PlatformService
 func (s SonarServiceImpl) Install(instance v1alpha1.Sonar) error {
 	log.Printf("Installing Sonar component has been started")
-	s.updateStatus(instance, true)
+	err := s.updateStatus(instance, true)
+	if err != nil {
+		return err
+	}
 
-	err := s.platformService.CreateSecret(instance)
+	err = s.platformService.CreateSecret(instance)
 	if err != nil {
 		return err
 	}
 
 	sa, err := s.platformService.CreateServiceAccount(instance)
-
 	if err != nil {
 		return err
 	}
 
 	err = s.platformService.CreateSecurityContext(instance, sa)
-
 	if err != nil {
 		return err
 	}
 
-	//_ = s.platformService.CreateDeployConf(instance)
+	err = s.platformService.CreateDeployConf(instance)
+	if err != nil {
+		return err
+	}
 	//_ = s.platformService.CreateExternalEndpoint(instance)
 
 	err = s.platformService.CreateVolume(instance)
@@ -67,10 +71,14 @@ func (s SonarServiceImpl) Install(instance v1alpha1.Sonar) error {
 	return nil
 }
 
-func (s SonarServiceImpl) updateStatus(instance v1alpha1.Sonar, value bool) {
+func (s SonarServiceImpl) updateStatus(instance v1alpha1.Sonar, value bool) error {
 	if instance.Status.Available != value {
 		instance.Status.Available = value
 		instance.Status.LastTimeUpdated = time.Now()
-		s.k8sClient.Update(context.TODO(), &instance)
+		err := s.k8sClient.Update(context.TODO(), &instance)
+		if err != nil {
+			return err
+		}
 	}
+	return nil
 }
