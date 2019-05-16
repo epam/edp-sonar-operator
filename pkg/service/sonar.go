@@ -11,6 +11,7 @@ import (
 type SonarService interface {
 	// This is an entry point for service package. Invoked in err = r.service.Install(*instance) sonar_controller.go, Reconcile method.
 	Install(instance v1alpha1.Sonar) error
+	Configure(instance v1alpha1.Sonar) error
 }
 
 func NewSonarService(platformService PlatformService, k8sClient client.Client) SonarService {
@@ -68,6 +69,13 @@ func (s SonarServiceImpl) Install(instance v1alpha1.Sonar) error {
 	}
 
 	log.Printf("Installing Sonar component has been finished")
+	return nil
+}
+
+func (s SonarServiceImpl) Configure(instance v1alpha1.Sonar) error {
+	log.Printf("Sonar component configuration has been started")
+
+	log.Printf("Sonar component configuration has been finished")
 	return nil
 }
 
