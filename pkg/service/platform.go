@@ -21,7 +21,6 @@ type PlatformService interface {
 }
 
 func NewPlatformService(scheme *runtime.Scheme) (PlatformService, error) {
-
 	config := clientcmd.NewNonInteractiveDeferredLoadingClientConfig(
 		clientcmd.NewDefaultClientConfigLoadingRules(),
 		&clientcmd.ConfigOverrides{},

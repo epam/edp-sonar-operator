@@ -6,7 +6,7 @@ import (
 )
 
 const (
-	url      = "https://sonar-qa-380-edp-cicd.delivery.aws.main.edp.projects.epam.com"
+	url      = "https://sonar-qa-389-edp-cicd.delivery.aws.main.edp.projects.epam.com/api"
 	username = "admin"
 	token    = ""
 )

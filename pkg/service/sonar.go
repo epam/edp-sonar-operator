@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"github.com/dchest/uniuri"
 	"gopkg.in/resty.v1"
@@ -34,90 +35,29 @@ type SonarServiceImpl struct {
 
 func (s SonarServiceImpl) Configure(instance v1alpha1.Sonar) error {
 	log.Println("Sonar component configuration has been started")
-	sonarApiUrl := fmt.Sprintf("http://sonar.%s:9000/api", instance.Namespace)
 
-	//credentials := s.platformService.GetSecret(instance)
-	//if credentials == nil {
-	//	log.Println("Sonar secret not found. Configuration failed")
-	//	return errors.New("sonar secret not found")
-	//}
-	//
-	//password := string(credentials["password"])
-	sc := sonarClient.SonarClient{}
-	err := sc.InitNewRestClient(sonarApiUrl, "admin", "admin")
-	if err != nil {
-		return logErrorAndReturn(err)
+	sonarApiUrl := fmt.Sprintf("http://sonar.%v:9000/api", instance.Namespace)
+
+	// Retrieve password from secret
+	credentials := s.platformService.GetSecret(instance.Namespace, instance.Name)
+	if credentials == nil {
+		log.Printf("Sonar secret not found. Configuration failed")
+		return errors.New("sonar secret not found")
 	}
 
-	//// Install plugins
-	//// Do we have to pass this as a parameter&
-	//plugins := [4]string{"authoidc", "checkstyle", "findbugs", "pmd"}
-	//
-	//resp, err = restClient.R().
-	//	Get(sonarApiUrl + "/plugins/installed")
-	//
-	//err = json.Unmarshal([]byte(resp.String()), &raw)
-	//if err != nil {
-	//	return err
-	//}
-	//
-	//for _, plugin := range plugins {
-	//	if !strings.Contains(resp.String(), plugin) {
-	//		resp, err := resty.R().
-	//			SetBody("key="+plugin).
-	//			SetHeader("Content-Type", "application/x-www-form-urlencoded").
-	//			SetBasicAuth("admin", password).
-	//			Post(sonarApiUrl + "/plugins/install")
-	//
-	//		if err != nil || resp.IsError() {
-	//			log.Println("Plugin " + plugin + " installation failed - " + resp.String())
-	//			return err
-	//		}
-	//		log.Println("Plugin " + plugin + "has been installed")
-	//	}
-	//}
-	//
-	//// Reboot Sonar
-	//resp, err = resty.R().
-	//	SetBasicAuth("admin", password).
-	//	Post(sonarApiUrl + "/system/restart")
-	//
-	//if err != nil || resp.IsError() {
-	//	log.Println("Sonar restart failed - " + resp.String())
-	//	return errors.New("Sonar restart failed - " + resp.String())
-	//}
-	//
-	//// Wait for Sonar Up
-	//resp, err = resty.
-	//	SetRetryCount(60).
-	//	SetRetryWaitTime(10*time.Second).
-	//	AddRetryCondition(
-	//		func(response *resty.Response) (bool, error) {
-	//			if response.IsError() {
-	//				return response.IsError(), nil
-	//			}
-	//			json.Unmarshal([]byte(response.String()), &raw)
-	//			log.Println("Current Sonar status - " + raw["status"].(string))
-	//			if raw["status"].(string) == "UP" {
-	//				return false, nil
-	//			} else {
-	//				return true, nil
-	//			}
-	//		},
-	//	).
-	//	R().
-	//	SetBasicAuth("admin", password).
-	//	Get(sonarApiUrl + "/system/status")
-	//
-	//log.Println("Sonar restarted")
+	sc := sonarClient.SonarClient{}
 
-	//_, err = sc.UploadProfile()
-	//if err != nil {
-	//	return err
-	//}
+	err := sc.InitNewRestClient(sonarApiUrl, "admin", "admin")
+	if err != nil {
+		return err
+	}
+
+	_, err = sc.UploadProfile()
+	if err != nil {
+		return err
+	}
 
 	log.Println("Sonar component configuration has been finished")
-
 	return nil
 }
 
