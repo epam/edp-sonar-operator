@@ -51,7 +51,11 @@ func (s SonarServiceImpl) Install(instance v1alpha1.Sonar) error {
 	if err != nil {
 		return err
 	}
-	//_ = s.platformService.CreateExternalEndpoint(instance)
+
+	err = s.platformService.CreateExternalEndpoint(instance)
+	if err != nil {
+		return err
+	}
 
 	err = s.platformService.CreateVolume(instance)
 	if err != nil {

@@ -190,7 +190,7 @@ func (service OpenshiftService) CreateExternalEndpoint(sonar v1alpha1.Sonar) err
 			},
 			To: routeV1Api.RouteTargetReference{
 				Name: sonar.Name,
-				Kind: "service",
+				Kind: "Service",
 			},
 		},
 	}
@@ -202,7 +202,7 @@ func (service OpenshiftService) CreateExternalEndpoint(sonar v1alpha1.Sonar) err
 	sonarRoute, err := service.routeClient.Routes(sonarRouteObject.Namespace).Get(sonarRouteObject.Name, metav1.GetOptions{})
 
 	if err != nil && k8serrors.IsNotFound(err) {
-		log.Printf("Creating a new Route %s/%s for static analysis tool %s", sonarRouteObject.Namespace, sonarRouteObject.Name, sonar.Name)
+		log.Printf("Creating a new Route %s/%s for Sonar %s", sonarRouteObject.Namespace, sonarRouteObject.Name, sonar.Name)
 		sonarRoute, err = service.routeClient.Routes(sonarRouteObject.Namespace).Create(sonarRouteObject)
 
 		if err != nil {
@@ -218,12 +218,12 @@ func (service OpenshiftService) CreateExternalEndpoint(sonar v1alpha1.Sonar) err
 }
 
 func (service OpenshiftService) CreateDbDeployConf(sonar v1alpha1.Sonar) error {
-	log.Printf("Start creating database deployment config for sonar %v %v in namespace %v", sonar.Name,
+	log.Printf("Start creating database deployment config for Sonar %v %v in namespace %v", sonar.Name,
 		sonar.Spec.Version, sonar.Namespace)
 	labels := generateLabels(sonar.Name)
 	name := sonar.Name + "-db"
 
-	sonarDbDcObject := newSonarDatabaseDeploymentConfig(name, sonar.Namespace, labels)
+	sonarDbDcObject := newSonarDatabaseDeploymentConfig(name, sonar.Name, sonar.Namespace, labels)
 
 	if err := controllerutil.SetControllerReference(&sonar, sonarDbDcObject, service.scheme); err != nil {
 		return logErrorAndReturn(err)
@@ -232,7 +232,7 @@ func (service OpenshiftService) CreateDbDeployConf(sonar v1alpha1.Sonar) error {
 	sonarDbDc, err := service.appClient.DeploymentConfigs(sonarDbDcObject.Namespace).Get(sonarDbDcObject.Name, metav1.GetOptions{})
 
 	if err != nil && k8serrors.IsNotFound(err) {
-		log.Printf("Creating a new DeploymentConfig %s/%s for static analysis tool %s", sonarDbDcObject.Namespace, sonarDbDcObject.Name, sonar.Name)
+		log.Printf("Creating a new DeploymentConfig %s/%s for Sonar %s", sonarDbDcObject.Namespace, sonarDbDcObject.Name, sonar.Name)
 
 		sonarDbDc, err = service.appClient.DeploymentConfigs(sonarDbDcObject.Namespace).Create(sonarDbDcObject)
 
@@ -260,23 +260,23 @@ func (service OpenshiftService) CreateDeployConf(sonar v1alpha1.Sonar) error {
 
 	sonarDc, err := service.appClient.DeploymentConfigs(sonarDcObject.Namespace).Get(sonarDcObject.Name, metav1.GetOptions{})
 	if err != nil && k8serrors.IsNotFound(err) {
-		log.Printf("Creating a new DeploymentConfig %s/%s for static analysis tool %s", sonarDcObject.Namespace, sonarDcObject.Name, sonar.Name)
+		log.Printf("Creating a new DeploymentConfig %s/%s for Sonar %s", sonarDcObject.Namespace, sonarDcObject.Name, sonar.Name)
 
 		sonarDc, err = service.appClient.DeploymentConfigs(sonarDcObject.Namespace).Create(sonarDcObject)
 		if err != nil {
 			return logErrorAndReturn(err)
 		}
 
-		log.Printf("DeploymentConfig for static analysis tool %s/%s has been created in namespace %v",
+		log.Printf("DeploymentConfig for Sonar %s/%s has been created in namespace %v",
 			sonarDcObject.Name, sonar.Spec.Version, sonarDcObject.Namespace)
 	} else if err != nil {
 		return logErrorAndReturn(err)
 	}
 
 	if sonarDc.Status.AvailableReplicas > 0 {
-		log.Printf("DeploymentConfig for sonar has been created")
+		log.Printf("DeploymentConfig for Sonar has been created")
 	} else {
-		log.Printf("DeploymentConfig for sonar has not been created")
+		log.Printf("DeploymentConfig for Sonar has not been created")
 	}
 
 	return nil
@@ -417,7 +417,7 @@ func newSonarDeploymentConfig(name string, namespace string, version string, lab
 	}
 }
 
-func newSonarDatabaseDeploymentConfig(name string, namespace string, labels map[string]string) (*appsV1Api.DeploymentConfig) {
+func newSonarDatabaseDeploymentConfig(name string,sa string, namespace string, labels map[string]string) *appsV1Api.DeploymentConfig {
 	return &appsV1Api.DeploymentConfig{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      name,
@@ -452,7 +452,7 @@ func newSonarDatabaseDeploymentConfig(name string, namespace string, labels map[
 								},
 								{
 									Name:  "POSTGRES_DB",
-									Value: name,
+									Value: "sonar",
 								},
 								{
 									Name: "POD_IP",
@@ -506,7 +506,7 @@ func newSonarDatabaseDeploymentConfig(name string, namespace string, labels map[
 							},
 						},
 					},
-					ServiceAccountName: name,
+					ServiceAccountName: sa,
 					Volumes: []coreV1Api.Volume{
 						{
 							Name: "data",
