@@ -9,8 +9,8 @@ import (
 )
 
 type PlatformService interface {
-	CreateSecret(sonar v1alpha1.Sonar) error
-	GetSecret(sonar v1alpha1.Sonar) map[string][]byte
+	CreateSecret(sonar v1alpha1.Sonar, name string, data map[string][]byte) error
+	GetSecret(namespace string, name string) map[string][]byte
 	CreateServiceAccount(sonar v1alpha1.Sonar) (*coreV1Api.ServiceAccount, error)
 	CreateSecurityContext(sonar v1alpha1.Sonar, sa *coreV1Api.ServiceAccount) error
 	CreateExternalEndpoint(sonar v1alpha1.Sonar) error

@@ -315,7 +315,7 @@ func generateDbProbe(delay int32) *coreV1Api.Probe {
 	}
 }
 
-func newSonarDeploymentConfig(name string, namespace string, version string, labels map[string]string) (*appsV1Api.DeploymentConfig) {
+func newSonarDeploymentConfig(name string, namespace string, version string, labels map[string]string) *appsV1Api.DeploymentConfig {
 	return &appsV1Api.DeploymentConfig{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      name,
@@ -417,7 +417,7 @@ func newSonarDeploymentConfig(name string, namespace string, version string, lab
 	}
 }
 
-func newSonarDatabaseDeploymentConfig(name string,sa string, namespace string, labels map[string]string) *appsV1Api.DeploymentConfig {
+func newSonarDatabaseDeploymentConfig(name string, sa string, namespace string, labels map[string]string) *appsV1Api.DeploymentConfig {
 	return &appsV1Api.DeploymentConfig{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      name,

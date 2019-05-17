@@ -32,28 +32,25 @@ func (service *K8SService) Init(config *rest.Config, scheme *runtime.Scheme) err
 	return nil
 }
 
-func (service K8SService) GetSecret(sonar v1alpha1.Sonar) map[string][]byte {
-	sonarSecret, err := service.coreClient.Secrets(sonar.Namespace).Get(sonar.Name, metav1.GetOptions{})
+func (service K8SService) GetSecret(namespace string, name string) map[string][]byte {
+	sonarSecret, err := service.coreClient.Secrets(namespace).Get(name, metav1.GetOptions{})
 	if err != nil {
 		return nil
 	}
 	return sonarSecret.Data
 }
 
-func (service K8SService) CreateSecret(sonar v1alpha1.Sonar) error {
+func (service K8SService) CreateSecret(sonar v1alpha1.Sonar, name string, data map[string][]byte) error {
 
 	labels := generateLabels(sonar.Name)
 
 	sonarSecretObject := &coreV1Api.Secret{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      sonar.Name + "-db",
+			Name:      name,
 			Namespace: sonar.Namespace,
 			Labels:    labels,
 		},
-		Data: map[string][]byte{
-			"database-user":     []byte("admin"),
-			"database-password": []byte("admin"),
-		},
+		Data: data,
 		Type: "Opaque",
 	}
 

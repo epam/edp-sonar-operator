@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 	"fmt"
+	"github.com/dchest/uniuri"
 	"gopkg.in/resty.v1"
 	"log"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -128,7 +129,22 @@ func (s SonarServiceImpl) Install(instance v1alpha1.Sonar) error {
 		return err
 	}
 
-	err = s.platformService.CreateSecret(instance)
+	dbSecret := map[string][]byte{
+		"database-user":     []byte("admin"),
+		"database-password": []byte(uniuri.New()),
+	}
+
+	err = s.platformService.CreateSecret(instance, instance.Name+"-db", dbSecret)
+	if err != nil {
+		return err
+	}
+
+	adminSecret := map[string][]byte{
+		"user":     []byte("admin"),
+		"password": []byte(uniuri.New()),
+	}
+
+	err = s.platformService.CreateSecret(instance, instance.Name+"-admin-password", adminSecret)
 	if err != nil {
 		return err
 	}
