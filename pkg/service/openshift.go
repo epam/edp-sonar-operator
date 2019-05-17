@@ -249,8 +249,6 @@ func (service OpenshiftService) CreateDbDeployConf(sonar v1alpha1.Sonar) error {
 }
 
 func (service OpenshiftService) CreateDeployConf(sonar v1alpha1.Sonar) error {
-	log.Printf("Start creating deployment config for sonar %v %v in namespace %v", sonar.Name,
-		sonar.Spec.Version, sonar.Namespace)
 	labels := generateLabels(sonar.Name)
 
 	sonarDcObject := newSonarDeploymentConfig(sonar.Name, sonar.Namespace, sonar.Spec.Version, labels)

@@ -171,7 +171,6 @@ func (service K8SService) CreateService(sonar v1alpha1.Sonar) error {
 		sonar.Name + "-db": DBPort,
 	}
 	for _, serviceName := range []string{sonar.Name, sonar.Name + "-db"} {
-		log.Printf("Start creating sonar service %v in namespace %v", serviceName, sonar.Namespace)
 		labels := generateLabels(serviceName)
 
 		sonarServiceObject, err := newSonarInternalBalancingService(serviceName, sonar.Namespace, labels, portMap[serviceName])
@@ -180,10 +179,10 @@ func (service K8SService) CreateService(sonar v1alpha1.Sonar) error {
 			return logErrorAndReturn(err)
 		}
 
-		sonarService, err := service.coreClient.Services(sonarServiceObject.Namespace).Get(sonarServiceObject.Name, metav1.GetOptions{})
+		sonarService, err := service.coreClient.Services(sonar.Namespace).Get(sonar.Name, metav1.GetOptions{})
 
 		if err != nil && k8serr.IsNotFound(err) {
-			log.Printf("Creating a new service %s/%s for sonar %s", sonarService.Namespace, sonarService.Name, sonar.Name)
+			log.Printf("Creating a new service %s/%s for sonar %s", sonarServiceObject.Namespace, sonarServiceObject.Name, sonar.Name)
 
 			sonarService, err = service.coreClient.Services(sonarServiceObject.Namespace).Create(sonarServiceObject)
 
