@@ -2,7 +2,6 @@ package service
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"github.com/dchest/uniuri"
 	"gopkg.in/resty.v1"
@@ -35,22 +34,25 @@ type SonarServiceImpl struct {
 
 func (s SonarServiceImpl) Configure(instance v1alpha1.Sonar) error {
 	log.Println("Sonar component configuration has been started")
-
 	sonarApiUrl := fmt.Sprintf("http://sonar.%v:9000/api", instance.Namespace)
-
-	// Retrieve password from secret
-	credentials := s.platformService.GetSecret(instance.Namespace, instance.Name)
-	if credentials == nil {
-		log.Printf("Sonar secret not found. Configuration failed")
-		return errors.New("sonar secret not found")
-	}
-
 	sc := sonarClient.SonarClient{}
-
 	err := sc.InitNewRestClient(sonarApiUrl, "admin", "admin")
 	if err != nil {
-		return err
+		return logErrorAndReturn(err)
 	}
+
+	sc.WaitForStatusIsUp(60, 10)
+
+	//credentials := s.platformService.GetSecret(instance)
+	//if credentials == nil {
+	//	log.Println("Sonar secret not found. Configuration failed")
+	//	return errors.New("sonar secret not found")
+	//}
+	//
+	//password := string(credentials["password"])
+
+	plugins := []string{"authoidc", "checkstyle", "findbugs", "pmd"}
+	sc.InstallPlugins(plugins)
 
 	_, err = sc.UploadProfile()
 	if err != nil {

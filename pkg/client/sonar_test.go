@@ -40,3 +40,19 @@ func TestExampleConfiguration_UploadProfile(t *testing.T) {
 
 	log.Println(*id)
 }
+
+func TestExampleConfiguration_checkInstallPlugins(t *testing.T) {
+	sc := SonarClient{}
+	err := sc.InitNewRestClient(url, username, token)
+	if err != nil {
+		log.Print(err)
+	}
+
+	plugins := []string{"pmd"}
+	err = sc.InstallPlugins(plugins)
+	if err != nil {
+		log.Print(err)
+	}
+
+	//assert.Assert(t, err == nil)
+}
