@@ -2,6 +2,7 @@ package client
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"gopkg.in/resty.v1"
 	"log"
@@ -31,6 +32,23 @@ func (sc *SonarClient) InitNewRestClient(url string, user string, password strin
 	return nil
 }
 
+func (sc *SonarClient) ChangePassword(user string, oldPassword string, newPassword string) error {
+	resp, err := sc.resty.R().
+		SetBody("login="+user+"&password="+newPassword+"&previousPassword="+oldPassword).
+		SetHeader("Content-Type", "application/x-www-form-urlencoded").
+		Post("/users/change_password")
+
+	if err != nil {
+		logErrorAndReturn(err)
+	}
+
+	if resp.IsError() {
+		logErrorAndReturn(errors.New("Password change unsuccessful - " + resp.String()))
+	}
+
+	return nil
+}
+
 func (sc SonarClient) Reboot() error {
 	resp, err := sc.resty.R().
 		Post("/system/restart")
@@ -50,7 +68,7 @@ func (sc SonarClient) WaitForStatusIsUp(retryCount int, timeout time.Duration) e
 		SetRetryWaitTime(timeout * time.Second).
 		AddRetryCondition(
 			func(response *resty.Response) (bool, error) {
-				if response.IsError() {
+				if response.IsError() || !response.IsSuccess() {
 					return response.IsError(), nil
 				}
 				json.Unmarshal([]byte(response.String()), &raw)
