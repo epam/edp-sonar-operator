@@ -12,7 +12,4 @@ spec:
     - name: "db"
       storage_class: "efs"
       capacity: "1Gi"
-status:
-  available: true
-  status: "initialized"
-  LastTimeUpdated: 0001-01-01T00:00:00Z
+
