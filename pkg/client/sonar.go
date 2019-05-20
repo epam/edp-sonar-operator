@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"gopkg.in/resty.v1"
 	"log"
+	"strings"
 	"time"
 )
 
@@ -34,7 +35,7 @@ func (sc *SonarClient) InitNewRestClient(url string, user string, password strin
 
 func (sc *SonarClient) ChangePassword(user string, oldPassword string, newPassword string) error {
 	resp, err := sc.resty.R().
-		SetBody("login="+user+"&password="+newPassword+"&previousPassword="+oldPassword).
+		SetBody(fmt.Sprintf("login=%v&password=%v&previousPassword=%v", user, newPassword, oldPassword)).
 		SetHeader("Content-Type", "application/x-www-form-urlencoded").
 		Post("/users/change_password")
 
@@ -296,4 +297,51 @@ func (sc SonarClient) AddPermissionsToGroup(groupName string, permissions string
 	log.Printf("Permissions %v to group %v has been added", permissions, groupName)
 
 	return nil
+}
+
+func (sc SonarClient) GenerateUserToken(userName string) (*string, error) {
+	log.Printf("Start generating token for user %v in Sonar", userName)
+	tokenExist, err := sc.checkUserTokenExist(userName)
+	if err != nil {
+		return nil, err
+	}
+
+	if tokenExist {
+		log.Printf("Token for user %v already exist in Sonar", userName)
+		return nil, nil
+	}
+
+	resp, err := sc.resty.R().
+		SetHeader("Content-Type", "application/json").
+		SetQueryParams(map[string]string{
+			"login": userName,
+			"name":  strings.Title(userName)}).
+		Post("/user_tokens/generate")
+	if err != nil || resp.IsError() {
+		return nil, err
+	}
+	log.Printf("Token for user %v has been generated", userName)
+
+	var rawResponse map[string]string
+	err = json.Unmarshal(resp.Body(), &rawResponse)
+	token := rawResponse["token"]
+
+	return &token, nil
+}
+
+func (sc SonarClient) checkUserTokenExist(userName string) (bool, error) {
+	resp, err := sc.resty.R().
+		Get(fmt.Sprintf("/user_tokens/search?login=%v", userName))
+	if err != nil || resp.IsError() {
+		return false, err
+	}
+
+	var raw map[string][]map[string]interface{}
+	err = json.Unmarshal(resp.Body(), &raw)
+
+	if len(raw["userTokens"]) == 0 {
+		return false, nil
+	}
+
+	return true, nil
 }

@@ -14,11 +14,11 @@ import (
 )
 
 const (
-	StatusInstall   = "installing"
-	StatusFailed    = "failed"
-	StatusCreated   = "created"
-	GroupName       = "non-interactive-users"
+	StatusInstall = "installing"
+	StatusFailed  = "failed"
+	StatusCreated = "created"
 	JenkinsUsername = "jenkins"
+	GroupName       = "non-interactive-users"
 )
 
 type Client struct {
@@ -73,6 +73,11 @@ func (s SonarServiceImpl) Configure(instance v1alpha1.Sonar) error {
 	sc.InstallPlugins(plugins)
 
 	_, err = sc.UploadProfile()
+	if err != nil {
+		return err
+	}
+
+	_, err = sc.GenerateUserToken(JenkinsUsername)
 	if err != nil {
 		return err
 	}

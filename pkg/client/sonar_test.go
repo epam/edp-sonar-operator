@@ -7,10 +7,10 @@ import (
 )
 
 const (
-	url       = "https://sonar-mr-1944-1-edp-cicd.delivery.aws.main.edp.projects.epam.com/api"
-	username  = "admin"
+	url      = "https://sonar-mr-1944-1-edp-cicd.delivery.aws.main.edp.projects.epam.com/api"
+	username = "admin"
+	jenkinsUsername = "kostenko"
 	groupName = "non-interactive-users"
-	userName  = "jenkins"
 	token     = ""
 )
 
@@ -107,7 +107,7 @@ func TestExampleConfiguration_AddPermissionsToUser(t *testing.T) {
 		log.Print(err)
 	}
 
-	err = cs.AddPermissionsToUser(userName, "admin")
+	err = cs.AddPermissionsToUser(jenkinsUsername, "admin")
 	if err != nil {
 		log.Print(err)
 	}
@@ -123,5 +123,33 @@ func TestExampleConfiguration_AddPermissionsToGroup(t *testing.T) {
 	err = cs.AddPermissionsToGroup(groupName, "scan")
 	if err != nil {
 		log.Print(err)
+	}
+}
+
+func TestExampleConfiguration_CheckUserToken(t *testing.T) {
+	sc := SonarClient{}
+	err := sc.InitNewRestClient(url, username, token)
+	if err != nil {
+		log.Print(err)
+	}
+
+	exist, err := sc.checkUserTokenExist(jenkinsUsername)
+	if err != nil {
+		log.Print(err)
+	}
+
+	log.Println(exist)
+}
+
+func TestExampleConfiguration_GenerateUserToken(t *testing.T) {
+	sc := SonarClient{}
+	err := sc.InitNewRestClient(url, username, token)
+	if err != nil {
+		log.Print(err)
+	}
+
+	tokenPass, err := sc.GenerateUserToken(jenkinsUsername)
+	if err != nil {
+		log.Print(*tokenPass, err)
 	}
 }
