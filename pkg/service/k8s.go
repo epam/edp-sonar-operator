@@ -179,7 +179,7 @@ func (service K8SService) CreateService(sonar v1alpha1.Sonar) error {
 			return logErrorAndReturn(err)
 		}
 
-		sonarService, err := service.coreClient.Services(sonar.Namespace).Get(sonar.Name, metav1.GetOptions{})
+		sonarService, err := service.coreClient.Services(sonar.Namespace).Get(serviceName, metav1.GetOptions{})
 
 		if err != nil && k8serr.IsNotFound(err) {
 			log.Printf("Creating a new service %s/%s for sonar %s", sonarServiceObject.Namespace, sonarServiceObject.Name, sonar.Name)
