@@ -43,8 +43,10 @@ func (sc *SonarClient) ChangePassword(user string, oldPassword string, newPasswo
 	}
 
 	if resp.IsError() {
-		logErrorAndReturn(errors.New("Password change unsuccessful - " + resp.String()))
+		logErrorAndReturn(errors.New(fmt.Sprintf("Password change unsuccessful - %v", resp.Status())))
 	}
+
+	log.Printf("Password for user %v changed successfully", user)
 
 	return nil
 }
