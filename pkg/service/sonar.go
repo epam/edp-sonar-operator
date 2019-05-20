@@ -14,9 +14,11 @@ import (
 )
 
 const (
-	StatusInstall = "installing"
-	StatusFailed  = "failed"
-	StatusCreated = "created"
+	StatusInstall   = "installing"
+	StatusFailed    = "failed"
+	StatusCreated   = "created"
+	GroupName       = "non-interactive-users"
+	JenkinsUsername = "jenkins"
 )
 
 type Client struct {
@@ -71,6 +73,26 @@ func (s SonarServiceImpl) Configure(instance v1alpha1.Sonar) error {
 	sc.InstallPlugins(plugins)
 
 	_, err = sc.UploadProfile()
+	if err != nil {
+		return err
+	}
+
+	err = sc.CreateGroup(GroupName)
+	if err != nil {
+		return err
+	}
+
+	err = sc.AddUserToGroup(GroupName, JenkinsUsername)
+	if err != nil {
+		return err
+	}
+
+	err = sc.AddPermissionsToUser(JenkinsUsername, "admin")
+	if err != nil {
+		return err
+	}
+
+	err = sc.AddPermissionsToGroup(GroupName, "scan")
 	if err != nil {
 		return err
 	}

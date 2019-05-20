@@ -202,3 +202,98 @@ func (sc SonarClient) setDefaultProfile() error {
 	}
 	return nil
 }
+
+func (sc SonarClient) CreateGroup(groupName string) error {
+	log.Printf("Start creating group %v in Sonar", groupName)
+	groupExist, err := sc.checkGroupExist(groupName)
+	if err != nil {
+		return nil
+	}
+
+	if groupExist {
+		log.Printf("Group %v already exist in Sonar", groupName)
+		return nil
+	}
+
+	resp, err := sc.resty.R().
+		SetHeader("Content-Type", "application/json").
+		SetQueryParams(map[string]string{
+			"name": groupName}).
+		Post("/user_groups/create")
+	if err != nil || resp.IsError() {
+		return err
+	}
+	log.Printf("Group %v in Sonar has been created", groupName)
+
+	return nil
+}
+
+func (sc SonarClient) checkGroupExist(groupName string) (bool, error) {
+	resp, err := sc.resty.R().
+		Get(fmt.Sprintf("/user_groups/search?q=%v&f=name", groupName))
+	if err != nil || resp.IsError() {
+		return false, err
+	}
+
+	var raw map[string][]map[string]interface{}
+	err = json.Unmarshal(resp.Body(), &raw)
+
+	for _, v := range raw["groups"] {
+		if v["name"] == groupName {
+			return true, nil
+		}
+	}
+
+	return false, nil
+}
+
+func (sc SonarClient) AddUserToGroup(groupName string, user string) error {
+	log.Printf("Start adding user %v to group %v in Sonar", user, groupName)
+	resp, err := sc.resty.R().
+		SetHeader("Content-Type", "application/json").
+		SetQueryParams(map[string]string{
+			"name":  groupName,
+			"login": user}).
+		Post("/user_groups/add_user")
+	if err != nil || resp.IsError() {
+		return err
+	}
+
+	log.Printf("User %v has been added to group %v in Sonar", user, groupName)
+
+	return nil
+}
+
+func (sc SonarClient) AddPermissionsToUser(user string, permissions string) error {
+	log.Printf("Start adding permissions %v to user %v", permissions, user)
+	resp, err := sc.resty.R().
+		SetHeader("Content-Type", "application/json").
+		SetQueryParams(map[string]string{
+			"login":      user,
+			"permission": permissions}).
+		Post("/permissions/add_user")
+	if err != nil || resp.IsError() {
+		return err
+	}
+
+	log.Printf("Permissions %v to user %v has been added", permissions, user)
+
+	return nil
+}
+
+func (sc SonarClient) AddPermissionsToGroup(groupName string, permissions string) error {
+	log.Printf("Start adding permissions %v to group %v", permissions, groupName)
+	resp, err := sc.resty.R().
+		SetHeader("Content-Type", "application/json").
+		SetQueryParams(map[string]string{
+			"groupName":  groupName,
+			"permission": permissions}).
+		Post("/permissions/add_group")
+	if err != nil || resp.IsError() {
+		return err
+	}
+
+	log.Printf("Permissions %v to group %v has been added", permissions, groupName)
+
+	return nil
+}

@@ -57,6 +57,10 @@ required = [
   version = "=v0.1.10"
 
 [[override]]
+  name = "github.com/gotestyourself/gotest.tools"
+  version = "=v2.3.0"
+
+[[override]]
   name = "github.com/dchest/uniuri"
   revision = "8902c56451e9b58ff940bbe5fec35d5f9c04584a"
 
