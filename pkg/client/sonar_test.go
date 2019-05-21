@@ -7,11 +7,13 @@ import (
 )
 
 const (
-	url      = "https://sonar-mr-1944-1-edp-cicd.delivery.aws.main.edp.projects.epam.com/api"
-	username = "admin"
+	url             = "https://sonar-mr-1944-1-edp-cicd.delivery.aws.main.edp.projects.epam.com/api"
+	username        = "admin"
 	jenkinsUsername = "kostenko"
-	groupName = "non-interactive-users"
-	token     = ""
+	groupName       = "non-interactive-users"
+	token           = ""
+	webhookName     = "jenkins"
+	webhookUrl      = "http://jenkins:8080/sonarqube-webhook/"
 )
 
 func TestExampleConfiguration_checkProfileExist(t *testing.T) {
@@ -151,5 +153,33 @@ func TestExampleConfiguration_GenerateUserToken(t *testing.T) {
 	tokenPass, err := sc.GenerateUserToken(jenkinsUsername)
 	if err != nil {
 		log.Print(*tokenPass, err)
+	}
+}
+
+func TestExampleConfiguration_checkWebhook(t *testing.T) {
+	sc := SonarClient{}
+	err := sc.InitNewRestClient(url, username, token)
+	if err != nil {
+		log.Print(err)
+	}
+
+	exist, err := sc.checkWebhookExist(webhookName)
+	if err != nil {
+		log.Print(err)
+	}
+
+	log.Println(exist)
+}
+
+func TestExampleConfiguration_AddWebhook(t *testing.T) {
+	sc := SonarClient{}
+	err := sc.InitNewRestClient(url, username, token)
+	if err != nil {
+		log.Print(err)
+	}
+
+	err = sc.AddWebhook(webhookName, webhookUrl)
+	if err != nil {
+		log.Print(err)
 	}
 }

@@ -345,3 +345,48 @@ func (sc SonarClient) checkUserTokenExist(userName string) (bool, error) {
 
 	return true, nil
 }
+
+func (sc SonarClient) AddWebhook(webhookName string, webhookUrl string) error {
+	log.Printf("Start creating webhook %v in Sonar", webhookName)
+	webHookExist, err := sc.checkWebhookExist(webhookName)
+	if err != nil {
+		return err
+	}
+
+	if webHookExist {
+		log.Printf("Webhook %v already exist in Sonar", webhookName)
+		return nil
+	}
+
+	resp, err := sc.resty.R().
+		SetHeader("Content-Type", "application/json").
+		SetQueryParams(map[string]string{
+			"name": webhookName,
+			"url":  webhookUrl}).
+		Post("/webhooks/create")
+	if err != nil || resp.IsError() {
+		return err
+	}
+	log.Printf("Webhook %v has been created", webhookName)
+
+	return nil
+}
+
+func (sc SonarClient) checkWebhookExist(webhookName string) (bool, error) {
+	resp, err := sc.resty.R().
+		Get("/webhooks/list")
+	if err != nil || resp.IsError() {
+		return false, err
+	}
+
+	var raw map[string][]map[string]interface{}
+	err = json.Unmarshal(resp.Body(), &raw)
+
+	for _, v := range raw["webhooks"] {
+		if v["name"] == webhookName {
+			return true, nil
+		}
+	}
+
+	return false, nil
+}

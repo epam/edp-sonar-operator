@@ -14,11 +14,12 @@ import (
 )
 
 const (
-	StatusInstall = "installing"
-	StatusFailed  = "failed"
-	StatusCreated = "created"
+	StatusInstall   = "installing"
+	StatusFailed    = "failed"
+	StatusCreated   = "created"
 	JenkinsUsername = "jenkins"
 	GroupName       = "non-interactive-users"
+	WebhookUrl      = "http://jenkins:8080/sonarqube-webhook/"
 )
 
 type Client struct {
@@ -98,6 +99,11 @@ func (s SonarServiceImpl) Configure(instance v1alpha1.Sonar) error {
 	}
 
 	err = sc.AddPermissionsToGroup(GroupName, "scan")
+	if err != nil {
+		return err
+	}
+
+	err = sc.AddWebhook(JenkinsUsername, WebhookUrl)
 	if err != nil {
 		return err
 	}
