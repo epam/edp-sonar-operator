@@ -7,13 +7,15 @@ import (
 )
 
 const (
-	url             = "https://sonar-mr-1944-1-edp-cicd.delivery.aws.main.edp.projects.epam.com/api"
-	username        = "admin"
-	jenkinsUsername = "kostenko"
-	groupName       = "non-interactive-users"
-	token           = ""
-	webhookName     = "jenkins"
-	webhookUrl      = "http://jenkins:8080/sonarqube-webhook/"
+	url                 = "https://sonar-mr-1944-1-edp-cicd.delivery.aws.main.edp.projects.epam.com/api"
+	username            = "admin"
+	jenkinsUsername     = "kostenko"
+	jenkinsUserLogin    = "jenkins"
+	jenkinsUserpassword = "password"
+	groupName           = "non-interactive-users"
+	token               = ""
+	webhookName         = "jenkins"
+	webhookUrl          = "http://jenkins:8080/sonarqube-webhook/"
 )
 
 func TestExampleConfiguration_checkProfileExist(t *testing.T) {
@@ -123,6 +125,19 @@ func TestExampleConfiguration_AddPermissionsToGroup(t *testing.T) {
 	}
 
 	err = cs.AddPermissionsToGroup(groupName, "scan")
+	if err != nil {
+		log.Print(err)
+	}
+}
+
+func TestExampleConfiguration_CreateUser(t *testing.T) {
+	cs := SonarClient{}
+	err := cs.InitNewRestClient(url, username, "password")
+	if err != nil {
+		log.Print(err)
+	}
+
+	err = cs.CreateUser(jenkinsUserLogin, jenkinsUsername, jenkinsUserpassword)
 	if err != nil {
 		log.Print(err)
 	}

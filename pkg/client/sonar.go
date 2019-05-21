@@ -204,6 +204,37 @@ func (sc SonarClient) setDefaultProfile() error {
 	return nil
 }
 
+func (sc *SonarClient) CreateUser(login string, name string, password string) error {
+	resp, err := sc.resty.R().
+		Get("/users/search?q=" + login)
+
+	if err != nil {
+		logErrorAndReturn(err)
+	}
+
+	var raw map[string][]map[string]interface{}
+	err = json.Unmarshal(resp.Body(), &raw)
+
+	for _, v := range raw["users"] {
+		if v["login"] == login {
+			return nil
+		}
+	}
+
+	resp, err = sc.resty.R().
+		SetBody("login="+login+"&name="+name+"&password="+password).
+		SetHeader("Content-Type", "application/x-www-form-urlencoded").
+		Post("/users/create")
+
+	if err != nil || resp.IsError() {
+		logErrorAndReturn(errors.New(fmt.Sprintf("Create user %s unsuccessful\nError: %v\nResponse code: %v",
+			login, err, resp.StatusCode())))
+	}
+
+	log.Printf("User %s in Sonar has been created", login)
+	return nil
+}
+
 func (sc SonarClient) CreateGroup(groupName string) error {
 	log.Printf("Start creating group %v in Sonar", groupName)
 	groupExist, err := sc.checkGroupExist(groupName)

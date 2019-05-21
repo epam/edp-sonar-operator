@@ -30,6 +30,7 @@ type SonarService interface {
 	// This is an entry point for service package. Invoked in err = r.service.Install(*instance) sonar_controller.go, Reconcile method.
 	Install(instance v1alpha1.Sonar) error
 	Configure(instance v1alpha1.Sonar) error
+	ExposeConfiguration(instance v1alpha1.Sonar) error
 }
 
 func NewSonarService(platformService PlatformService, k8sClient client.Client) SonarService {
@@ -40,6 +41,55 @@ type SonarServiceImpl struct {
 	// Providing sonar service implementation through the interface (platform abstract)
 	platformService PlatformService
 	k8sClient       client.Client
+}
+
+func (s SonarServiceImpl) ExposeConfiguration(instance v1alpha1.Sonar) error {
+	log.Println("Sonar expose configuration has been started")
+	sonarApiUrl := fmt.Sprintf("http://%v.%v:9000/api", instance.Name, instance.Namespace)
+
+	credentials := s.platformService.GetSecret(instance.Namespace, instance.Name+"-admin-password")
+	if credentials == nil {
+		logErrorAndReturn(errors.New("Sonar secret not found. Configuration failed"))
+	}
+	password := string(credentials["password"])
+
+	sc := sonarClient.SonarClient{}
+	err := sc.InitNewRestClient(sonarApiUrl, "admin", password)
+	if err != nil {
+		return logErrorAndReturn(err)
+	}
+
+	jenkinsPassword := uniuri.New()
+	err = sc.CreateUser("jenkins", "Jenkins", jenkinsPassword)
+	if err != nil {
+		return err
+	}
+
+	perf := s.platformService.GetConfigmap(instance.Namespace, "user-settings")
+
+	if perfIntergation, ok := perf["perf_integration_enabled"]; ok && perfIntergation == "true" {
+		perfPassword := uniuri.New()
+
+		perfSecret := map[string][]byte{
+			"password": []byte(perfPassword),
+		}
+
+		err = s.platformService.CreateSecret(instance, "sonar-perfuser-password", perfSecret)
+		if err != nil {
+			return resourceActionFailed(&instance, err)
+		}
+
+		err = sc.CreateUser("perf", "Perf", perfPassword)
+		if err != nil {
+			return err
+		}
+
+	} else {
+		log.Println("Perf integration disabled or can't be determined")
+	}
+
+	log.Println("Sonar expose configuration has been finished")
+	return nil
 }
 
 func (s SonarServiceImpl) Configure(instance v1alpha1.Sonar) error {
@@ -73,10 +123,10 @@ func (s SonarServiceImpl) Configure(instance v1alpha1.Sonar) error {
 	plugins := []string{"authoidc", "checkstyle", "findbugs", "pmd"}
 	sc.InstallPlugins(plugins)
 
-	_, err = sc.UploadProfile()
+	/*_, err = sc.UploadProfile()
 	if err != nil {
 		return err
-	}
+	}*/
 
 	_, err = sc.GenerateUserToken(JenkinsUsername)
 	if err != nil {
