@@ -101,16 +101,17 @@ func (s SonarServiceImpl) Configure(instance v1alpha1.Sonar) error {
 	if err != nil {
 		return logErrorAndReturn(err)
 	}
-
+	// TODO(Serhii Shydlovskyi): Error handling here ?
 	sc.WaitForStatusIsUp(60, 10)
+
 
 	credentials := s.platformService.GetSecret(instance.Namespace, instance.Name+"-admin-password")
 	if credentials == nil {
-		logErrorAndReturn(errors.New("Sonar secret not found. Configuration failed"))
+		return logErrorAndReturn(errors.New("Sonar secret not found. Configuration failed"))
 	}
 	password := string(credentials["password"])
-
-	err = sc.ChangePassword("admin", "admin", password)
+	// TODO(Serhii Shydlovskyi): Error handling here ?
+	sc.ChangePassword("admin", "admin", password)
 	if err != nil {
 		return logErrorAndReturn(err)
 	}
@@ -121,6 +122,7 @@ func (s SonarServiceImpl) Configure(instance v1alpha1.Sonar) error {
 	}
 
 	plugins := []string{"authoidc", "checkstyle", "findbugs", "pmd"}
+	// TODO(Serhii Shydlovskyi): Error handling here ?
 	sc.InstallPlugins(plugins)
 
 	/*_, err = sc.UploadProfile()
@@ -156,6 +158,11 @@ func (s SonarServiceImpl) Configure(instance v1alpha1.Sonar) error {
 	err = sc.AddWebhook(JenkinsUsername, WebhookUrl)
 	if err != nil {
 		return err
+	}
+
+	err = sc.ConfigureGeneralSettings()
+	if err != nil {
+		return logErrorAndReturn(err)
 	}
 
 	log.Println("Sonar component configuration has been finished")

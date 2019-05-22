@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"gopkg.in/resty.v1"
 	"log"
+	"reflect"
 	"strings"
 	"time"
 )
@@ -40,11 +41,11 @@ func (sc *SonarClient) ChangePassword(user string, oldPassword string, newPasswo
 		Post("/users/change_password")
 
 	if err != nil {
-		logErrorAndReturn(err)
+		return logErrorAndReturn(err)
 	}
 
 	if resp.IsError() {
-		logErrorAndReturn(errors.New(fmt.Sprintf("Password change unsuccessful - %v", resp.Status())))
+		return logErrorAndReturn(errors.New(fmt.Sprintf("Password change unsuccessful - %v", resp.Status())))
 	}
 
 	log.Printf("Password for user %v changed successfully", user)
@@ -416,6 +417,59 @@ func (sc SonarClient) checkWebhookExist(webhookName string) (bool, error) {
 	for _, v := range raw["webhooks"] {
 		if v["name"] == webhookName {
 			return true, nil
+		}
+	}
+
+	return false, nil
+}
+//TODO(Serhii Shydlovskyi): Current implementation works ONLY for sonar.typescript.lcov.reportPaths. Requires effort to generalize it.
+func (sc SonarClient) ConfigureGeneralSettings() error {
+	key := "sonar.typescript.lcov.reportPaths"
+	reportPath := "coverage/lcov.info"
+
+	generalSettingsExist, err := sc.checkGeneralSetting(key, reportPath)
+	if err != nil {
+		return logErrorAndReturn(err)
+	}
+
+	if generalSettingsExist {
+		return nil
+	}
+
+	log.Printf("Configuring general settings.")
+	resp, err := sc.resty.R().
+		SetHeader("Content-Type", "application/json").
+		SetQueryParams(
+			map[string]string{
+				"key":    key,
+				"values": reportPath}).
+		Post("/settings/set")
+	if err != nil || resp.IsError() {
+		log.Printf("%v", resp)
+		return err
+	}
+
+	return nil
+}
+
+func (sc SonarClient) checkGeneralSetting(key string, value string) (bool, error) {
+	resp, err := sc.resty.R().
+		Get("/settings/values")
+	if err != nil || resp.IsError() {
+		return false, err
+	}
+
+	var raw map[string][]map[string]interface{}
+	err = json.Unmarshal(resp.Body(), &raw)
+
+	for _, v := range raw["settings"] {
+		if v["key"] == key {
+			s := reflect.ValueOf(v["values"])
+			for i := 0; i < s.Len(); i++ {
+				if value == s.Index(i).Interface() {
+					return true, nil
+				}
+			}
 		}
 	}
 

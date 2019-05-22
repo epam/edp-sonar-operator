@@ -158,6 +158,7 @@ func (service OpenshiftService) CreateSecurityContext(sonar v1alpha1.Sonar, sa *
 		return logErrorAndReturn(err)
 
 	} else {
+		// TODO(Serhii Shydlovskyi): Reflect reports that present users and currently stored in object are different for some reason.
 		if !reflect.DeepEqual(sonarSCC.Users, sonarSccObject.Users) {
 
 			sonarSCC, err = service.securityClient.SecurityContextConstraints().Update(sonarSccObject)
@@ -218,8 +219,7 @@ func (service OpenshiftService) CreateExternalEndpoint(sonar v1alpha1.Sonar) err
 }
 
 func (service OpenshiftService) CreateDbDeployConf(sonar v1alpha1.Sonar) error {
-	log.Printf("Start creating database deployment config for Sonar %v %v in namespace %v", sonar.Name,
-		sonar.Spec.Version, sonar.Namespace)
+
 	labels := generateLabels(sonar.Name)
 	name := sonar.Name + "-db"
 
@@ -271,6 +271,7 @@ func (service OpenshiftService) CreateDeployConf(sonar v1alpha1.Sonar) error {
 		return logErrorAndReturn(err)
 	}
 
+	// TODO(Serhii Shydlovskyi): I don't think that this is required to be logged every time the loop goes though.
 	if sonarDc.Status.AvailableReplicas > 0 {
 		log.Printf("DeploymentConfig for Sonar has been created")
 	} else {
