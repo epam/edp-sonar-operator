@@ -16,6 +16,9 @@ const (
 	token               = ""
 	webhookName         = "jenkins"
 	webhookUrl          = "http://jenkins:8080/sonarqube-webhook/"
+	defaultProfileName  = "Sonar way"
+	profileName         = "EDP way"
+	ProfilePath         = "../configs/quality-profile.xml"
 )
 
 func TestExampleConfiguration_checkProfileExist(t *testing.T) {
@@ -25,7 +28,7 @@ func TestExampleConfiguration_checkProfileExist(t *testing.T) {
 		log.Print(err)
 	}
 
-	exist, result, err := cs.checkProfileExist()
+	exist, result, _, err := cs.checkProfileExist(defaultProfileName)
 	if err != nil {
 		log.Print(err)
 	}
@@ -40,7 +43,7 @@ func TestExampleConfiguration_UploadProfile(t *testing.T) {
 		log.Print(err)
 	}
 
-	id, err := cs.UploadProfile()
+	id, err := cs.UploadProfile(profileName, ProfilePath)
 	if err != nil {
 		log.Print(err)
 	}

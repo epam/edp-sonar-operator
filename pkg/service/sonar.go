@@ -20,6 +20,7 @@ const (
 	JenkinsUsername = "jenkins"
 	GroupName       = "non-interactive-users"
 	WebhookUrl      = "http://jenkins:8080/sonarqube-webhook/"
+	ProfilePath     = "../configs/quality-profile.xml"
 )
 
 type Client struct {
@@ -123,6 +124,7 @@ func (s SonarServiceImpl) ExposeConfiguration(instance v1alpha1.Sonar) error {
 func (s SonarServiceImpl) Configure(instance v1alpha1.Sonar) error {
 	log.Println("Sonar component configuration has been started")
 	sonarApiUrl := fmt.Sprintf("http://%v.%v:9000/api", instance.Name, instance.Namespace)
+	//sonarApiUrl := "https://example-sonar-am-sonar-operator-test.delivery.aws.main.edp.projects.epam.com/api"
 
 	sc := sonarClient.SonarClient{}
 	err := sc.InitNewRestClient(sonarApiUrl, "admin", "admin")
@@ -140,22 +142,37 @@ func (s SonarServiceImpl) Configure(instance v1alpha1.Sonar) error {
 	// TODO(Serhii Shydlovskyi): Error handling here ?
 	sc.ChangePassword("admin", "admin", password)
 	if err != nil {
-		return logErrorAndReturn(err)
+		return err
 	}
 
 	err = sc.InitNewRestClient(sonarApiUrl, "admin", password)
 	if err != nil {
-		return logErrorAndReturn(err)
+		return err
 	}
 
 	plugins := []string{"authoidc", "checkstyle", "findbugs", "pmd"}
-	// TODO(Serhii Shydlovskyi): Error handling here ?
-	sc.InstallPlugins(plugins)
-
-	/*_, err = sc.UploadProfile()
+	err = sc.InstallPlugins(plugins)
 	if err != nil {
 		return err
-	}*/
+	}
+
+	_, err = sc.UploadProfile("EDP way", ProfilePath)
+	if err != nil {
+		return err
+	}
+
+	qgContidions := []map[string]string{
+		{"error": "80", "metric": "new_coverage", "op": "LT", "period": "1"},
+		{"error": "0", "metric": "test_errors", "op": "GT"},
+		{"error": "3", "metric": "new_duplicated_lines_density", "op": "GT", "period": "1"},
+		{"error": "0", "metric": "test_failures", "op": "GT"},
+		{"error": "0", "metric": "blocker_violations", "op": "GT"},
+		{"error": "0", "metric": "critical_violations", "op": "GT"},
+	}
+	_, err = sc.CreateQualityGate("EDP way", qgContidions)
+	if err != nil {
+		return err
+	}
 
 	err = sc.CreateGroup(GroupName)
 	if err != nil {

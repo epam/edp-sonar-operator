@@ -9,7 +9,7 @@ ENV OPERATOR=/usr/local/bin/sonar-operator \
 COPY sonar-operator ${OPERATOR}
 
 COPY bin /usr/local/bin
-COPY configs /usr/local/bin/configs
+COPY configs /usr/local/configs
 
 RUN  chmod u+x /usr/local/bin/user_setup && \
      chmod ugo+x /usr/local/bin/entrypoint && \

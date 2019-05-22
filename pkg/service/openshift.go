@@ -219,7 +219,6 @@ func (service OpenshiftService) CreateExternalEndpoint(sonar v1alpha1.Sonar) err
 }
 
 func (service OpenshiftService) CreateDbDeployConf(sonar v1alpha1.Sonar) error {
-
 	labels := generateLabels(sonar.Name)
 	name := sonar.Name + "-db"
 
@@ -265,17 +264,9 @@ func (service OpenshiftService) CreateDeployConf(sonar v1alpha1.Sonar) error {
 			return logErrorAndReturn(err)
 		}
 
-		log.Printf("DeploymentConfig for Sonar %s/%s has been created in namespace %v",
-			sonarDcObject.Name, sonar.Spec.Version, sonarDcObject.Namespace)
+		log.Printf("DeploymentConfig %s/%s has been created", sonarDc.Namespace, sonarDc.Name)
 	} else if err != nil {
 		return logErrorAndReturn(err)
-	}
-
-	// TODO(Serhii Shydlovskyi): I don't think that this is required to be logged every time the loop goes though.
-	if sonarDc.Status.AvailableReplicas > 0 {
-		log.Printf("DeploymentConfig for Sonar has been created")
-	} else {
-		log.Printf("DeploymentConfig for Sonar has not been created")
 	}
 
 	return nil
