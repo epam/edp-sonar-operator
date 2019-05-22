@@ -60,9 +60,35 @@ func (s SonarServiceImpl) ExposeConfiguration(instance v1alpha1.Sonar) error {
 	}
 
 	jenkinsPassword := uniuri.New()
-	err = sc.CreateUser("jenkins", "Jenkins", jenkinsPassword)
+	err = sc.CreateUser(JenkinsUsername, "Jenkins", jenkinsPassword)
 	if err != nil {
 		return err
+	}
+
+	err = sc.AddUserToGroup(GroupName, JenkinsUsername)
+	if err != nil {
+		return err
+	}
+
+	err = sc.AddPermissionsToUser(JenkinsUsername, "admin")
+	if err != nil {
+		return err
+	}
+
+	ciToken, err := sc.GenerateUserToken(JenkinsUsername)
+	if err != nil {
+		return err
+	}
+
+	ciSecret := map[string][]byte{
+		"password": []byte(*ciToken),
+	}
+
+	if s.platformService.GetSecret(instance.Namespace, "sonar-ciuser-token") == nil {
+		err = s.platformService.CreateSecret(instance, "sonar-ciuser-token", ciSecret)
+		if err != nil {
+			return resourceActionFailed(&instance, err)
+		}
 	}
 
 	perf := s.platformService.GetConfigmap(instance.Namespace, "user-settings")
@@ -70,18 +96,20 @@ func (s SonarServiceImpl) ExposeConfiguration(instance v1alpha1.Sonar) error {
 	if perfIntergation, ok := perf["perf_integration_enabled"]; ok && perfIntergation == "true" {
 		perfPassword := uniuri.New()
 
-		perfSecret := map[string][]byte{
-			"password": []byte(perfPassword),
-		}
-
-		err = s.platformService.CreateSecret(instance, "sonar-perfuser-password", perfSecret)
-		if err != nil {
-			return resourceActionFailed(&instance, err)
-		}
-
 		err = sc.CreateUser("perf", "Perf", perfPassword)
 		if err != nil {
 			return err
+		}
+
+		if s.platformService.GetSecret(instance.Namespace, "sonar-perfuser-password") == nil {
+			perfSecret := map[string][]byte{
+				"password": []byte(perfPassword),
+			}
+
+			err = s.platformService.CreateSecret(instance, "sonar-perfuser-password", perfSecret)
+			if err != nil {
+				return resourceActionFailed(&instance, err)
+			}
 		}
 
 	} else {
@@ -103,7 +131,6 @@ func (s SonarServiceImpl) Configure(instance v1alpha1.Sonar) error {
 	}
 	// TODO(Serhii Shydlovskyi): Error handling here ?
 	sc.WaitForStatusIsUp(60, 10)
-
 
 	credentials := s.platformService.GetSecret(instance.Namespace, instance.Name+"-admin-password")
 	if credentials == nil {
@@ -130,22 +157,7 @@ func (s SonarServiceImpl) Configure(instance v1alpha1.Sonar) error {
 		return err
 	}*/
 
-	_, err = sc.GenerateUserToken(JenkinsUsername)
-	if err != nil {
-		return err
-	}
-
 	err = sc.CreateGroup(GroupName)
-	if err != nil {
-		return err
-	}
-
-	err = sc.AddUserToGroup(GroupName, JenkinsUsername)
-	if err != nil {
-		return err
-	}
-
-	err = sc.AddPermissionsToUser(JenkinsUsername, "admin")
 	if err != nil {
 		return err
 	}

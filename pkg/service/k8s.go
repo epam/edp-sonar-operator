@@ -43,7 +43,7 @@ func (service K8SService) GetConfigmap(namespace string, name string) map[string
 
 func (service K8SService) GetSecret(namespace string, name string) map[string][]byte {
 	sonarSecret, err := service.coreClient.Secrets(namespace).Get(name, metav1.GetOptions{})
-	if err != nil {
+	if err != nil && k8serr.IsNotFound(err) {
 		return nil
 	}
 	return sonarSecret.Data
