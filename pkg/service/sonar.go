@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"github.com/dchest/uniuri"
 	"gopkg.in/resty.v1"
@@ -20,7 +21,10 @@ const (
 	StatusConfigured  = "configured"
 	StatusReady       = "ready"
 	StatuseExposeConf = "exposing config"
-	JenkinsUsername   = "jenkins"
+	JenkinsLogin      = "jenkins"
+	JenkinsUsername   = "Jenkins"
+	ReaduserLogin     = "read"
+	ReaduserUsername  = "Read-only user"
 	GroupName         = "non-interactive-users"
 	WebhookUrl        = "http://jenkins:8080/sonarqube-webhook/"
 	ProfilePath       = "/usr/local/configs/quality-profile.xml"
@@ -57,11 +61,14 @@ func (s SonarServiceImpl) ExposeConfiguration(instance *v1alpha1.Sonar) error {
 	}
 
 	sonarApiUrl := fmt.Sprintf("http://%v.%v:9000/api", instance.Name, instance.Namespace)
+	sonarApiUrl = "https://example-sonar-voronin-test.delivery.aws.main.edp.projects.epam.com/api"
+	externalConfig := v1alpha1.SonarExternalConfiguration{nil, nil, nil}
 
 	credentials, err := s.platformService.GetSecret(instance.Namespace, instance.Name+"-admin-password")
 	if err != nil {
 		return s.resourceActionFailed(instance, err)
 	}
+
 	password := string(credentials["password"])
 
 	sc := sonarClient.SonarClient{}
@@ -71,22 +78,22 @@ func (s SonarServiceImpl) ExposeConfiguration(instance *v1alpha1.Sonar) error {
 	}
 
 	jenkinsPassword := uniuri.New()
-	err = sc.CreateUser(JenkinsUsername, "Jenkins", jenkinsPassword)
+	err = sc.CreateUser(JenkinsLogin, JenkinsUsername, jenkinsPassword)
 	if err != nil {
 		return s.resourceActionFailed(instance, err)
 	}
 
-	err = sc.AddUserToGroup(GroupName, JenkinsUsername)
+	err = sc.AddUserToGroup(GroupName, JenkinsLogin)
 	if err != nil {
 		return s.resourceActionFailed(instance, err)
 	}
 
-	err = sc.AddPermissionsToUser(JenkinsUsername, "admin")
+	err = sc.AddPermissionsToUser(JenkinsLogin, "admin")
 	if err != nil {
 		return s.resourceActionFailed(instance, err)
 	}
 
-	ciToken, err := sc.GenerateUserToken(JenkinsUsername)
+	ciToken, err := sc.GenerateUserToken(JenkinsLogin)
 	if err != nil {
 		return s.resourceActionFailed(instance, err)
 	}
@@ -96,36 +103,44 @@ func (s SonarServiceImpl) ExposeConfiguration(instance *v1alpha1.Sonar) error {
 			"password": []byte(*ciToken),
 		}
 
-		err = s.platformService.CreateSecret(*instance, "sonar-ciuser-token", ciSecret)
+		err = s.platformService.CreateSecret(*instance, instance.Name+"-ciuser-token", ciSecret)
 		if err != nil {
 			return s.resourceActionFailed(instance, err)
 		}
 	}
 
-	perf, err := s.platformService.GetConfigmap(instance.Namespace, "user-settings")
+	ciUser := &v1alpha1.SonarExternalConfigurationItem{instance.Name + "-ciuser-token", "Secret", "Token for CI tool user"}
+	adminUser := &v1alpha1.SonarExternalConfigurationItem{instance.Name + "-admin-password", "Secret", "Password for Sonar admin user"}
+	readUser := &v1alpha1.SonarExternalConfigurationItem{instance.Name + "-readuser-token", "Secret", "Token for read-only user"}
 
-	if perfIntergation, ok := perf["perf_integration_enabled"]; ok && perfIntergation == "true" {
-		perfPassword := uniuri.New()
+	readPassword := uniuri.New()
+	err = sc.CreateUser(ReaduserLogin, ReaduserUsername, readPassword)
+	if err != nil {
+		return s.resourceActionFailed(instance, err)
+	}
 
-		err = sc.CreateUser("perf", "Perf", perfPassword)
+	readToken, err := sc.GenerateUserToken(ReaduserLogin)
+	if err != nil {
+		return s.resourceActionFailed(instance, err)
+	}
+
+	if readToken != nil {
+		readSecret := map[string][]byte{
+			"password": []byte(*readToken),
+		}
+
+		err = s.platformService.CreateSecret(*instance, instance.Name+"-readuser-token", readSecret)
 		if err != nil {
 			return s.resourceActionFailed(instance, err)
 		}
+	}
 
-		if _, err := s.platformService.GetSecret(instance.Namespace, "sonar-perfuser-password");
-			err == nil {
-			perfSecret := map[string][]byte{
-				"password": []byte(perfPassword),
-			}
-
-			err = s.platformService.CreateSecret(*instance, "sonar-perfuser-password", perfSecret)
-			if err != nil {
-				return s.resourceActionFailed(instance, err)
-			}
-		}
-
-	} else {
-		log.Println("Perf integration disabled or can't be determined")
+	externalConfig.CiUser = ciUser
+	externalConfig.AdminUser = adminUser
+	externalConfig.ReadUser = readUser
+	err = s.updateExternalConfig(instance, externalConfig)
+	if err != nil {
+		return logErrorAndReturn(errors.New(fmt.Sprintf("Sonar expose configuration failed with error - %v", err)))
 	}
 
 	if instance.Status.Status == StatuseExposeConf {
@@ -155,13 +170,13 @@ func (s SonarServiceImpl) Configure(instance *v1alpha1.Sonar) error {
 	}
 
 	sonarApiUrl := fmt.Sprintf("http://%v.%v:9000/api", instance.Name, instance.Namespace)
-	//sonarApiUrl := "https://example-sonar-am-sonar-operator-test.delivery.aws.main.edp.projects.epam.com/api"
-
+	sonarApiUrl = "https://example-sonar-voronin-test.delivery.aws.main.edp.projects.epam.com/api"
 	sc := sonarClient.SonarClient{}
 	err := sc.InitNewRestClient(sonarApiUrl, "admin", "admin")
 	if err != nil {
 		return s.resourceActionFailed(instance, err)
 	}
+
 	// TODO(Serhii Shydlovskyi): Error handling here ?
 	sc.WaitForStatusIsUp(60, 10)
 
@@ -187,10 +202,10 @@ func (s SonarServiceImpl) Configure(instance *v1alpha1.Sonar) error {
 		return s.resourceActionFailed(instance, err)
 	}
 
-	_, err = sc.UploadProfile("EDP way", ProfilePath)
+	/*_, err = sc.UploadProfile("EDP way", ProfilePath)
 	if err != nil {
 		return s.resourceActionFailed(instance, err)
-	}
+	}*/
 
 	qgContidions := []map[string]string{
 		{"error": "80", "metric": "new_coverage", "op": "LT", "period": "1"},
@@ -215,7 +230,7 @@ func (s SonarServiceImpl) Configure(instance *v1alpha1.Sonar) error {
 		return s.resourceActionFailed(instance, err)
 	}
 
-	err = sc.AddWebhook(JenkinsUsername, WebhookUrl)
+	err = sc.AddWebhook(JenkinsLogin, WebhookUrl)
 	if err != nil {
 		return s.resourceActionFailed(instance, err)
 	}
@@ -334,6 +349,16 @@ func (s SonarServiceImpl) updateStatus(instance *v1alpha1.Sonar, status string) 
 	}
 
 	log.Printf("Status for Sonar %v has been updated to '%v' at %v.", instance.Name, status, instance.Status.LastTimeUpdated)
+	return nil
+}
+
+func (s SonarServiceImpl) updateExternalConfig(instance *v1alpha1.Sonar, config v1alpha1.SonarExternalConfiguration) error {
+	instance.Spec.SonarExternalConfiguration = config
+
+	err := s.k8sClient.Update(context.TODO(), instance)
+	if err != nil {
+		return err
+	}
 	return nil
 }
 

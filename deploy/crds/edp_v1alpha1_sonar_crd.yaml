@@ -29,6 +29,48 @@ spec:
           type: object
         spec:
           properties:
+            externalConfiguration:
+              properties:
+                adminUser:
+                  properties:
+                    description:
+                      type: string
+                    kind:
+                      type: string
+                    name:
+                      type: string
+                  required:
+                  - name
+                  - kind
+                  - description
+                  type: object
+                ciUser:
+                  properties:
+                    description:
+                      type: string
+                    kind:
+                      type: string
+                    name:
+                      type: string
+                  required:
+                  - name
+                  - kind
+                  - description
+                  type: object
+                readUser:
+                  properties:
+                    description:
+                      type: string
+                    kind:
+                      type: string
+                    name:
+                      type: string
+                  required:
+                  - name
+                  - kind
+                  - description
+                  type: object
+              type: object
             type:
               description: 'INSERT ADDITIONAL SPEC FIELDS - desired state of cluster
                 Important: Run "operator-sdk generate k8s" to regenerate code after
