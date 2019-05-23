@@ -94,19 +94,19 @@ func (r *ReconcileSonar) Reconcile(request reconcile.Request) (reconcile.Result,
 		return reconcile.Result{}, err
 	}
 
-	err = r.service.Install(*instance)
+	err = r.service.Install(instance)
 	if err != nil {
 		logPrint.Printf("[ERROR] Cannot install Sonar %s %s. The reason: %s", instance.Name, instance.Spec.Version, err)
 		return reconcile.Result{RequeueAfter: 10 * time.Second}, nil
 	}
 
-	err = r.service.Configure(*instance)
+	err = r.service.Configure(instance)
 	if err != nil {
 		logPrint.Printf("[ERROR] Cannot run Sonar post-configuration %s %s. The reason: %s", instance.Name, instance.Spec.Version, err)
 		return reconcile.Result{RequeueAfter: 10 * time.Second}, nil
 	}
 
-	err = r.service.ExposeConfiguration(*instance)
+	err = r.service.ExposeConfiguration(instance)
 	if err != nil {
 		logPrint.Printf("[ERROR] Cannot run Sonar expose configuration %s %s. The reason: %s", instance.Name, instance.Spec.Version, err)
 		return reconcile.Result{RequeueAfter: 10 * time.Second}, nil

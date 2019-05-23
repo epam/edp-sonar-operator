@@ -32,21 +32,27 @@ func (service *K8SService) Init(config *rest.Config, scheme *runtime.Scheme) err
 	return nil
 }
 
-func (service K8SService) GetConfigmap(namespace string, name string) map[string]string {
+func (service K8SService) GetConfigmap(namespace string, name string) (map[string]string, error) {
 	configmap, err := service.coreClient.ConfigMaps(namespace).Get(name, metav1.GetOptions{})
+
 	if err != nil && k8serr.IsNotFound(err) {
 		log.Printf("Config map %v in namespace %v not found", name, namespace)
-		return nil
+		return nil, nil
+	} else if err != nil {
+		return nil, logErrorAndReturn(err)
 	}
-	return configmap.Data
+	return configmap.Data, nil
 }
 
-func (service K8SService) GetSecret(namespace string, name string) map[string][]byte {
+func (service K8SService) GetSecret(namespace string, name string) (map[string][]byte, error) {
 	sonarSecret, err := service.coreClient.Secrets(namespace).Get(name, metav1.GetOptions{})
 	if err != nil && k8serr.IsNotFound(err) {
-		return nil
+		log.Printf("Secret %v in namespace %v not found", name, namespace)
+		return nil, nil
+	} else if err != nil {
+		return nil, logErrorAndReturn(err)
 	}
-	return sonarSecret.Data
+	return sonarSecret.Data, nil
 }
 
 func (service K8SService) CreateSecret(sonar v1alpha1.Sonar, name string, data map[string][]byte) error {

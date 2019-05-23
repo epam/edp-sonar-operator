@@ -108,7 +108,8 @@ func (sc SonarClient) InstallPlugins(plugins []string) error {
 				Post("/plugins/install")
 
 			if err != nil || resp.IsError() {
-				return logErrorAndReturn(errors.New(fmt.Sprintf("[ERROR] Installation of plugin %s failed - %s. Err - %s. Response - %s", plugin, err, resp.Status())))
+				return logErrorAndReturn(errors.New(fmt.Sprintf("[ERROR] Installation of plugin %s failed. Err - %s. Response - %s", plugin, err, resp.Status())))
+
 			}
 			log.Printf("Plugin %s has been installed", plugin)
 		}
@@ -303,7 +304,7 @@ func (sc *SonarClient) CreateUser(login string, name string, password string) er
 		Get("/users/search?q=" + login)
 
 	if err != nil {
-		logErrorAndReturn(err)
+		return logErrorAndReturn(err)
 	}
 
 	var raw map[string][]map[string]interface{}
@@ -321,7 +322,7 @@ func (sc *SonarClient) CreateUser(login string, name string, password string) er
 		Post("/users/create")
 
 	if err != nil || resp.IsError() {
-		logErrorAndReturn(errors.New(fmt.Sprintf("Create user %s unsuccessful\nError: %v\nResponse code: %v",
+		return logErrorAndReturn(errors.New(fmt.Sprintf("Create user %s unsuccessful\nError: %v\nResponse code: %v",
 			login, err, resp.StatusCode())))
 	}
 
