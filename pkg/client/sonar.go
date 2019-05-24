@@ -6,8 +6,6 @@ import (
 	"fmt"
 	"gopkg.in/resty.v1"
 	"log"
-	"os"
-	"path/filepath"
 	"reflect"
 	"strconv"
 	"strings"
@@ -229,8 +227,6 @@ func (sc SonarClient) setDefaultQualityGate(qgId string) error {
 }
 
 func (sc SonarClient) UploadProfile(profileName string, profilePath string) (*string, error) {
-	binaryDir, _ := filepath.Abs(filepath.Dir(os.Args[0]))
-	profilePath = fmt.Sprintf("%v/%v", binaryDir, profilePath)
 	profileExist, profileId, isDefault, err := sc.checkProfileExist(profileName)
 	if err != nil {
 		return nil, logErrorAndReturn(err)

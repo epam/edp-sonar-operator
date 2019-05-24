@@ -20,7 +20,7 @@ const (
 	JenkinsUsername = "jenkins"
 	GroupName       = "non-interactive-users"
 	WebhookUrl      = "http://jenkins:8080/sonarqube-webhook/"
-	ProfilePath     = "../configs/quality-profile.xml"
+	ProfilePath     = "/usr/local/configs/quality-profile.xml"
 )
 
 type Client struct {
