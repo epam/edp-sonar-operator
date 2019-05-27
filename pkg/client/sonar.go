@@ -114,7 +114,7 @@ func (sc SonarClient) InstallPlugins(plugins []string) error {
 		}
 	}
 	if needReboot {
-		//sc.Reboot()
+		sc.Reboot()
 		sc.WaitForStatusIsUp(60, 10)
 	}
 	return nil

@@ -61,7 +61,6 @@ func (s SonarServiceImpl) ExposeConfiguration(instance *v1alpha1.Sonar) error {
 	}
 
 	sonarApiUrl := fmt.Sprintf("http://%v.%v:9000/api", instance.Name, instance.Namespace)
-	sonarApiUrl = "https://example-sonar-voronin-test.delivery.aws.main.edp.projects.epam.com/api"
 	externalConfig := v1alpha1.SonarExternalConfiguration{nil, nil, nil}
 
 	credentials, err := s.platformService.GetSecret(instance.Namespace, instance.Name+"-admin-password")
@@ -170,7 +169,6 @@ func (s SonarServiceImpl) Configure(instance *v1alpha1.Sonar) error {
 	}
 
 	sonarApiUrl := fmt.Sprintf("http://%v.%v:9000/api", instance.Name, instance.Namespace)
-	sonarApiUrl = "https://example-sonar-voronin-test.delivery.aws.main.edp.projects.epam.com/api"
 	sc := sonarClient.SonarClient{}
 	err := sc.InitNewRestClient(sonarApiUrl, "admin", "admin")
 	if err != nil {
@@ -202,10 +200,10 @@ func (s SonarServiceImpl) Configure(instance *v1alpha1.Sonar) error {
 		return s.resourceActionFailed(instance, err)
 	}
 
-	/*_, err = sc.UploadProfile("EDP way", ProfilePath)
+	_, err = sc.UploadProfile("EDP way", ProfilePath)
 	if err != nil {
 		return s.resourceActionFailed(instance, err)
-	}*/
+	}
 
 	qgContidions := []map[string]string{
 		{"error": "80", "metric": "new_coverage", "op": "LT", "period": "1"},
