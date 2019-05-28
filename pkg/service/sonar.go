@@ -99,7 +99,8 @@ func (s SonarServiceImpl) ExposeConfiguration(instance *v1alpha1.Sonar) error {
 
 	if ciToken != nil {
 		ciSecret := map[string][]byte{
-			"token": []byte(*ciToken),
+			"username": []byte(JenkinsLogin),
+			"token":    []byte(*ciToken),
 		}
 
 		err = s.platformService.CreateSecret(*instance, instance.Name+"-ciuser-token", ciSecret)
@@ -125,7 +126,8 @@ func (s SonarServiceImpl) ExposeConfiguration(instance *v1alpha1.Sonar) error {
 
 	if readToken != nil {
 		readSecret := map[string][]byte{
-			"token": []byte(*readToken),
+			"username": []byte(ReaduserLogin),
+			"token":    []byte(*readToken),
 		}
 
 		err = s.platformService.CreateSecret(*instance, instance.Name+"-readuser-token", readSecret)
