@@ -14,20 +14,20 @@ import (
 )
 
 const (
-	StatusInstall     = "installing"
-	StatusFailed      = "failed"
-	StatusCreated     = "created"
-	StatusConfiguring = "configuring"
-	StatusConfigured  = "configured"
-	StatusReady       = "ready"
-	StatuseExposeConf = "exposing config"
-	JenkinsLogin      = "jenkins"
-	JenkinsUsername   = "Jenkins"
-	ReaduserLogin     = "read"
-	ReaduserUsername  = "Read-only user"
-	GroupName         = "non-interactive-users"
-	WebhookUrl        = "http://jenkins:8080/sonarqube-webhook/"
-	ProfilePath       = "/usr/local/configs/quality-profile.xml"
+	StatusInstall           = "installing"
+	StatusFailed            = "failed"
+	StatusCreated           = "created"
+	StatusConfiguring       = "configuring"
+	StatusConfigured        = "configured"
+	StatusReady             = "ready"
+	StatuseExposeConf       = "exposing config"
+	JenkinsLogin            = "jenkins"
+	JenkinsUsername         = "Jenkins"
+	ReaduserLogin           = "read"
+	ReaduserUsername        = "Read-only user"
+	NonInteractiveGroupName = "non-interactive-users"
+	WebhookUrl              = "http://jenkins:8080/sonarqube-webhook/"
+	ProfilePath             = "/usr/local/configs/quality-profile.xml"
 )
 
 type Client struct {
@@ -82,7 +82,7 @@ func (s SonarServiceImpl) ExposeConfiguration(instance *v1alpha1.Sonar) error {
 		return s.resourceActionFailed(instance, err)
 	}
 
-	err = sc.AddUserToGroup(GroupName, JenkinsLogin)
+	err = sc.AddUserToGroup(NonInteractiveGroupName, JenkinsLogin)
 	if err != nil {
 		return s.resourceActionFailed(instance, err)
 	}
@@ -134,6 +134,11 @@ func (s SonarServiceImpl) ExposeConfiguration(instance *v1alpha1.Sonar) error {
 		if err != nil {
 			return s.resourceActionFailed(instance, err)
 		}
+	}
+
+	err = sc.AddUserToGroup(NonInteractiveGroupName, ReaduserLogin)
+	if err != nil {
+		return s.resourceActionFailed(instance, err)
 	}
 
 	externalConfig.CiUser = ciUser
@@ -220,12 +225,12 @@ func (s SonarServiceImpl) Configure(instance *v1alpha1.Sonar) error {
 		return s.resourceActionFailed(instance, err)
 	}
 
-	err = sc.CreateGroup(GroupName)
+	err = sc.CreateGroup(NonInteractiveGroupName)
 	if err != nil {
 		return s.resourceActionFailed(instance, err)
 	}
 
-	err = sc.AddPermissionsToGroup(GroupName, "scan")
+	err = sc.AddPermissionsToGroup(NonInteractiveGroupName, "scan")
 	if err != nil {
 		return s.resourceActionFailed(instance, err)
 	}
