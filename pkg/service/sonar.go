@@ -61,7 +61,7 @@ func (s SonarServiceImpl) ExposeConfiguration(instance *v1alpha1.Sonar) error {
 	}
 
 	sonarApiUrl := fmt.Sprintf("http://%v.%v:9000/api", instance.Name, instance.Namespace)
-	externalConfig := v1alpha1.SonarExternalConfiguration{nil, nil, nil}
+	externalConfig := v1alpha1.SonarExternalConfiguration{nil, nil, nil, nil}
 
 	credentials, err := s.platformService.GetSecret(instance.Namespace, instance.Name+"-admin-password")
 	if err != nil {
@@ -109,10 +109,6 @@ func (s SonarServiceImpl) ExposeConfiguration(instance *v1alpha1.Sonar) error {
 		}
 	}
 
-	ciUser := &v1alpha1.SonarExternalConfigurationItem{instance.Name + "-ciuser-token", "Secret", "Token for CI tool user"}
-	adminUser := &v1alpha1.SonarExternalConfigurationItem{instance.Name + "-admin-password", "Secret", "Password for Sonar admin user"}
-	readUser := &v1alpha1.SonarExternalConfigurationItem{instance.Name + "-readuser-token", "Secret", "Token for read-only user"}
-
 	readPassword := uniuri.New()
 	err = sc.CreateUser(ReaduserLogin, ReaduserUsername, readPassword)
 	if err != nil {
@@ -141,9 +137,22 @@ func (s SonarServiceImpl) ExposeConfiguration(instance *v1alpha1.Sonar) error {
 		return s.resourceActionFailed(instance, err)
 	}
 
-	externalConfig.CiUser = ciUser
-	externalConfig.AdminUser = adminUser
-	externalConfig.ReadUser = readUser
+	identityServiceClientSecret := uniuri.New()
+	identityServiceClientCredenrials := map[string][]byte{
+		"client_id":     []byte(instance.Name),
+		"client_secret": []byte(identityServiceClientSecret),
+	}
+
+	err = s.platformService.CreateSecret(*instance, instance.Name+"-is-credentials", identityServiceClientCredenrials)
+	if err != nil {
+		return s.resourceActionFailed(instance, err)
+	}
+
+	externalConfig.CiUser = &v1alpha1.SonarExternalConfigurationItem{instance.Name + "-ciuser-token", "Secret", "Token for CI tool user"}
+	externalConfig.AdminUser = &v1alpha1.SonarExternalConfigurationItem{instance.Name + "-admin-password", "Secret", "Password for Sonar admin user"}
+	externalConfig.ReadUser = &v1alpha1.SonarExternalConfigurationItem{instance.Name + "-readuser-token", "Secret", "Token for read-only user"}
+	externalConfig.IsCredentials = &v1alpha1.SonarExternalConfigurationItem{instance.Name + "-is-credentials", "Secret", "Credentials for Identity Server integration"}
+
 	err = s.updateExternalConfig(instance, externalConfig)
 	if err != nil {
 		return logErrorAndReturn(errors.New(fmt.Sprintf("Sonar expose configuration failed with error - %v", err)))
@@ -176,6 +185,7 @@ func (s SonarServiceImpl) Configure(instance *v1alpha1.Sonar) error {
 	}
 
 	sonarApiUrl := fmt.Sprintf("http://%v.%v:9000/api", instance.Name, instance.Namespace)
+
 	sc := sonarClient.SonarClient{}
 	err := sc.InitNewRestClient(sonarApiUrl, "admin", "admin")
 	if err != nil {

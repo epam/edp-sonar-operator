@@ -54,6 +54,11 @@ func (in *SonarExternalConfiguration) DeepCopyInto(out *SonarExternalConfigurati
 		*out = new(SonarExternalConfigurationItem)
 		**out = **in
 	}
+	if in.IsCredentials != nil {
+		in, out := &in.IsCredentials, &out.IsCredentials
+		*out = new(SonarExternalConfigurationItem)
+		**out = **in
+	}
 	return
 }
 

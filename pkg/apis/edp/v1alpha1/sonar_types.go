@@ -34,9 +34,10 @@ type SonarExternalConfigurationItem struct {
 }
 
 type SonarExternalConfiguration struct {
-	CiUser    *SonarExternalConfigurationItem `json:"ciUser,omitempty"`
-	ReadUser  *SonarExternalConfigurationItem `json:"readUser,omitempty"`
-	AdminUser *SonarExternalConfigurationItem `json:"adminUser,omitempty"`
+	CiUser        *SonarExternalConfigurationItem `json:"ciUser,omitempty"`
+	ReadUser      *SonarExternalConfigurationItem `json:"readUser,omitempty"`
+	AdminUser     *SonarExternalConfigurationItem `json:"adminUser,omitempty"`
+	IsCredentials *SonarExternalConfigurationItem `json:"isCredentials,omitempty"`
 }
 
 // SonarStatus defines the observed state of Sonar
