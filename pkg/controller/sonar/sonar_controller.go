@@ -112,12 +112,6 @@ func (r *ReconcileSonar) Reconcile(request reconcile.Request) (reconcile.Result,
 		return reconcile.Result{RequeueAfter: 10 * time.Second}, nil
 	}
 
-	err = r.service.Integration(instance)
-	if err != nil {
-		logPrint.Printf("[ERROR] Cannot run Sonar integration %s %s. The reason: %s", instance.Name, instance.Spec.Version, err)
-		return reconcile.Result{RequeueAfter: 10 * time.Second}, nil
-	}
-
 	reqLogger.Info("Reconciling Sonar component %s/%s has been finished", request.Namespace, request.Name)
 	return reconcile.Result{Requeue: false}, nil
 }

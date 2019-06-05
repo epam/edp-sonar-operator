@@ -84,16 +84,6 @@ func (service *OpenshiftService) Init(config *rest.Config, scheme *runtime.Schem
 
 	return nil
 }
-func (service OpenshiftService) GetRoute(namespace string, name string) (*routeV1Api.Route, error) {
-	route, err := service.routeClient.Routes(namespace).Get(name, metav1.GetOptions{})
-	if err != nil && k8serrors.IsNotFound(err) {
-		log.Printf("Route %v in namespace %v not found", name, namespace)
-		return nil, nil
-	} else if err != nil {
-		return nil, logErrorAndReturn(err)
-	}
-	return route, nil
-}
 
 func (service OpenshiftService) CreateSecurityContext(sonar v1alpha1.Sonar, sa *coreV1Api.ServiceAccount) error {
 

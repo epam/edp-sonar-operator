@@ -27,18 +27,16 @@ func checkPluginInstalled(pluginsList []string, plugin string) bool {
 }
 
 type SonarClient struct {
-	resty  resty.Client
-	ApiUrl string
+	resty resty.Client
 }
 
 func (sc *SonarClient) InitNewRestClient(url string, user string, password string) error {
 	sc.resty = *resty.SetHostURL(url).SetBasicAuth(user, password)
-	sc.ApiUrl = url
 	return nil
 }
 
 func (sc *SonarClient) ChangePassword(user string, oldPassword string, newPassword string) error {
-	resp, err := sc.resty.R().Get("/system/health")
+	resp, err := sc.resty.R().Get("/system/status")
 	if err == nil && resp.IsError() {
 		return nil
 	}
@@ -49,7 +47,7 @@ func (sc *SonarClient) ChangePassword(user string, oldPassword string, newPasswo
 		Post("/users/change_password")
 
 	if err != nil || resp.IsError() {
-		return logErrorAndReturn(errors.New(fmt.Sprintf("Password changing for user %s unsuccessful. Err - %v. Response - %s", user, err, resp.Status())))
+		return logErrorAndReturn(errors.New(fmt.Sprintf("[ERROR] Password changing for user %s unsuccessful. Err - %v. Response - %s", user, err, resp.Status())))
 	}
 
 	log.Printf("Password for user %v changed successfully", user)
@@ -62,7 +60,7 @@ func (sc SonarClient) Reboot() error {
 		Post("/system/restart")
 
 	if err != nil {
-		return logErrorAndReturn(errors.New(fmt.Sprintf("Sonar rebooting failed. Err - %v. Response - %s", err, resp.Status())))
+		return logErrorAndReturn(errors.New(fmt.Sprintf("[ERROR] Sonar rebooting failed. Err - %v. Response - %s", err, resp.Status())))
 	}
 
 	return nil
@@ -89,7 +87,7 @@ func (sc SonarClient) WaitForStatusIsUp(retryCount int, timeout time.Duration) e
 		R().
 		Get("/system/status")
 	if err != nil || resp.IsError() {
-		return logErrorAndReturn(errors.New(fmt.Sprintf("Checking Sonar status failed. Err - %v. Response - %s", err, resp.Status())))
+		return logErrorAndReturn(errors.New(fmt.Sprintf("[ERROR] Checking Sonar status failed. Err - %v. Response - %s", err, resp.Status())))
 	}
 	return nil
 }
@@ -110,7 +108,7 @@ func (sc SonarClient) InstallPlugins(plugins []string) error {
 				Post("/plugins/install")
 
 			if err != nil || resp.IsError() {
-				return logErrorAndReturn(errors.New(fmt.Sprintf("Installation of plugin %s failed. Err - %v. Response - %s", plugin, err, resp.Status())))
+				return logErrorAndReturn(errors.New(fmt.Sprintf("[ERROR] Installation of plugin %s failed. Err - %v. Response - %s", plugin, err, resp.Status())))
 			}
 			log.Printf("Plugin %s has been installed", plugin)
 		}
@@ -193,7 +191,7 @@ func (sc SonarClient) createCondition(conditionMap map[string]string) error {
 		SetQueryParams(conditionMap).
 		Post("/qualitygates/create_condition")
 	if err != nil || resp.IsError() {
-		return logErrorAndReturn(errors.New(fmt.Sprintf("Creating condition %s failed. Err - %v. Response - %s", conditionMap["metric"], err, resp.Status())))
+		return logErrorAndReturn(errors.New(fmt.Sprintf("[ERROR] Creating condition %s failed. Err - %v. Response - %s", conditionMap["metric"], err, resp.Status())))
 	}
 	return nil
 }
@@ -516,9 +514,12 @@ func (sc SonarClient) checkWebhookExist(webhookName string) (bool, error) {
 	return false, nil
 }
 
-//TODO(Serhii Shydlovskyi): Current implementation works ONLY for single value setting. Requires effort to generalize it and use for several values simultaneously.
-func (sc SonarClient) ConfigureGeneralSettings(valueType string, key string, value string) error {
-	generalSettingsExist, err := sc.checkGeneralSetting(key, value)
+//TODO(Serhii Shydlovskyi): Current implementation works ONLY for sonar.typescript.lcov.reportPaths. Requires effort to generalize it.
+func (sc SonarClient) ConfigureGeneralSettings() error {
+	key := "sonar.typescript.lcov.reportPaths"
+	reportPath := "coverage/lcov.info"
+
+	generalSettingsExist, err := sc.checkGeneralSetting(key, reportPath)
 	if err != nil {
 		return logErrorAndReturn(err)
 	}
@@ -527,23 +528,23 @@ func (sc SonarClient) ConfigureGeneralSettings(valueType string, key string, val
 		return nil
 	}
 
+	log.Printf("Configuring general settings.")
 	resp, err := sc.resty.R().
 		SetHeader("Content-Type", "application/json").
 		SetQueryParams(
 			map[string]string{
-				"key":     key,
-				valueType: value}).
+				"key":    key,
+				"values": reportPath}).
 		Post("/settings/set")
 	if err != nil || resp.IsError() {
 		log.Printf("%v", resp)
 		return err
 	}
-	log.Printf("Setting %v has been set to %v", key, value)
 
 	return nil
 }
 
-func (sc SonarClient) checkGeneralSetting(key string, valueToCheck string) (bool, error) {
+func (sc SonarClient) checkGeneralSetting(key string, value string) (bool, error) {
 	resp, err := sc.resty.R().
 		Get("/settings/values")
 	if err != nil || resp.IsError() {
@@ -555,12 +556,9 @@ func (sc SonarClient) checkGeneralSetting(key string, valueToCheck string) (bool
 
 	for _, v := range raw["settings"] {
 		if v["key"] == key {
-			if value, exists := v["value"]; exists {
-				if checkValue(value, valueToCheck) {
-					return true, nil
-				}
-			} else if value, exists := v["values"]; exists {
-				if checkValue(value, valueToCheck) {
+			s := reflect.ValueOf(v["values"])
+			for i := 0; i < s.Len(); i++ {
+				if value == s.Index(i).Interface() {
 					return true, nil
 				}
 			}
@@ -568,21 +566,4 @@ func (sc SonarClient) checkGeneralSetting(key string, valueToCheck string) (bool
 	}
 
 	return false, nil
-}
-
-func checkValue(value interface{}, valueToCheck string) bool {
-	switch reflect.TypeOf(value).Kind() {
-	case reflect.Slice:
-		s := reflect.ValueOf(value)
-		for i := 0; i < s.Len(); i++ {
-			if valueToCheck == s.Index(i).Interface() {
-				return true
-			}
-		}
-	case reflect.String:
-		if valueToCheck == value {
-			return true
-		}
-	}
-	return false
 }
