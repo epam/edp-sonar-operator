@@ -28,6 +28,8 @@ const (
 	NonInteractiveGroupName = "non-interactive-users"
 	WebhookUrl              = "http://jenkins:8080/sonarqube-webhook/"
 	ProfilePath             = "/usr/local/configs/quality-profile.xml"
+	DefaultPassword         = "admin"
+	ClaimName               = "roles"
 )
 
 type Client struct {
@@ -39,6 +41,7 @@ type SonarService interface {
 	Install(instance *v1alpha1.Sonar) error
 	Configure(instance *v1alpha1.Sonar) error
 	ExposeConfiguration(instance *v1alpha1.Sonar) error
+	Integration(instance *v1alpha1.Sonar) error
 }
 
 func NewSonarService(platformService PlatformService, k8sClient client.Client) SonarService {
@@ -51,6 +54,73 @@ type SonarServiceImpl struct {
 	k8sClient       client.Client
 }
 
+func (s SonarServiceImpl) initSonarClient(instance *v1alpha1.Sonar, defaultPassword bool) (*sonarClient.SonarClient, error) {
+	sonarApiUrl := fmt.Sprintf("http://%v.%v:9000/api", instance.Name, instance.Namespace)
+	sc := &sonarClient.SonarClient{}
+
+	password := DefaultPassword
+	if !defaultPassword {
+		credentials, err := s.platformService.GetSecret(instance.Namespace, instance.Name+"-admin-password")
+		if err != nil {
+			return nil, s.resourceActionFailed(instance, err)
+		}
+		password = string(credentials["password"])
+	}
+
+	err := sc.InitNewRestClient(sonarApiUrl, "admin", password)
+	if err != nil {
+		return nil, s.resourceActionFailed(instance, err)
+	}
+	return sc, nil
+}
+
+func (s SonarServiceImpl) Integration(instance *v1alpha1.Sonar) error {
+	sc, err := s.initSonarClient(instance, false)
+
+	openIdConfigMap, err := s.platformService.GetConfigmap(instance.Namespace, "keycloak-sonaropenid-config")
+	if err != nil {
+		return s.resourceActionFailed(instance, err)
+	}
+	if openIdConfigMap != nil {
+		openIdConfiguration := openIdConfigMap["openid-configuration.json"]
+		err = sc.ConfigureGeneralSettings("value", "sonar.auth.oidc.providerConfiguration", openIdConfiguration)
+		if err != nil {
+			return s.resourceActionFailed(instance, err)
+		}
+	}
+
+	sonarRoute, err := s.platformService.GetRoute(instance.Namespace, instance.Name)
+	err = sc.ConfigureGeneralSettings("value", "sonar.core.serverBaseURL", fmt.Sprintf("https://%v", sonarRoute.Spec.Host))
+	if err != nil {
+		return s.resourceActionFailed(instance, err)
+	}
+
+	keycloakCredentials, err := s.platformService.GetSecret(instance.Namespace, fmt.Sprintf("%v-is-credentials", instance.Name))
+	if err != nil {
+		return s.resourceActionFailed(instance, err)
+	}
+	err = sc.ConfigureGeneralSettings("value", "sonar.auth.oidc.clientId.secured", string(keycloakCredentials["client_id"]))
+	if err != nil {
+		return s.resourceActionFailed(instance, err)
+	}
+
+	err = sc.ConfigureGeneralSettings("value", "sonar.auth.oidc.groupsSync.claimName", ClaimName)
+	if err != nil {
+		return s.resourceActionFailed(instance, err)
+	}
+
+	err = sc.ConfigureGeneralSettings("value", "sonar.auth.oidc.groupsSync", "true")
+	if err != nil {
+		return s.resourceActionFailed(instance, err)
+	}
+
+	err = sc.ConfigureGeneralSettings("value", "sonar.auth.oidc.enabled", "true")
+	if err != nil {
+		return s.resourceActionFailed(instance, err)
+	}
+	return nil
+}
+
 func (s SonarServiceImpl) ExposeConfiguration(instance *v1alpha1.Sonar) error {
 	if instance.Status.Status == StatusConfigured || instance.Status.Status == "" {
 		log.Println("Sonar expose configuration has been started")
@@ -60,18 +130,9 @@ func (s SonarServiceImpl) ExposeConfiguration(instance *v1alpha1.Sonar) error {
 		}
 	}
 
-	sonarApiUrl := fmt.Sprintf("http://%v.%v:9000/api", instance.Name, instance.Namespace)
 	externalConfig := v1alpha1.SonarExternalConfiguration{nil, nil, nil, nil}
 
-	credentials, err := s.platformService.GetSecret(instance.Namespace, instance.Name+"-admin-password")
-	if err != nil {
-		return s.resourceActionFailed(instance, err)
-	}
-
-	password := string(credentials["password"])
-
-	sc := sonarClient.SonarClient{}
-	err = sc.InitNewRestClient(sonarApiUrl, "admin", password)
+	sc, err := s.initSonarClient(instance, false)
 	if err != nil {
 		return s.resourceActionFailed(instance, err)
 	}
@@ -183,11 +244,7 @@ func (s SonarServiceImpl) Configure(instance *v1alpha1.Sonar) error {
 			return logErrorAndReturn(err)
 		}
 	}
-
-	sonarApiUrl := fmt.Sprintf("http://%v.%v:9000/api", instance.Name, instance.Namespace)
-
-	sc := sonarClient.SonarClient{}
-	err := sc.InitNewRestClient(sonarApiUrl, "admin", "admin")
+	sc, err := s.initSonarClient(instance, true)
 	if err != nil {
 		return s.resourceActionFailed(instance, err)
 	}
@@ -201,12 +258,9 @@ func (s SonarServiceImpl) Configure(instance *v1alpha1.Sonar) error {
 	}
 	password := string(credentials["password"])
 	// TODO(Serhii Shydlovskyi): Add check for password presence. Breaks status update.
-	sc.ChangePassword("admin", "admin", password)
-	//if err != nil {
-	//	return err
-	//}
+	sc.ChangePassword("admin", DefaultPassword, password)
 
-	err = sc.InitNewRestClient(sonarApiUrl, "admin", password)
+	sc, err = s.initSonarClient(instance, false)
 	if err != nil {
 		return s.resourceActionFailed(instance, err)
 	}
@@ -250,7 +304,7 @@ func (s SonarServiceImpl) Configure(instance *v1alpha1.Sonar) error {
 		return s.resourceActionFailed(instance, err)
 	}
 
-	err = sc.ConfigureGeneralSettings()
+	err = sc.ConfigureGeneralSettings("values", "sonar.typescript.lcov.reportPaths", "coverage/lcov.info")
 	if err != nil {
 		return s.resourceActionFailed(instance, err)
 	}
