@@ -1,6 +1,8 @@
 package service
 
 import (
+	"errors"
+	"fmt"
 	appsV1Api "github.com/openshift/api/apps/v1"
 	routeV1Api "github.com/openshift/api/route/v1"
 	securityV1Api "github.com/openshift/api/security/v1"
@@ -100,9 +102,19 @@ func (service OpenshiftService) CreateSecurityContext(sonar v1alpha1.Sonar, sa *
 	labels := generateLabels(sonar.Name)
 	priority := int32(1)
 
+	project, err := service.projectClient.Projects().Get(sonar.Namespace, metav1.GetOptions{})
+	if err != nil && k8serrors.IsNotFound(err) {
+		return logErrorAndReturn(errors.New(fmt.Sprintf("Unable to retrieve project %s", sonar.Namespace)))
+	}
+
+	displayName := project.GetObjectMeta().GetAnnotations()["openshift.io/display-name"]
+	if displayName == "" {
+		return logErrorAndReturn(errors.New(fmt.Sprintf("Project display name does not set")))
+	}
+
 	sonarSccObject := &securityV1Api.SecurityContextConstraints{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      sonar.Name,
+			Name:      fmt.Sprintf("%s-%s", sonar.Name, displayName),
 			Namespace: sonar.Namespace,
 			Labels:    labels,
 		},
