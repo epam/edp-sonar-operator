@@ -93,7 +93,6 @@ func schema_pkg_apis_edp_v1alpha1_SonarStatus(ref common.ReferenceCallback) comm
 						},
 					},
 				},
-				Required: []string{"available", "lastTimeUpdated", "status", "externalUrl"},
 			},
 		},
 		Dependencies: []string{},

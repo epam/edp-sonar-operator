@@ -249,6 +249,7 @@ func (sc SonarClient) UploadProfile(profileName string, profilePath string) (*st
 		SetHeader("Content-Type", "multipart/form-data").
 		SetFile("backup", profilePath).
 		Post("/qualityprofiles/restore")
+	// TODO(Serhii Shydlovskyi): Differ missing file from HTTP response. Breaks, if file not found.
 	if err != nil || resp.IsError() {
 		return nil, logErrorAndReturn(errors.New(fmt.Sprintf("Uploading profile %s failed. Err - %v. Response - %s", profileName, err, resp.Status())))
 	}

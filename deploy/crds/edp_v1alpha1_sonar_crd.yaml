@@ -57,6 +57,19 @@ spec:
                   - kind
                   - description
                   type: object
+                isCredentials:
+                  properties:
+                    description:
+                      type: string
+                    kind:
+                      type: string
+                    name:
+                      type: string
+                  required:
+                  - name
+                  - kind
+                  - description
+                  type: object
                 readUser:
                   properties:
                     description:
@@ -98,3 +111,7 @@ spec:
         status:
           type: object
   version: v1alpha1
+  versions:
+  - name: v1alpha1
+    served: true
+    storage: true

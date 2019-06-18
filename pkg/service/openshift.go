@@ -261,8 +261,111 @@ func (service OpenshiftService) CreateDbDeployConf(sonar v1alpha1.Sonar) error {
 
 func (service OpenshiftService) CreateDeployConf(sonar v1alpha1.Sonar) error {
 	labels := generateLabels(sonar.Name)
+	repository := Image
+	if sonar.Spec.Image != "" {
+		repository = sonar.Spec.Image
+	}
 
-	sonarDcObject := newSonarDeploymentConfig(sonar.Name, sonar.Namespace, sonar.Spec.Version, labels)
+	sonarDcObject := &appsV1Api.DeploymentConfig{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      sonar.Name,
+			Namespace: sonar.Namespace,
+			Labels:    labels,
+		},
+		Spec: appsV1Api.DeploymentConfigSpec{
+			Replicas: 1,
+			Triggers: []appsV1Api.DeploymentTriggerPolicy{
+				{
+					Type: appsV1Api.DeploymentTriggerOnConfigChange,
+				},
+			},
+			Strategy: appsV1Api.DeploymentStrategy{
+				Type: appsV1Api.DeploymentStrategyTypeRolling,
+			},
+			Selector: labels,
+			Template: &coreV1Api.PodTemplateSpec{
+				ObjectMeta: metav1.ObjectMeta{
+					Labels: labels,
+				},
+				Spec: coreV1Api.PodSpec{
+					InitContainers: []coreV1Api.Container{
+						{
+							Name:    sonar.Name + "init",
+							Image:   "busybox",
+							Command: []string{"sh", "-c", "while ! nc -w 1 " + sonar.Name + "-db " + strconv.Itoa(DBPort) + " </dev/null; do echo waiting for " + sonar.Name + "-db; sleep 10; done;"},
+						},
+					},
+					Containers: []coreV1Api.Container{
+						{
+							Name:            sonar.Name,
+							Image:           repository + ":" + sonar.Spec.Version,
+							ImagePullPolicy: coreV1Api.PullIfNotPresent,
+							Env: []coreV1Api.EnvVar{
+								{
+									Name: "SONARQUBE_JDBC_USERNAME",
+									ValueFrom: &coreV1Api.EnvVarSource{
+										SecretKeyRef: &coreV1Api.SecretKeySelector{
+											LocalObjectReference: coreV1Api.LocalObjectReference{
+												Name: sonar.Name + "-db",
+											},
+											Key: "database-user",
+										},
+									},
+								},
+								{
+									Name: "SONARQUBE_JDBC_PASSWORD",
+									ValueFrom: &coreV1Api.EnvVarSource{
+										SecretKeyRef: &coreV1Api.SecretKeySelector{
+											LocalObjectReference: coreV1Api.LocalObjectReference{
+												Name: sonar.Name + "-db",
+											},
+											Key: "database-password",
+										},
+									},
+								},
+								{
+									Name:  "SONARQUBE_JDBC_URL",
+									Value: "jdbc:postgresql://" + sonar.Name + "-db/sonar",
+								},
+							},
+							Ports: []coreV1Api.ContainerPort{
+								{
+									Name:          sonar.Name,
+									ContainerPort: Port,
+								},
+							},
+							LivenessProbe:          generateProbe(LivenessProbeDelay),
+							ReadinessProbe:         generateProbe(ReadinessProbeDelay),
+							TerminationMessagePath: "/dev/termination-log",
+							Resources: coreV1Api.ResourceRequirements{
+								Requests: map[coreV1Api.ResourceName]resource.Quantity{
+									coreV1Api.ResourceMemory: resource.MustParse(MemoryRequest),
+								},
+							},
+							VolumeMounts: []coreV1Api.VolumeMount{
+								{
+									MountPath: "/opt/sonarqube/extensions/plugins",
+									Name:      "data",
+								},
+							},
+						},
+					},
+					ServiceAccountName: sonar.Name,
+					Volumes: []coreV1Api.Volume{
+						{
+							Name: "data",
+							VolumeSource: coreV1Api.VolumeSource{
+								PersistentVolumeClaim: &coreV1Api.PersistentVolumeClaimVolumeSource{
+									ClaimName: sonar.Name + "-data",
+								},
+							},
+						},
+					},
+				},
+			},
+		},
+	}
+
 	if err := controllerutil.SetControllerReference(&sonar, sonarDcObject, service.scheme); err != nil {
 		return logErrorAndReturn(err)
 	}
@@ -314,108 +417,6 @@ func generateDbProbe(delay int32) *coreV1Api.Probe {
 			},
 		},
 		TimeoutSeconds: 5,
-	}
-}
-
-func newSonarDeploymentConfig(name string, namespace string, version string, labels map[string]string) *appsV1Api.DeploymentConfig {
-	return &appsV1Api.DeploymentConfig{
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      name,
-			Namespace: namespace,
-			Labels:    labels,
-		},
-		Spec: appsV1Api.DeploymentConfigSpec{
-			Replicas: 1,
-			Triggers: []appsV1Api.DeploymentTriggerPolicy{
-				{
-					Type: appsV1Api.DeploymentTriggerOnConfigChange,
-				},
-			},
-			Strategy: appsV1Api.DeploymentStrategy{
-				Type: appsV1Api.DeploymentStrategyTypeRolling,
-			},
-			Selector: labels,
-			Template: &coreV1Api.PodTemplateSpec{
-				ObjectMeta: metav1.ObjectMeta{
-					Labels: labels,
-				},
-				Spec: coreV1Api.PodSpec{
-					InitContainers: []coreV1Api.Container{
-						{
-							Name:    name + "init",
-							Image:   "busybox",
-							Command: []string{"sh", "-c", "while ! nc -w 1 " + name + "-db " + strconv.Itoa(DBPort) + " </dev/null; do echo waiting for " + name + "-db; sleep 10; done;"},
-						},
-					},
-					Containers: []coreV1Api.Container{
-						{
-							Name:            name,
-							Image:           Image + ":" + version,
-							ImagePullPolicy: coreV1Api.PullIfNotPresent,
-							Env: []coreV1Api.EnvVar{
-								{
-									Name: "SONARQUBE_JDBC_USERNAME",
-									ValueFrom: &coreV1Api.EnvVarSource{
-										SecretKeyRef: &coreV1Api.SecretKeySelector{
-											LocalObjectReference: coreV1Api.LocalObjectReference{
-												Name: name + "-db",
-											},
-											Key: "database-user",
-										},
-									},
-								},
-								{
-									Name: "SONARQUBE_JDBC_PASSWORD",
-									ValueFrom: &coreV1Api.EnvVarSource{
-										SecretKeyRef: &coreV1Api.SecretKeySelector{
-											LocalObjectReference: coreV1Api.LocalObjectReference{
-												Name: name + "-db",
-											},
-											Key: "database-password",
-										},
-									},
-								},
-								{
-									Name:  "SONARQUBE_JDBC_URL",
-									Value: "jdbc:postgresql://" + name + "-db/sonar",
-								},
-							},
-							Ports: []coreV1Api.ContainerPort{
-								{
-									Name:          name,
-									ContainerPort: Port,
-								},
-							},
-							LivenessProbe:          generateProbe(LivenessProbeDelay),
-							ReadinessProbe:         generateProbe(ReadinessProbeDelay),
-							TerminationMessagePath: "/dev/termination-log",
-							Resources: coreV1Api.ResourceRequirements{
-								Requests: map[coreV1Api.ResourceName]resource.Quantity{
-									coreV1Api.ResourceMemory: resource.MustParse(MemoryRequest),
-								},
-							},
-							VolumeMounts: []coreV1Api.VolumeMount{
-								{
-									MountPath: "/opt/sonarqube/extensions/plugins",
-									Name:      "data",
-								},
-							},
-						},
-					},
-					ServiceAccountName: name,
-					Volumes: []coreV1Api.Volume{
-						{
-							Name: "data",
-							VolumeSource: coreV1Api.VolumeSource{
-								PersistentVolumeClaim: &coreV1Api.PersistentVolumeClaimVolumeSource{
-									ClaimName: name + "-data",
-								},
-							},
-						},
-					},
-				},
-			},
-		},
 	}
 }
 
