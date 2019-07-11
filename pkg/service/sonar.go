@@ -401,7 +401,7 @@ func (s SonarServiceImpl) updateAvailableStatus(instance *v1alpha1.Sonar, value 
 	if instance.Status.Available != value {
 		instance.Status.Available = value
 		instance.Status.LastTimeUpdated = time.Now()
-		err := s.k8sClient.Update(context.TODO(), instance)
+		err := s.k8sClient.Status().Update(context.TODO(), instance)
 		if err != nil {
 			return err
 		}
@@ -412,7 +412,7 @@ func (s SonarServiceImpl) updateAvailableStatus(instance *v1alpha1.Sonar, value 
 func (s SonarServiceImpl) updateStatus(instance *v1alpha1.Sonar, status string) error {
 	instance.Status.Status = status
 	instance.Status.LastTimeUpdated = time.Now()
-	err := s.k8sClient.Update(context.TODO(), instance)
+	err := s.k8sClient.Status().Update(context.TODO(), instance)
 	if err != nil {
 		return err
 	}
