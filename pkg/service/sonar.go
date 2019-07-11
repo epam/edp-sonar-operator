@@ -403,7 +403,10 @@ func (s SonarServiceImpl) updateAvailableStatus(instance *v1alpha1.Sonar, value 
 		instance.Status.LastTimeUpdated = time.Now()
 		err := s.k8sClient.Status().Update(context.TODO(), instance)
 		if err != nil {
-			return err
+			err = s.k8sClient.Update(context.TODO(), instance)
+			if err != nil {
+				return err
+			}
 		}
 	}
 	return nil
@@ -413,8 +416,12 @@ func (s SonarServiceImpl) updateStatus(instance *v1alpha1.Sonar, status string) 
 	instance.Status.Status = status
 	instance.Status.LastTimeUpdated = time.Now()
 	err := s.k8sClient.Status().Update(context.TODO(), instance)
+	log.Printf("Error - %v", err)
 	if err != nil {
-		return err
+		err = s.k8sClient.Update(context.TODO(), instance)
+		if err != nil {
+			return err
+		}
 	}
 
 	log.Printf("Status for Sonar %v has been updated to '%v' at %v.", instance.Name, status, instance.Status.LastTimeUpdated)
@@ -424,9 +431,12 @@ func (s SonarServiceImpl) updateStatus(instance *v1alpha1.Sonar, status string) 
 func (s SonarServiceImpl) updateExternalConfig(instance *v1alpha1.Sonar, config v1alpha1.SonarExternalConfiguration) error {
 	instance.Spec.SonarExternalConfiguration = config
 
-	err := s.k8sClient.Update(context.TODO(), instance)
+	err := s.k8sClient.Status().Update(context.TODO(), instance)
 	if err != nil {
-		return err
+		err = s.k8sClient.Update(context.TODO(), instance)
+		if err != nil {
+			return err
+		}
 	}
 	return nil
 }
