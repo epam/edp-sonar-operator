@@ -430,6 +430,8 @@ func newSonarDeploymentConfig(name string, namespace string, version string, lab
 }
 
 func newSonarDatabaseDeploymentConfig(name string, sa string, namespace string, labels map[string]string) *appsV1Api.DeploymentConfig {
+	fsGroup, _ := strconv.ParseInt("999", 10, 64)
+
 	return &appsV1Api.DeploymentConfig{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      name,
@@ -517,6 +519,9 @@ func newSonarDatabaseDeploymentConfig(name string, sa string, namespace string, 
 								},
 							},
 						},
+					},
+					SecurityContext: &coreV1Api.PodSecurityContext{
+						FSGroup: &fsGroup,
 					},
 					ServiceAccountName: sa,
 					Volumes: []coreV1Api.Volume{
