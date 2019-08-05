@@ -57,6 +57,10 @@ required = [
   version = "=v0.1.10"
 
 [[override]]
+  name = "github.com/census-instrumentation/opencensus-proto"
+  version = "=v0.1.0"
+
+[[override]]
   name = "github.com/gotestyourself/gotest.tools"
   version = "=v2.3.0"
 

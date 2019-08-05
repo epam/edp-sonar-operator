@@ -47,7 +47,7 @@ rules:
   verbs:
   - update
 - apiGroups:
-  - edp.epam.com
+  - v2.edp.epam.com
   resources:
   - '*'
   verbs:
