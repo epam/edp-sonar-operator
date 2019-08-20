@@ -265,7 +265,7 @@ func (s SonarServiceImpl) Configure(instance *v1alpha1.Sonar) error {
 		return s.resourceActionFailed(instance, err)
 	}
 
-	plugins := []string{"authoidc", "checkstyle", "findbugs", "pmd"}
+	plugins := []string{"authoidc", "checkstyle", "findbugs", "pmd", "jacoco"}
 	err = sc.InstallPlugins(plugins)
 	if err != nil {
 		return s.resourceActionFailed(instance, err)
@@ -305,6 +305,11 @@ func (s SonarServiceImpl) Configure(instance *v1alpha1.Sonar) error {
 	}
 
 	err = sc.ConfigureGeneralSettings("values", "sonar.typescript.lcov.reportPaths", "coverage/lcov.info")
+	if err != nil {
+		return s.resourceActionFailed(instance, err)
+	}
+
+	err = sc.ConfigureGeneralSettings("values", "sonar.coverage.jacoco.xmlReportPaths", "target/site/jacoco/jacoco.xml")
 	if err != nil {
 		return s.resourceActionFailed(instance, err)
 	}
