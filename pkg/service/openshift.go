@@ -31,9 +31,9 @@ const (
 	Port                  = 9000
 	DBPort                = 5432
 	LivenessProbeDelay    = 180
-	ReadinessProbeDelay   = 60
-	DbLivenessProbeDelay  = 60
-	DbReadinessProbeDelay = 60
+	ReadinessProbeDelay   = 180
+	DbLivenessProbeDelay  = 180
+	DbReadinessProbeDelay = 180
 	MemoryRequest         = "500Mi"
 )
 
