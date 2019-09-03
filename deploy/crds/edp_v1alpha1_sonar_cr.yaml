@@ -12,4 +12,3 @@ spec:
     - name: "db"
       storage_class: "efs"
       capacity: "1Gi"
-

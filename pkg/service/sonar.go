@@ -265,7 +265,7 @@ func (s SonarServiceImpl) Configure(instance *v1alpha1.Sonar) error {
 		return s.resourceActionFailed(instance, err)
 	}
 
-	plugins := []string{"authoidc", "checkstyle", "findbugs", "pmd", "jacoco"}
+	plugins := []string{"authoidc", "checkstyle", "findbugs", "pmd", "jacoco", "xml", "javascript"}
 	err = sc.InstallPlugins(plugins)
 	if err != nil {
 		return s.resourceActionFailed(instance, err)
