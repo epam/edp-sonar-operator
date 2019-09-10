@@ -2,8 +2,8 @@ package service
 
 import (
 	"fmt"
+	"github.com/epmd-edp/sonar-operator/v2/pkg/apis/edp/v1alpha1"
 	"log"
-	"sonar-operator/pkg/apis/edp/v1alpha1"
 
 	coreV1Api "k8s.io/api/core/v1"
 	k8serr "k8s.io/apimachinery/pkg/api/errors"

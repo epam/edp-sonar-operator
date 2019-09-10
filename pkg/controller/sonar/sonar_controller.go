@@ -2,10 +2,10 @@ package sonar
 
 import (
 	"context"
-	"sonar-operator/pkg/service"
+	"github.com/epmd-edp/sonar-operator/v2/pkg/service"
 	"time"
 
-	edpv1alpha1 "sonar-operator/pkg/apis/edp/v1alpha1"
+	edpv1alpha1 "github.com/epmd-edp/sonar-operator/v2/pkg/apis/edp/v1alpha1"
 
 	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/runtime"

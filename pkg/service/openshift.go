@@ -3,6 +3,7 @@ package service
 import (
 	"errors"
 	"fmt"
+	"github.com/epmd-edp/sonar-operator/v2/pkg/apis/edp/v1alpha1"
 	appsV1Api "github.com/openshift/api/apps/v1"
 	routeV1Api "github.com/openshift/api/route/v1"
 	securityV1Api "github.com/openshift/api/security/v1"
@@ -21,7 +22,6 @@ import (
 	"log"
 	"reflect"
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
-	"sonar-operator/pkg/apis/edp/v1alpha1"
 	"strconv"
 )
 

@@ -1,7 +1,7 @@
 package controller
 
 import (
-	"sonar-operator/pkg/controller/sonar"
+	"github.com/epmd-edp/sonar-operator/v2/pkg/controller/sonar"
 )
 
 func init() {

@@ -13,8 +13,8 @@ import (
 
 func GetOpenAPIDefinitions(ref common.ReferenceCallback) map[string]common.OpenAPIDefinition {
 	return map[string]common.OpenAPIDefinition{
-		"sonar-operator/pkg/apis/edp/v1alpha1.Sonar":       schema_pkg_apis_edp_v1alpha1_Sonar(ref),
-		"sonar-operator/pkg/apis/edp/v1alpha1.SonarStatus": schema_pkg_apis_edp_v1alpha1_SonarStatus(ref),
+		"github.com/epmd-edp/sonar-operator/v2/pkg/apis/edp/v1alpha1.Sonar":       schema_pkg_apis_edp_v1alpha1_Sonar(ref),
+		"github.com/epmd-edp/sonar-operator/v2/pkg/apis/edp/v1alpha1.SonarStatus": schema_pkg_apis_edp_v1alpha1_SonarStatus(ref),
 	}
 }
 
@@ -45,19 +45,19 @@ func schema_pkg_apis_edp_v1alpha1_Sonar(ref common.ReferenceCallback) common.Ope
 					},
 					"spec": {
 						SchemaProps: spec.SchemaProps{
-							Ref: ref("sonar-operator/pkg/apis/edp/v1alpha1.SonarSpec"),
+							Ref: ref("github.com/epmd-edp/sonar-operator/v2/pkg/apis/edp/v1alpha1.SonarSpec"),
 						},
 					},
 					"status": {
 						SchemaProps: spec.SchemaProps{
-							Ref: ref("sonar-operator/pkg/apis/edp/v1alpha1.SonarStatus"),
+							Ref: ref("github.com/epmd-edp/sonar-operator/v2/pkg/apis/edp/v1alpha1.SonarStatus"),
 						},
 					},
 				},
 			},
 		},
 		Dependencies: []string{
-			"k8s.io/apimachinery/pkg/apis/meta/v1.ObjectMeta", "sonar-operator/pkg/apis/edp/v1alpha1.SonarSpec", "sonar-operator/pkg/apis/edp/v1alpha1.SonarStatus"},
+			"k8s.io/apimachinery/pkg/apis/meta/v1.ObjectMeta", "github.com/epmd-edp/sonar-operator/v2/pkg/apis/edp/v1alpha1.SonarSpec", "github.com/epmd-edp/sonar-operator/v2/pkg/apis/edp/v1alpha1.SonarStatus"},
 	}
 }
 

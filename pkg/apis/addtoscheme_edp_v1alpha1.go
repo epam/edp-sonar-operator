@@ -1,7 +1,7 @@
 package apis
 
 import (
-	"sonar-operator/pkg/apis/edp/v1alpha1"
+	"github.com/epmd-edp/sonar-operator/v2/pkg/apis/edp/v1alpha1"
 )
 
 func init() {

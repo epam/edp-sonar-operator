@@ -5,11 +5,11 @@ import (
 	"errors"
 	"fmt"
 	"github.com/dchest/uniuri"
+	"github.com/epmd-edp/sonar-operator/v2/pkg/apis/edp/v1alpha1"
+	sonarClient "github.com/epmd-edp/sonar-operator/v2/pkg/client"
 	"gopkg.in/resty.v1"
 	"log"
 	"sigs.k8s.io/controller-runtime/pkg/client"
-	"sonar-operator/pkg/apis/edp/v1alpha1"
-	sonarClient "sonar-operator/pkg/client"
 	"time"
 )
 

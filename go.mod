@@ -1,4 +1,4 @@
-module sonar-operator
+module github.com/epmd-edp/sonar-operator/v2
 
 go 1.12
 

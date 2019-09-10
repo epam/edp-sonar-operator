@@ -1,11 +1,11 @@
 package service
 
 import (
+	"github.com/epmd-edp/sonar-operator/v2/pkg/apis/edp/v1alpha1"
 	routeV1Api "github.com/openshift/api/route/v1"
 	coreV1Api "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/client-go/tools/clientcmd"
-	"sonar-operator/pkg/apis/edp/v1alpha1"
 )
 
 type PlatformService interface {
