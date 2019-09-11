@@ -38,7 +38,7 @@ func newReconciler(mgr manager.Manager) reconcile.Reconciler {
 	client := mgr.GetClient()
 	platformService, _ := service.NewPlatformService(scheme)
 
-	sonarService := service.NewSonarService(platformService, client)
+	sonarService := service.NewSonarService(platformService, client, scheme)
 	return &ReconcileSonar{
 		client:  client,
 		scheme:  scheme,

@@ -84,12 +84,6 @@ spec:
                   - description
                   type: object
               type: object
-            type:
-              description: 'INSERT ADDITIONAL SPEC FIELDS - desired state of cluster
-                Important: Run "operator-sdk generate k8s" to regenerate code after
-                modifying this file Add custom validation using kubebuilder tags:
-                https://book.kubebuilder.io/beyond_basics/generating_crd.html'
-              type: string
             version:
               type: string
             volumes:
@@ -105,7 +99,6 @@ spec:
                 type: object
               type: array
           required:
-          - type
           - version
           type: object
         status:

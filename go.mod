@@ -5,56 +5,22 @@ go 1.12
 replace git.apache.org/thrift.git => github.com/apache/thrift v0.12.0
 
 require (
-	cloud.google.com/go v0.44.3 // indirect
-	github.com/Azure/go-autorest/autorest v0.9.1 // indirect
-	github.com/Azure/go-autorest/autorest/adal v0.6.0 // indirect
+	cloud.google.com/go v0.44.3
 	github.com/alecthomas/template v0.0.0-20190718012654-fb15b899a751 // indirect
 	github.com/alecthomas/units v0.0.0-20190910110746-680d30ca3117 // indirect
-	github.com/appscode/jsonpatch v0.0.0-20190108182946-7c0e3b262f30 // indirect
 	github.com/dchest/uniuri v0.0.0-20160212164326-8902c56451e9
-	github.com/emicklei/go-restful v2.9.6+incompatible // indirect
-	github.com/ghodss/yaml v1.0.0 // indirect
-	github.com/go-logr/zapr v0.1.1 // indirect
+	github.com/epmd-edp/jenkins-operator/v2 v2.1.0-32
 	github.com/go-openapi/spec v0.19.2
-	github.com/go-openapi/swag v0.19.5 // indirect
-	github.com/gogo/protobuf v1.2.1 // indirect
-	github.com/golang/groupcache v0.0.0-20190702054246-869f871628b6 // indirect
-	github.com/google/uuid v1.1.1 // indirect
-	github.com/googleapis/gnostic v0.3.1 // indirect
-	github.com/gophercloud/gophercloud v0.3.0 // indirect
-	github.com/gregjones/httpcache v0.0.0-20190611155906-901d90724c79 // indirect
-	github.com/hashicorp/golang-lru v0.5.3 // indirect
-	github.com/imdario/mergo v0.3.7 // indirect
-	github.com/mailru/easyjson v0.0.0-20190626092158-b2ccc519800e // indirect
-	github.com/onsi/ginkgo v1.10.1 // indirect
-	github.com/onsi/gomega v1.7.0 // indirect
 	github.com/openshift/api v3.9.0+incompatible
 	github.com/openshift/client-go v3.9.0+incompatible
 	github.com/operator-framework/operator-sdk v0.0.0-20190530173525-d6f9cdf2f52e
-	github.com/pborman/uuid v0.0.0-20180906182336-adf5a7427709 // indirect
-	github.com/peterbourgon/diskv v2.0.1+incompatible // indirect
-	github.com/pkg/errors v0.8.1 // indirect
-	github.com/prometheus/client_golang v1.1.0 // indirect
-	github.com/prometheus/client_model v0.0.0-20190812154241-14fe0d1b01d4 // indirect
+	github.com/pkg/errors v0.8.1
 	github.com/prometheus/common v0.6.0
-	github.com/spf13/pflag v1.0.3 // indirect
-	go.uber.org/atomic v1.4.0 // indirect
-	go.uber.org/multierr v1.1.0 // indirect
-	go.uber.org/zap v1.10.0 // indirect
-	golang.org/x/crypto v0.0.0-20190829043050-9756ffdc2472 // indirect
-	golang.org/x/net v0.0.0-20190827160401-ba9fcec4b297 // indirect
-	golang.org/x/sys v0.0.0-20190904154756-749cb33beabd // indirect
-	google.golang.org/appengine v1.6.2 // indirect
-	gopkg.in/inf.v0 v0.9.1 // indirect
 	gopkg.in/resty.v1 v1.12.0
 	gotest.tools v2.2.0+incompatible
 	k8s.io/api v0.0.0-20190222213804-5cb15d344471
-	k8s.io/apiextensions-apiserver v0.0.0-20190228180357-d002e88f6236 // indirect
 	k8s.io/apimachinery v0.0.0-20190221213512-86fb29eff628
 	k8s.io/client-go v0.0.0-20190228174230-b40b2a5939e4
-	k8s.io/klog v0.4.0 // indirect
 	k8s.io/kube-openapi v0.0.0-20181109181836-c59034cc13d5
 	sigs.k8s.io/controller-runtime v0.1.12
-	sigs.k8s.io/testing_frameworks v0.1.1 // indirect
-	sigs.k8s.io/yaml v1.1.0 // indirect
 )

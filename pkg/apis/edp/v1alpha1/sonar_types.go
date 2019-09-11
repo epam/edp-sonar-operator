@@ -21,7 +21,6 @@ type SonarSpec struct {
 	// INSERT ADDITIONAL SPEC FIELDS - desired state of cluster
 	// Important: Run "operator-sdk generate k8s" to regenerate code after modifying this file
 	// Add custom validation using kubebuilder tags: https://book.kubebuilder.io/beyond_basics/generating_crd.html
-	Type                       string                     `json:"type"`
 	Version                    string                     `json:"version"`
 	Image                      string                     `json:"image, omitempty"`
 	Volumes                    []SonarVolumes             `json:"volumes,omitempty"`
@@ -35,7 +34,6 @@ type SonarExternalConfigurationItem struct {
 }
 
 type SonarExternalConfiguration struct {
-	CiUser        *SonarExternalConfigurationItem `json:"ciUser,omitempty"`
 	ReadUser      *SonarExternalConfigurationItem `json:"readUser,omitempty"`
 	AdminUser     *SonarExternalConfigurationItem `json:"adminUser,omitempty"`
 	IsCredentials *SonarExternalConfigurationItem `json:"isCredentials,omitempty"`

@@ -3,8 +3,10 @@ package service
 import (
 	"fmt"
 	"github.com/epmd-edp/sonar-operator/v2/pkg/apis/edp/v1alpha1"
+	"github.com/pkg/errors"
 	"log"
 
+	sonarSpec "github.com/epmd-edp/sonar-operator/v2/pkg/service/spec"
 	coreV1Api "k8s.io/api/core/v1"
 	k8serr "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/api/resource"
@@ -14,7 +16,10 @@ import (
 	coreV1Client "k8s.io/client-go/kubernetes/typed/core/v1"
 	"k8s.io/client-go/rest"
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
+	logf "sigs.k8s.io/controller-runtime/pkg/runtime/log"
 )
+
+var logV2 = logf.Log.WithName("platform")
 
 type K8SService struct {
 	scheme     *runtime.Scheme
@@ -44,7 +49,7 @@ func (service K8SService) GetConfigmap(namespace string, name string) (map[strin
 	return configmap.Data, nil
 }
 
-func (service K8SService) GetSecret(namespace string, name string) (map[string][]byte, error) {
+func (service K8SService) GetSecretData(namespace string, name string) (map[string][]byte, error) {
 	sonarSecret, err := service.coreClient.Secrets(namespace).Get(name, metav1.GetOptions{})
 	if err != nil && k8serr.IsNotFound(err) {
 		log.Printf("Secret %v in namespace %v not found", name, namespace)
@@ -182,8 +187,8 @@ func (service K8SService) CreateExternalEndpoint(sonar v1alpha1.Sonar) error {
 
 func (service K8SService) CreateService(sonar v1alpha1.Sonar) error {
 	portMap := map[string]int32{
-		sonar.Name:         Port,
-		sonar.Name + "-db": DBPort,
+		sonar.Name:         sonarSpec.Port,
+		sonar.Name + "-db": sonarSpec.DBPort,
 	}
 	for _, serviceName := range []string{sonar.Name, sonar.Name + "-db"} {
 		labels := generateLabels(serviceName)
@@ -242,4 +247,33 @@ func generateLabels(name string) map[string]string {
 	return map[string]string{
 		"app": name,
 	}
+}
+
+func (service K8SService) CreateConfigMapFromData(instance v1alpha1.Sonar, configMapName string,
+	configMapData map[string]string, labels map[string]string, ownerReference metav1.Object) error {
+	configMapObject := &coreV1Api.ConfigMap{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      configMapName,
+			Namespace: instance.Namespace,
+			Labels:    labels,
+		},
+		Data: configMapData,
+	}
+
+	if err := controllerutil.SetControllerReference(ownerReference, configMapObject, service.scheme); err != nil {
+		return errors.Wrapf(err, "Couldn't set reference for Config Map %v object", configMapObject.Name)
+	}
+
+	cm, err := service.coreClient.ConfigMaps(instance.Namespace).Get(configMapObject.Name, metav1.GetOptions{})
+	if err != nil {
+		if k8serr.IsNotFound(err) {
+			cm, err = service.coreClient.ConfigMaps(configMapObject.Namespace).Create(configMapObject)
+			if err != nil {
+				return errors.Wrapf(err, "Couldn't create Config Map %v object", cm.Name)
+			}
+			logV2.Info(fmt.Sprintf("ConfigMap %s/%s has been created", cm.Namespace, cm.Name))
+		}
+		return errors.Wrapf(err, "Couldn't get ConfigMap %v object", configMapObject.Name)
+	}
+	return nil
 }

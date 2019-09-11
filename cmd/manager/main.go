@@ -10,6 +10,7 @@ import (
 	// Import all Kubernetes client auth plugins (e.g. Azure, GCP, OIDC, etc.)
 	_ "k8s.io/client-go/plugin/pkg/client/auth"
 
+	jenkinsApis "github.com/epmd-edp/jenkins-operator/v2/pkg/apis"
 	"github.com/epmd-edp/sonar-operator/v2/pkg/apis"
 	"github.com/epmd-edp/sonar-operator/v2/pkg/controller"
 
@@ -65,6 +66,11 @@ func main() {
 
 	// Setup Scheme for all resources
 	if err := apis.AddToScheme(mgr.GetScheme()); err != nil {
+		log.Error(err, "")
+		os.Exit(1)
+	}
+
+	if err := jenkinsApis.AddToScheme(mgr.GetScheme()); err != nil {
 		log.Error(err, "")
 		os.Exit(1)
 	}

@@ -3,12 +3,11 @@ kind: Sonar
 metadata:
   name: example-sonar
 spec:
-  type: "Sonar"
   version: "7.6-community"
   volumes:
     - name: "data"
-      storage_class: "efs"
+      storage_class: "gp2"
       capacity: "1Gi"
     - name: "db"
-      storage_class: "efs"
+      storage_class: "gp2"
       capacity: "1Gi"

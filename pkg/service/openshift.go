@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/epmd-edp/sonar-operator/v2/pkg/apis/edp/v1alpha1"
+	sonarSpec "github.com/epmd-edp/sonar-operator/v2/pkg/service/spec"
 	appsV1Api "github.com/openshift/api/apps/v1"
 	routeV1Api "github.com/openshift/api/route/v1"
 	securityV1Api "github.com/openshift/api/security/v1"
@@ -23,18 +24,6 @@ import (
 	"reflect"
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 	"strconv"
-)
-
-const (
-	Image                 = "sonarqube"
-	DbImage               = "postgres:9.6"
-	Port                  = 9000
-	DBPort                = 5432
-	LivenessProbeDelay    = 180
-	ReadinessProbeDelay   = 180
-	DbLivenessProbeDelay  = 180
-	DbReadinessProbeDelay = 180
-	MemoryRequest         = "500Mi"
 )
 
 type OpenshiftService struct {
@@ -86,17 +75,22 @@ func (service *OpenshiftService) Init(config *rest.Config, scheme *runtime.Schem
 
 	return nil
 }
-func (service OpenshiftService) GetRoute(namespace string, name string) (*routeV1Api.Route, error) {
+
+// GetRoute returns Route object and connection protocol from Openshift
+func (service OpenshiftService) GetRoute(namespace string, name string) (*routeV1Api.Route, string, error) {
 	route, err := service.routeClient.Routes(namespace).Get(name, metav1.GetOptions{})
 	if err != nil && k8serrors.IsNotFound(err) {
-		log.Printf("Route %v in namespace %v not found", name, namespace)
-		return nil, nil
+		return nil, "", errors.New(fmt.Sprintf("Route %v in namespace %v not found", name, namespace))
 	} else if err != nil {
-		return nil, logErrorAndReturn(err)
+		return nil, "", err
 	}
-	return route, nil
-}
 
+	var routeScheme = "http"
+	if route.Spec.TLS.Termination != "" {
+		routeScheme = "https"
+	}
+	return route, routeScheme, nil
+}
 func (service OpenshiftService) CreateSecurityContext(sonar v1alpha1.Sonar, sa *coreV1Api.ServiceAccount) error {
 
 	labels := generateLabels(sonar.Name)
@@ -303,7 +297,7 @@ func generateProbe(delay int32) *coreV1Api.Probe {
 		Handler: coreV1Api.Handler{
 			HTTPGet: &coreV1Api.HTTPGetAction{
 				Port: intstr.IntOrString{
-					IntVal: Port,
+					IntVal: sonarSpec.Port,
 				},
 				Path: "/",
 			},
@@ -355,13 +349,13 @@ func newSonarDeploymentConfig(name string, namespace string, version string, lab
 						{
 							Name:    name + "init",
 							Image:   "busybox",
-							Command: []string{"sh", "-c", "while ! nc -w 1 " + name + "-db " + strconv.Itoa(DBPort) + " </dev/null; do echo waiting for " + name + "-db; sleep 10; done;"},
+							Command: []string{"sh", "-c", "while ! nc -w 1 " + name + "-db " + strconv.Itoa(sonarSpec.DBPort) + " </dev/null; do echo waiting for " + name + "-db; sleep 10; done;"},
 						},
 					},
 					Containers: []coreV1Api.Container{
 						{
 							Name:            name,
-							Image:           Image + ":" + version,
+							Image:           sonarSpec.Image + ":" + version,
 							ImagePullPolicy: coreV1Api.PullIfNotPresent,
 							Env: []coreV1Api.EnvVar{
 								{
@@ -394,15 +388,15 @@ func newSonarDeploymentConfig(name string, namespace string, version string, lab
 							Ports: []coreV1Api.ContainerPort{
 								{
 									Name:          name,
-									ContainerPort: Port,
+									ContainerPort: sonarSpec.Port,
 								},
 							},
-							LivenessProbe:          generateProbe(LivenessProbeDelay),
-							ReadinessProbe:         generateProbe(ReadinessProbeDelay),
+							LivenessProbe:          generateProbe(sonarSpec.LivenessProbeDelay),
+							ReadinessProbe:         generateProbe(sonarSpec.ReadinessProbeDelay),
 							TerminationMessagePath: "/dev/termination-log",
 							Resources: coreV1Api.ResourceRequirements{
 								Requests: map[coreV1Api.ResourceName]resource.Quantity{
-									coreV1Api.ResourceMemory: resource.MustParse(MemoryRequest),
+									coreV1Api.ResourceMemory: resource.MustParse(sonarSpec.MemoryRequest),
 								},
 							},
 							VolumeMounts: []coreV1Api.VolumeMount{
@@ -459,7 +453,7 @@ func newSonarDatabaseDeploymentConfig(name string, sa string, namespace string, 
 					Containers: []coreV1Api.Container{
 						{
 							Name:            name,
-							Image:           DbImage,
+							Image:           sonarSpec.DbImage,
 							ImagePullPolicy: coreV1Api.PullIfNotPresent,
 							Env: []coreV1Api.EnvVar{
 								{
@@ -503,15 +497,15 @@ func newSonarDatabaseDeploymentConfig(name string, sa string, namespace string, 
 							},
 							Ports: []coreV1Api.ContainerPort{
 								{
-									ContainerPort: DBPort,
+									ContainerPort: sonarSpec.DBPort,
 								},
 							},
-							LivenessProbe:          generateDbProbe(DbLivenessProbeDelay),
-							ReadinessProbe:         generateDbProbe(DbReadinessProbeDelay),
+							LivenessProbe:          generateDbProbe(sonarSpec.DbLivenessProbeDelay),
+							ReadinessProbe:         generateDbProbe(sonarSpec.DbReadinessProbeDelay),
 							TerminationMessagePath: "/dev/termination-log",
 							Resources: coreV1Api.ResourceRequirements{
 								Requests: map[coreV1Api.ResourceName]resource.Quantity{
-									coreV1Api.ResourceMemory: resource.MustParse(MemoryRequest),
+									coreV1Api.ResourceMemory: resource.MustParse(sonarSpec.MemoryRequest),
 								},
 							},
 							VolumeMounts: []coreV1Api.VolumeMount{
