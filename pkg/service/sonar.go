@@ -42,7 +42,7 @@ const (
 	localConfigsRelativePath       = "configs"
 	defaultTemplatesDirectory      = "templates"
 	defaultConfigsAbsolutePath     = defaultConfigFilesAbsolutePath + localConfigsRelativePath
-	defaultProfileAbsolutePath     = localConfigsRelativePath + localConfigsRelativePath + "/" + defaultQualityProfilesFileName
+	defaultProfileAbsolutePath     = defaultConfigFilesAbsolutePath + localConfigsRelativePath + "/" + defaultQualityProfilesFileName
 	defaultTemplatesAbsolutePath   = defaultConfigsAbsolutePath + defaultTemplatesDirectory
 	defaultQualityProfilesFileName = "quality-profile.xml"
 	jenkinsPluginConfigFileName    = "config-sonar-plugin.tmpl"
