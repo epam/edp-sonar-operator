@@ -43,9 +43,10 @@ const (
 	defaultTemplatesDirectory      = "templates"
 	defaultConfigsAbsolutePath     = defaultConfigFilesAbsolutePath + localConfigsRelativePath
 	defaultProfileAbsolutePath     = defaultConfigFilesAbsolutePath + localConfigsRelativePath + "/" + defaultQualityProfilesFileName
-	defaultTemplatesAbsolutePath   = defaultConfigsAbsolutePath + defaultTemplatesDirectory
+	defaultTemplatesAbsolutePath   = defaultConfigsAbsolutePath + "/" + defaultTemplatesDirectory
 	defaultQualityProfilesFileName = "quality-profile.xml"
 	jenkinsPluginConfigFileName    = "config-sonar-plugin.tmpl"
+	jenkinsPluginConfigPostfix     = "jenkins-plugin-config"
 )
 
 type Client struct {
@@ -508,23 +509,22 @@ func (s SonarServiceImpl) configureSonarPluginInJenkins(instance *v1alpha1.Sonar
 		return errors.Wrapf(err, "Couldn't parse template %v", jenkinsPluginConfigFileName)
 	}
 
-	jenkinsScriptName := fmt.Sprintf("%v-%v", instance.Name, "jenkins-plugin-config")
-	configMapName := fmt.Sprintf("%v-%v", instance.Name, jenkinsScriptName)
+	jenkinsPluginConfigurationName := fmt.Sprintf("%v-%v", instance.Name, jenkinsPluginConfigPostfix)
 
 	jenkinsScript, err := jenkinsHelper.CreateJenkinsScript(
 		jenkinsHelper.K8sClient{s.k8sClient, s.k8sScheme},
-		jenkinsScriptName,
-		configMapName,
+		jenkinsPluginConfigurationName,
+		jenkinsPluginConfigurationName,
 		instance.Namespace,
 		false,
 		nil)
 	if err != nil {
-		return errors.Wrapf(err, "Couldn't create Jenkins Script %v", jenkinsScriptName)
+		return errors.Wrapf(err, "Couldn't create Jenkins Script %v", jenkinsPluginConfigurationName)
 	}
 
 	labels := helper.GenerateLabels(instance.Name)
 	configMapData := map[string]string{jenkinsHelper.JenkinsDefaultScriptConfigMapKey: jenkinsPluginConfigurationScriptContext.String()}
-	err = s.platformService.CreateConfigMapFromData(*instance, configMapName, configMapData, labels, jenkinsScript)
+	err = s.platformService.CreateConfigMapFromData(*instance, jenkinsPluginConfigurationName, configMapData, labels, jenkinsScript)
 	if err != nil {
 		return err
 	}
