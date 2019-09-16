@@ -2,6 +2,7 @@ package service
 
 import (
 	"github.com/epmd-edp/sonar-operator/v2/pkg/apis/edp/v1alpha1"
+	appsV1Api "github.com/openshift/api/apps/v1"
 	routeV1Api "github.com/openshift/api/route/v1"
 	coreV1Api "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -21,6 +22,7 @@ type PlatformService interface {
 	CreateDbDeployConf(sonar v1alpha1.Sonar) error
 	CreateDeployConf(sonar v1alpha1.Sonar) error
 	CreateConfigMapFromData(instance v1alpha1.Sonar, configMapName string, configMapData map[string]string, labels map[string]string, ownerReference metav1.Object) error
+	GetDeploymentConfig(instance v1alpha1.Sonar) (*appsV1Api.DeploymentConfig, error)
 	GetSecretData(namespace string, name string) (map[string][]byte, error)
 }
 
@@ -32,14 +34,14 @@ func NewPlatformService(scheme *runtime.Scheme) (PlatformService, error) {
 
 	restConfig, err := config.ClientConfig()
 	if err != nil {
-		return nil, logErrorAndReturn(err)
+		return nil, err
 	}
 
 	platform := OpenshiftService{}
 
 	err = platform.Init(restConfig, scheme)
 	if err != nil {
-		return nil, logErrorAndReturn(err)
+		return nil, err
 	}
 	return platform, nil
 }

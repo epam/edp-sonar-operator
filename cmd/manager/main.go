@@ -2,8 +2,10 @@ package main
 
 import (
 	"context"
+	"flag"
 	"fmt"
-	"github.com/prometheus/common/log"
+	"github.com/operator-framework/operator-sdk/pkg/log/zap"
+	"github.com/spf13/pflag"
 	"os"
 	"runtime"
 
@@ -19,8 +21,10 @@ import (
 	sdkVersion "github.com/operator-framework/operator-sdk/version"
 	"sigs.k8s.io/controller-runtime/pkg/client/config"
 	"sigs.k8s.io/controller-runtime/pkg/manager"
+	logf "sigs.k8s.io/controller-runtime/pkg/runtime/log"
 	"sigs.k8s.io/controller-runtime/pkg/runtime/signals"
 )
+var log = logf.Log.WithName("cmd")
 
 func printVersion() {
 	log.Info(fmt.Sprintf("Go Version: %s", runtime.Version()))
@@ -29,6 +33,19 @@ func printVersion() {
 }
 
 func main() {
+
+	// Add the zap logger flag set to the CLI. The flag set must
+	// be added before calling pflag.Parse().
+	pflag.CommandLine.AddFlagSet(zap.FlagSet())
+
+	// Add flags registered by imported packages (e.g. glog and
+	// controller-runtime)
+	pflag.CommandLine.AddGoFlagSet(flag.CommandLine)
+
+	pflag.Parse()
+
+	logf.SetLogger(zap.Logger())
+
 	printVersion()
 
 	namespace, err := k8sutil.GetWatchNamespace()

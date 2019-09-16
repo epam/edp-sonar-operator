@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/epmd-edp/sonar-operator/v2/pkg/apis/edp/v1alpha1"
+	"github.com/epmd-edp/sonar-operator/v2/pkg/service/helper"
 	sonarSpec "github.com/epmd-edp/sonar-operator/v2/pkg/service/spec"
 	appsV1Api "github.com/openshift/api/apps/v1"
 	routeV1Api "github.com/openshift/api/route/v1"
@@ -40,36 +41,36 @@ func (service *OpenshiftService) Init(config *rest.Config, scheme *runtime.Schem
 
 	err := service.K8SService.Init(config, scheme)
 	if err != nil {
-		return logErrorAndReturn(err)
+		return err
 	}
 
 	templateClient, err := templateV1Client.NewForConfig(config)
 	if err != nil {
-		return logErrorAndReturn(err)
+		return err
 	}
 
 	service.templateClient = *templateClient
 	projectClient, err := projectV1Client.NewForConfig(config)
 	if err != nil {
-		return logErrorAndReturn(err)
+		return err
 	}
 
 	service.projectClient = *projectClient
 	securityClient, err := securityV1Client.NewForConfig(config)
 	if err != nil {
-		return logErrorAndReturn(err)
+		return err
 	}
 
 	service.securityClient = *securityClient
 	appClient, err := appsV1client.NewForConfig(config)
 	if err != nil {
-		return logErrorAndReturn(err)
+		return err
 	}
 
 	service.appClient = *appClient
 	routeClient, err := routeV1Client.NewForConfig(config)
 	if err != nil {
-		return logErrorAndReturn(err)
+		return err
 	}
 	service.routeClient = *routeClient
 
@@ -93,17 +94,17 @@ func (service OpenshiftService) GetRoute(namespace string, name string) (*routeV
 }
 func (service OpenshiftService) CreateSecurityContext(sonar v1alpha1.Sonar, sa *coreV1Api.ServiceAccount) error {
 
-	labels := generateLabels(sonar.Name)
+	labels := helper.GenerateLabels(sonar.Name)
 	priority := int32(1)
 
 	project, err := service.projectClient.Projects().Get(sonar.Namespace, metav1.GetOptions{})
 	if err != nil && k8serrors.IsNotFound(err) {
-		return logErrorAndReturn(errors.New(fmt.Sprintf("Unable to retrieve project %s", sonar.Namespace)))
+		return errors.New(fmt.Sprintf("Unable to retrieve project %s", sonar.Namespace))
 	}
 
 	displayName := project.GetObjectMeta().GetAnnotations()["openshift.io/display-name"]
 	if displayName == "" {
-		return logErrorAndReturn(errors.New(fmt.Sprintf("Project display name does not set")))
+		return errors.New(fmt.Sprintf("Project display name does not set"))
 	}
 
 	sonarSccObject := &securityV1Api.SecurityContextConstraints{
@@ -156,7 +157,7 @@ func (service OpenshiftService) CreateSecurityContext(sonar v1alpha1.Sonar, sa *
 	}
 
 	if err := controllerutil.SetControllerReference(&sonar, sonarSccObject, service.scheme); err != nil {
-		return logErrorAndReturn(err)
+		return err
 	}
 
 	sonarSCC, err := service.securityClient.SecurityContextConstraints().Get(sonarSccObject.Name, metav1.GetOptions{})
@@ -166,12 +167,12 @@ func (service OpenshiftService) CreateSecurityContext(sonar v1alpha1.Sonar, sa *
 		sonarSCC, err = service.securityClient.SecurityContextConstraints().Create(sonarSccObject)
 
 		if err != nil {
-			return logErrorAndReturn(err)
+			return err
 		}
 
 		log.Printf("Security Context Constraint %s has been created", sonarSCC.Name)
 	} else if err != nil {
-		return logErrorAndReturn(err)
+		return err
 
 	} else {
 		// TODO(Serhii Shydlovskyi): Reflect reports that present users and currently stored in object are different for some reason.
@@ -180,7 +181,7 @@ func (service OpenshiftService) CreateSecurityContext(sonar v1alpha1.Sonar, sa *
 			sonarSCC, err = service.securityClient.SecurityContextConstraints().Update(sonarSccObject)
 
 			if err != nil {
-				return logErrorAndReturn(err)
+				return err
 			}
 
 			log.Printf("Security Context Constraint %s has been updated", sonarSCC.Name)
@@ -192,7 +193,7 @@ func (service OpenshiftService) CreateSecurityContext(sonar v1alpha1.Sonar, sa *
 
 func (service OpenshiftService) CreateExternalEndpoint(sonar v1alpha1.Sonar) error {
 
-	labels := generateLabels(sonar.Name)
+	labels := helper.GenerateLabels(sonar.Name)
 
 	sonarRouteObject := &routeV1Api.Route{
 		ObjectMeta: metav1.ObjectMeta{
@@ -213,7 +214,7 @@ func (service OpenshiftService) CreateExternalEndpoint(sonar v1alpha1.Sonar) err
 	}
 
 	if err := controllerutil.SetControllerReference(&sonar, sonarRouteObject, service.scheme); err != nil {
-		return logErrorAndReturn(err)
+		return err
 	}
 
 	sonarRoute, err := service.routeClient.Routes(sonarRouteObject.Namespace).Get(sonarRouteObject.Name, metav1.GetOptions{})
@@ -223,25 +224,25 @@ func (service OpenshiftService) CreateExternalEndpoint(sonar v1alpha1.Sonar) err
 		sonarRoute, err = service.routeClient.Routes(sonarRouteObject.Namespace).Create(sonarRouteObject)
 
 		if err != nil {
-			return logErrorAndReturn(err)
+			return err
 		}
 
 		log.Printf("Route %s/%s has been created", sonarRoute.Namespace, sonarRoute.Name)
 	} else if err != nil {
-		return logErrorAndReturn(err)
+		return err
 	}
 
 	return nil
 }
 
 func (service OpenshiftService) CreateDbDeployConf(sonar v1alpha1.Sonar) error {
-	labels := generateLabels(sonar.Name)
+	labels := helper.GenerateLabels(sonar.Name)
 	name := sonar.Name + "-db"
 
 	sonarDbDcObject := newSonarDatabaseDeploymentConfig(name, sonar.Name, sonar.Namespace, labels)
 
 	if err := controllerutil.SetControllerReference(&sonar, sonarDbDcObject, service.scheme); err != nil {
-		return logErrorAndReturn(err)
+		return err
 	}
 
 	sonarDbDc, err := service.appClient.DeploymentConfigs(sonarDbDcObject.Namespace).Get(sonarDbDcObject.Name, metav1.GetOptions{})
@@ -252,23 +253,23 @@ func (service OpenshiftService) CreateDbDeployConf(sonar v1alpha1.Sonar) error {
 		sonarDbDc, err = service.appClient.DeploymentConfigs(sonarDbDcObject.Namespace).Create(sonarDbDcObject)
 
 		if err != nil {
-			return logErrorAndReturn(err)
+			return err
 		}
 
 		log.Printf("DeploymentConfig %s/%s has been created", sonarDbDc.Namespace, sonarDbDc.Name)
 	} else if err != nil {
-		return logErrorAndReturn(err)
+		return err
 	}
 
 	return nil
 }
 
 func (service OpenshiftService) CreateDeployConf(sonar v1alpha1.Sonar) error {
-	labels := generateLabels(sonar.Name)
+	labels := helper.GenerateLabels(sonar.Name)
 
 	sonarDcObject := newSonarDeploymentConfig(sonar.Name, sonar.Namespace, sonar.Spec.Version, labels)
 	if err := controllerutil.SetControllerReference(&sonar, sonarDcObject, service.scheme); err != nil {
-		return logErrorAndReturn(err)
+		return err
 	}
 
 	sonarDc, err := service.appClient.DeploymentConfigs(sonarDcObject.Namespace).Get(sonarDcObject.Name, metav1.GetOptions{})
@@ -277,12 +278,12 @@ func (service OpenshiftService) CreateDeployConf(sonar v1alpha1.Sonar) error {
 
 		sonarDc, err = service.appClient.DeploymentConfigs(sonarDcObject.Namespace).Create(sonarDcObject)
 		if err != nil {
-			return logErrorAndReturn(err)
+			return err
 		}
 
 		log.Printf("DeploymentConfig %s/%s has been created", sonarDc.Namespace, sonarDc.Name)
 	} else if err != nil {
-		return logErrorAndReturn(err)
+		return err
 	}
 
 	return nil
@@ -444,10 +445,10 @@ func newSonarDatabaseDeploymentConfig(name string, sa string, namespace string, 
 			Strategy: appsV1Api.DeploymentStrategy{
 				Type: appsV1Api.DeploymentStrategyTypeRolling,
 			},
-			Selector: generateLabels(name),
+			Selector: helper.GenerateLabels(name),
 			Template: &coreV1Api.PodTemplateSpec{
 				ObjectMeta: metav1.ObjectMeta{
-					Labels: generateLabels(name),
+					Labels: helper.GenerateLabels(name),
 				},
 				Spec: coreV1Api.PodSpec{
 					Containers: []coreV1Api.Container{
@@ -531,4 +532,13 @@ func newSonarDatabaseDeploymentConfig(name string, sa string, namespace string, 
 			},
 		},
 	}
+}
+
+func (service OpenshiftService) GetDeploymentConfig(instance v1alpha1.Sonar) (*appsV1Api.DeploymentConfig, error) {
+	deploymentConfig, err := service.appClient.DeploymentConfigs(instance.Namespace).Get(instance.Name, metav1.GetOptions{})
+	if err != nil {
+		return nil, err
+	}
+
+	return deploymentConfig, nil
 }

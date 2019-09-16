@@ -5,7 +5,6 @@ go 1.12
 replace git.apache.org/thrift.git => github.com/apache/thrift v0.12.0
 
 require (
-	cloud.google.com/go v0.44.3
 	github.com/alecthomas/template v0.0.0-20190718012654-fb15b899a751 // indirect
 	github.com/alecthomas/units v0.0.0-20190910110746-680d30ca3117 // indirect
 	github.com/dchest/uniuri v0.0.0-20160212164326-8902c56451e9
