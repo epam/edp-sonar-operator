@@ -1,11 +1,12 @@
-package service
+package openshift
 
 import (
 	"errors"
 	"fmt"
 	"github.com/epmd-edp/sonar-operator/v2/pkg/apis/edp/v1alpha1"
-	"github.com/epmd-edp/sonar-operator/v2/pkg/service/helper"
-	sonarSpec "github.com/epmd-edp/sonar-operator/v2/pkg/service/spec"
+	"github.com/epmd-edp/sonar-operator/v2/pkg/service/platform/helper"
+	"github.com/epmd-edp/sonar-operator/v2/pkg/service/platform/kubernetes"
+	sonarSpec "github.com/epmd-edp/sonar-operator/v2/pkg/service/sonar/spec"
 	appsV1Api "github.com/openshift/api/apps/v1"
 	routeV1Api "github.com/openshift/api/route/v1"
 	securityV1Api "github.com/openshift/api/security/v1"
@@ -28,7 +29,7 @@ import (
 )
 
 type OpenshiftService struct {
-	K8SService
+	kubernetes.K8SService
 
 	templateClient templateV1Client.TemplateV1Client
 	projectClient  projectV1Client.ProjectV1Client
@@ -156,7 +157,7 @@ func (service OpenshiftService) CreateSecurityContext(sonar v1alpha1.Sonar, sa *
 		},
 	}
 
-	if err := controllerutil.SetControllerReference(&sonar, sonarSccObject, service.scheme); err != nil {
+	if err := controllerutil.SetControllerReference(&sonar, sonarSccObject, service.Scheme); err != nil {
 		return err
 	}
 
@@ -213,7 +214,7 @@ func (service OpenshiftService) CreateExternalEndpoint(sonar v1alpha1.Sonar) err
 		},
 	}
 
-	if err := controllerutil.SetControllerReference(&sonar, sonarRouteObject, service.scheme); err != nil {
+	if err := controllerutil.SetControllerReference(&sonar, sonarRouteObject, service.Scheme); err != nil {
 		return err
 	}
 
@@ -241,7 +242,7 @@ func (service OpenshiftService) CreateDbDeployConf(sonar v1alpha1.Sonar) error {
 
 	sonarDbDcObject := newSonarDatabaseDeploymentConfig(name, sonar.Name, sonar.Namespace, labels)
 
-	if err := controllerutil.SetControllerReference(&sonar, sonarDbDcObject, service.scheme); err != nil {
+	if err := controllerutil.SetControllerReference(&sonar, sonarDbDcObject, service.Scheme); err != nil {
 		return err
 	}
 
@@ -268,7 +269,7 @@ func (service OpenshiftService) CreateDeployConf(sonar v1alpha1.Sonar) error {
 	labels := helper.GenerateLabels(sonar.Name)
 
 	sonarDcObject := newSonarDeploymentConfig(sonar.Name, sonar.Namespace, sonar.Spec.Version, labels)
-	if err := controllerutil.SetControllerReference(&sonar, sonarDcObject, service.scheme); err != nil {
+	if err := controllerutil.SetControllerReference(&sonar, sonarDcObject, service.Scheme); err != nil {
 		return err
 	}
 

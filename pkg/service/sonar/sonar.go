@@ -1,22 +1,21 @@
-package service
+package sonar
 
 import (
-	"bytes"
 	"context"
 	"fmt"
 	"github.com/dchest/uniuri"
 	jenkinsHelper "github.com/epmd-edp/jenkins-operator/v2/pkg/controller/jenkinsscript/helper"
 	"github.com/epmd-edp/sonar-operator/v2/pkg/apis/edp/v1alpha1"
-	sonarClient "github.com/epmd-edp/sonar-operator/v2/pkg/client"
-	"github.com/epmd-edp/sonar-operator/v2/pkg/helper"
-	sonarSpec "github.com/epmd-edp/sonar-operator/v2/pkg/service/spec"
+	"github.com/epmd-edp/sonar-operator/v2/pkg/client/sonar"
+	pkgHelper "github.com/epmd-edp/sonar-operator/v2/pkg/helper"
+	"github.com/epmd-edp/sonar-operator/v2/pkg/service/platform"
+	sonarHelper "github.com/epmd-edp/sonar-operator/v2/pkg/service/sonar/helper"
+	sonarSpec "github.com/epmd-edp/sonar-operator/v2/pkg/service/sonar/spec"
 	"github.com/operator-framework/operator-sdk/pkg/k8sutil"
 	"github.com/pkg/errors"
 	"gopkg.in/resty.v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
-	"text/template"
-	"time"
 )
 
 const (
@@ -32,13 +31,10 @@ const (
 
 	defaultConfigFilesAbsolutePath = "/usr/local/"
 	localConfigsRelativePath       = "configs"
-	defaultTemplatesDirectory      = "templates"
-	defaultConfigsAbsolutePath     = defaultConfigFilesAbsolutePath + localConfigsRelativePath
-	defaultProfileAbsolutePath     = defaultConfigFilesAbsolutePath + localConfigsRelativePath + "/" + defaultQualityProfilesFileName
-	defaultTemplatesAbsolutePath   = defaultConfigsAbsolutePath + "/" + defaultTemplatesDirectory
+
+	defaultProfileAbsolutePath = defaultConfigFilesAbsolutePath + localConfigsRelativePath + "/" + defaultQualityProfilesFileName
+
 	defaultQualityProfilesFileName = "quality-profile.xml"
-	jenkinsPluginConfigFileName    = "config-sonar-plugin.tmpl"
-	jenkinsPluginConfigPostfix     = "jenkins-plugin-config"
 )
 
 type Client struct {
@@ -54,24 +50,24 @@ type SonarService interface {
 	IsDeploymentConfigReady(instance v1alpha1.Sonar) (bool, error)
 }
 
-func NewSonarService(platformService PlatformService, k8sClient client.Client, k8sScheme *runtime.Scheme) SonarService {
+func NewSonarService(platformService platform.PlatformService, k8sClient client.Client, k8sScheme *runtime.Scheme) SonarService {
 	return SonarServiceImpl{platformService: platformService, k8sClient: k8sClient, k8sScheme: k8sScheme}
 }
 
 type SonarServiceImpl struct {
 	// Providing sonar service implementation through the interface (platform abstract)
-	platformService PlatformService
+	platformService platform.PlatformService
 	k8sClient       client.Client
 	k8sScheme       *runtime.Scheme
 }
 
-func (s SonarServiceImpl) initSonarClient(instance *v1alpha1.Sonar, defaultPassword bool) (*sonarClient.SonarClient, error) {
+func (s SonarServiceImpl) initSonarClient(instance *v1alpha1.Sonar, defaultPassword bool) (*sonar.SonarClient, error) {
 	sonarRoute, scheme, err := s.platformService.GetRoute(instance.Namespace, instance.Name)
 	if err != nil {
 		return nil, errors.Wrapf(err, "Unable to get route for %v", instance.Name)
 	}
 	sonarApiUrl := fmt.Sprintf("%v://%v/api", scheme, sonarRoute.Spec.Host)
-	sc := &sonarClient.SonarClient{}
+	sc := &sonar.SonarClient{}
 
 	password := DefaultPassword
 	if !defaultPassword {
@@ -177,18 +173,42 @@ func (s SonarServiceImpl) ExposeConfiguration(instance v1alpha1.Sonar) (*v1alpha
 	if ciToken != nil {
 		ciSecret := map[string][]byte{
 			"username": []byte(JenkinsLogin),
-			"token":    []byte(*ciToken),
+			"secret":   []byte(*ciToken),
 		}
 
 		err = s.platformService.CreateSecret(instance, ciUserName, ciSecret)
 		if err != nil {
 			return &instance, errors.Wrapf(err, "Failed to create secret for  %v user", ciUserName)
 		}
-	}
 
-	err = s.configureSonarPluginInJenkins(&instance, ciUserName)
-	if err != nil {
-		return &instance, errors.Wrapf(err, "Failed to create secret for  %v user", ciUserName)
+		err = s.platformService.CreateJenkinsServiceAccount(instance.Namespace, ciUserName, "token")
+		if err != nil {
+			return &instance, errors.Wrapf(err, "Failed to create Jenkins Service Account for %v", ciUserName)
+		}
+
+		data := sonarHelper.InitNewJenkinsPluginInfo(true)
+		data.ServerName = instance.Name
+		data.SecretName = ciUserName
+
+		jenkinsScriptContext, err := sonarHelper.ParseDefaultTemplate(data)
+		if err != nil {
+			return &instance, errors.Wrapf(err, "Failed to parse default Jenkins plugin template!")
+		}
+
+		configMapName := fmt.Sprintf("%s-%s", instance.Name, sonarSpec.JenkinsPluginName)
+		configMapData := map[string]string{
+			jenkinsHelper.JenkinsDefaultScriptConfigMapKey: jenkinsScriptContext.String(),
+		}
+
+		err = s.platformService.CreateConfigMap(instance, configMapName, configMapData)
+		if err != nil {
+			return &instance, errors.Wrapf(err, "Failed to create Config Map %v", configMapName)
+		}
+
+		err = s.platformService.CreateJenkinsScript(instance.Namespace, sonarSpec.JenkinsPluginName)
+		if err != nil {
+			return &instance, errors.Wrapf(err, "Failed to create Jenkins Script for %v", ciUserName)
+		}
 	}
 
 	readPassword := uniuri.New()
@@ -273,7 +293,7 @@ func (s SonarServiceImpl) Configure(instance v1alpha1.Sonar) (*v1alpha1.Sonar, e
 		return &instance, errors.Wrap(err, "Failed to install plugins for Sonar!"), false
 	}
 
-	executableFilePath := helper.GetExecutableFilePath()
+	executableFilePath := pkgHelper.GetExecutableFilePath()
 	profilePath := defaultProfileAbsolutePath
 
 	if _, err := k8sutil.GetOperatorNamespace(); err != nil && err == k8sutil.ErrNoNamespace {
@@ -348,19 +368,16 @@ func (s SonarServiceImpl) Install(instance v1alpha1.Sonar) (*v1alpha1.Sonar, err
 	err = s.platformService.CreateSecret(instance, adminSecretName, adminSecret)
 	if err != nil {
 		return &instance, errors.Wrapf(err, "Failed to create password for Admin in %s Sonar!", instance.Name)
-		//s.resourceActionFailed(instance, err)
 	}
 
 	sa, err := s.platformService.CreateServiceAccount(instance)
 	if err != nil {
 		return &instance, errors.Wrapf(err, "Failed to create Service Account for %v Sonar!", instance.Name)
-		//s.resourceActionFailed(instance, err)
 	}
 
 	err = s.platformService.CreateSecurityContext(instance, sa)
 	if err != nil {
 		return &instance, errors.Wrapf(err, "Failed to create Security Context for %v Sonar!", instance.Name)
-		//s.resourceActionFailed(instance, err)
 	}
 
 	err = s.platformService.CreateDeployConf(instance)
@@ -391,21 +408,6 @@ func (s SonarServiceImpl) Install(instance v1alpha1.Sonar) (*v1alpha1.Sonar, err
 	return &instance, nil
 }
 
-func (s SonarServiceImpl) updateAvailableStatus(instance *v1alpha1.Sonar, value bool) error {
-	if instance.Status.Available != value {
-		instance.Status.Available = value
-		instance.Status.LastTimeUpdated = time.Now()
-		err := s.k8sClient.Status().Update(context.TODO(), instance)
-		if err != nil {
-			err = s.k8sClient.Update(context.TODO(), instance)
-			if err != nil {
-				return err
-			}
-		}
-	}
-	return nil
-}
-
 func (s SonarServiceImpl) updateExternalConfig(instance *v1alpha1.Sonar, config v1alpha1.SonarExternalConfiguration) error {
 	instance.Spec.SonarExternalConfiguration = config
 
@@ -419,65 +421,17 @@ func (s SonarServiceImpl) updateExternalConfig(instance *v1alpha1.Sonar, config 
 	return nil
 }
 
-func (s SonarServiceImpl) configureSonarPluginInJenkins(instance *v1alpha1.Sonar, ciTokenSecretName string) error {
-	ciTokenSecret, err := s.platformService.GetSecretData(instance.Namespace, ciTokenSecretName)
-	executableFilePath := helper.GetExecutableFilePath()
-	templatesDirectoryPath := defaultTemplatesAbsolutePath
-	if _, err := k8sutil.GetOperatorNamespace(); err != nil && err == k8sutil.ErrNoNamespace {
-		templatesDirectoryPath =fmt.Sprintf("%v\\..\\%v\\%v", executableFilePath, localConfigsRelativePath, defaultTemplatesDirectory)
-	}
-
-	var jenkinsPluginConfigurationScriptContext bytes.Buffer
-	templateAbsolutePath := fmt.Sprintf("%v\\%v", templatesDirectoryPath, jenkinsPluginConfigFileName)
-	t := template.Must(template.New(jenkinsPluginConfigFileName).ParseFiles(templateAbsolutePath))
-	data := struct {
-		Token      string
-		ServerName string
-		ServerPort int
-	}{
-		string(ciTokenSecret["token"]),
-		instance.Name,
-		sonarSpec.Port,
-	}
-	err = t.Execute(&jenkinsPluginConfigurationScriptContext, data)
-	if err != nil {
-		return errors.Wrapf(err, "Couldn't parse template %v", jenkinsPluginConfigFileName)
-	}
-
-	jenkinsPluginConfigurationName := fmt.Sprintf("%v-%v", instance.Name, jenkinsPluginConfigPostfix)
-
-	jenkinsScript, err := jenkinsHelper.CreateJenkinsScript(
-		jenkinsHelper.K8sClient{s.k8sClient, s.k8sScheme},
-		jenkinsPluginConfigurationName,
-		jenkinsPluginConfigurationName,
-		instance.Namespace,
-		false,
-		nil)
-	if err != nil {
-		return errors.Wrapf(err, "Couldn't create Jenkins Script %v", jenkinsPluginConfigurationName)
-	}
-
-	labels := helper.GenerateLabels(instance.Name)
-	configMapData := map[string]string{jenkinsHelper.JenkinsDefaultScriptConfigMapKey: jenkinsPluginConfigurationScriptContext.String()}
-	err = s.platformService.CreateConfigMapFromData(*instance, jenkinsPluginConfigurationName, configMapData, labels, jenkinsScript)
-	if err != nil {
-		return err
-	}
-
-	return nil
-}
-
 func (s SonarServiceImpl) IsDeploymentConfigReady(instance v1alpha1.Sonar) (bool, error) {
-	nexusIsReady := false
+	sonarIsReady := false
 
-	nexusDc, err := s.platformService.GetDeploymentConfig(instance)
+	sonarDc, err := s.platformService.GetDeploymentConfig(instance)
 	if err != nil {
-		return nexusIsReady, err
+		return sonarIsReady, err
 	}
 
-	if nexusDc.Status.AvailableReplicas == 1 {
-		nexusIsReady = true
+	if sonarDc.Status.AvailableReplicas == 1 {
+		sonarIsReady = true
 	}
 
-	return nexusIsReady, nil
+	return sonarIsReady, nil
 }

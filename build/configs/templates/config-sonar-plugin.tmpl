@@ -25,20 +25,12 @@ import com.cloudbees.plugins.credentials.domains.*
 import com.cloudbees.plugins.credentials.domains.Domain
 import com.cloudbees.plugins.credentials.impl.*
 
-
-def sonarSecret = Secret.fromString(StringUtils.trimToNull("{{ .Token }}"))
-def sonarCredentialsName = "sonar-token"
-global_domain = Domain.global()
-credentials_store = Jenkins.instance.getExtensionList('com.cloudbees.plugins.credentials.SystemCredentialsProvider')[0].getStore()
-credentials = new StringCredentialsImpl(CredentialsScope.GLOBAL, sonarCredentialsName,"Token for Jenkins-Sonar integration", sonarSecret)
-credentials_store.addCredentials(global_domain, credentials)
-
 // Sonar plugin configuration
 SonarGlobalConfiguration sonarConf = Hudson.instance.getDescriptorByType(SonarGlobalConfiguration.class)
 def sonarProperties = new SonarInstallation(
         "Sonar",
         "http://{{ .ServerName }}:{{ .ServerPort }}",
-  		sonarCredentialsName,
+  		{{ .SecretName }},
   		Secret.fromString(StringUtils.trimToNull("")),
         "5.3",
         "",

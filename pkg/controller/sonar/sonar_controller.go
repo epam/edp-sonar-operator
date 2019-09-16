@@ -4,7 +4,8 @@ import (
 	"context"
 	"fmt"
 	"github.com/epmd-edp/jenkins-operator/v2/pkg/controller/helper"
-	"github.com/epmd-edp/sonar-operator/v2/pkg/service"
+	"github.com/epmd-edp/sonar-operator/v2/pkg/service/platform"
+	"github.com/epmd-edp/sonar-operator/v2/pkg/service/sonar"
 	"time"
 
 	v2v1alpha1 "github.com/epmd-edp/sonar-operator/v2/pkg/apis/edp/v1alpha1"
@@ -50,9 +51,9 @@ func Add(mgr manager.Manager) error {
 func newReconciler(mgr manager.Manager) reconcile.Reconciler {
 	scheme := mgr.GetScheme()
 	client := mgr.GetClient()
-	platformService, _ := service.NewPlatformService(scheme)
+	platformService, _ := platform.NewPlatformService(scheme)
 
-	sonarService := service.NewSonarService(platformService, client, scheme)
+	sonarService := sonar.NewSonarService(platformService, client, scheme)
 	return &ReconcileSonar{
 		client:  client,
 		scheme:  scheme,
@@ -85,7 +86,7 @@ type ReconcileSonar struct {
 	// that reads objects from the cache and writes to the apiserver
 	client  client.Client
 	scheme  *runtime.Scheme
-	service service.SonarService
+	service sonar.SonarService
 }
 
 // Reconcile reads that state of the cluster for a Sonar object and makes changes based on the state read
@@ -133,7 +134,7 @@ func (r *ReconcileSonar) Reconcile(request reconcile.Request) (reconcile.Result,
 	if dcIsReady, err := r.service.IsDeploymentConfigReady(*instance); err != nil {
 		return reconcile.Result{RequeueAfter: helper.DefaultRequeueTime * time.Second}, errorsf.Wrapf(err, "Checking if Deployment configs is ready has been failed")
 	} else if !dcIsReady {
-		reqLogger.Info("Deployment configs is not ready for configuration yet")
+		reqLogger.Info("Deployment config is not ready for configuration yet")
 		return reconcile.Result{RequeueAfter: helper.DefaultRequeueTime * time.Second}, nil
 	}
 

@@ -1,10 +1,14 @@
-package service
+package kubernetes
 
 import (
 	"fmt"
+	jenkinsV1Api "github.com/epmd-edp/jenkins-operator/v2/pkg/apis/v2/v1alpha1"
+	jenkinsScriptV1Client "github.com/epmd-edp/jenkins-operator/v2/pkg/controller/jenkinsscript/client"
+	jenkinsSAV1Client "github.com/epmd-edp/jenkins-operator/v2/pkg/controller/jenkinsserviceaccount/client"
 	"github.com/epmd-edp/sonar-operator/v2/pkg/apis/edp/v1alpha1"
-	"github.com/epmd-edp/sonar-operator/v2/pkg/service/helper"
-	sonarSpec "github.com/epmd-edp/sonar-operator/v2/pkg/service/spec"
+	"github.com/epmd-edp/sonar-operator/v2/pkg/service/platform/helper"
+	platformHelper "github.com/epmd-edp/sonar-operator/v2/pkg/service/platform/helper"
+	sonarSpec "github.com/epmd-edp/sonar-operator/v2/pkg/service/sonar/spec"
 	"github.com/pkg/errors"
 	coreV1Api "k8s.io/api/core/v1"
 	k8serr "k8s.io/apimachinery/pkg/api/errors"
@@ -21,8 +25,10 @@ import (
 var logV2 = logf.Log.WithName("platform")
 
 type K8SService struct {
-	scheme     *runtime.Scheme
-	coreClient coreV1Client.CoreV1Client
+	Scheme                      *runtime.Scheme
+	coreClient                  coreV1Client.CoreV1Client
+	JenkinsScriptClient         jenkinsScriptV1Client.EdpV1Client
+	JenkinsServiceAccountClient jenkinsSAV1Client.EdpV1Client
 }
 
 func (service *K8SService) Init(config *rest.Config, scheme *runtime.Scheme) error {
@@ -31,8 +37,21 @@ func (service *K8SService) Init(config *rest.Config, scheme *runtime.Scheme) err
 	if err != nil {
 		return err
 	}
+
+	jenkinsScriptClient, err := jenkinsScriptV1Client.NewForConfig(config)
+	if err != nil {
+		return err
+	}
+
+	JenkinsServiceAccountClient, err := jenkinsSAV1Client.NewForConfig(config)
+	if err != nil {
+		return err
+	}
+
 	service.coreClient = *coreClient
-	service.scheme = scheme
+	service.JenkinsScriptClient = *jenkinsScriptClient
+	service.JenkinsServiceAccountClient = *JenkinsServiceAccountClient
+	service.Scheme = scheme
 	return nil
 }
 
@@ -73,7 +92,7 @@ func (service K8SService) CreateSecret(sonar v1alpha1.Sonar, name string, data m
 		Type: "Opaque",
 	}
 
-	if err := controllerutil.SetControllerReference(&sonar, sonarSecretObject, service.scheme); err != nil {
+	if err := controllerutil.SetControllerReference(&sonar, sonarSecretObject, service.Scheme); err != nil {
 		return err
 	}
 
@@ -121,7 +140,7 @@ func (service K8SService) CreateVolume(sonar v1alpha1.Sonar) error {
 			},
 		}
 
-		if err := controllerutil.SetControllerReference(&sonar, sonarVolumeObject, service.scheme); err != nil {
+		if err := controllerutil.SetControllerReference(&sonar, sonarVolumeObject, service.Scheme); err != nil {
 			return err
 		}
 
@@ -156,7 +175,7 @@ func (service K8SService) CreateServiceAccount(sonar v1alpha1.Sonar) (*coreV1Api
 		},
 	}
 
-	if err := controllerutil.SetControllerReference(&sonar, sonarServiceAccountObject, service.scheme); err != nil {
+	if err := controllerutil.SetControllerReference(&sonar, sonarServiceAccountObject, service.Scheme); err != nil {
 		return nil, err
 	}
 
@@ -194,7 +213,7 @@ func (service K8SService) CreateService(sonar v1alpha1.Sonar) error {
 
 		sonarServiceObject, err := newSonarInternalBalancingService(serviceName, sonar.Namespace, labels, portMap[serviceName])
 
-		if err := controllerutil.SetControllerReference(&sonar, sonarServiceObject, service.scheme); err != nil {
+		if err := controllerutil.SetControllerReference(&sonar, sonarServiceObject, service.Scheme); err != nil {
 			return err
 		}
 
@@ -237,8 +256,8 @@ func newSonarInternalBalancingService(serviceName string, namespace string, labe
 	}, nil
 }
 
-func (service K8SService) CreateConfigMapFromData(instance v1alpha1.Sonar, configMapName string,
-	configMapData map[string]string, labels map[string]string, ownerReference metav1.Object) error {
+func (service K8SService) CreateConfigMap(instance v1alpha1.Sonar, configMapName string, configMapData map[string]string) error {
+	labels := platformHelper.GenerateLabels(instance.Name)
 	configMapObject := &coreV1Api.ConfigMap{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      configMapName,
@@ -248,7 +267,7 @@ func (service K8SService) CreateConfigMapFromData(instance v1alpha1.Sonar, confi
 		Data: configMapData,
 	}
 
-	if err := controllerutil.SetControllerReference(ownerReference, configMapObject, service.scheme); err != nil {
+	if err := controllerutil.SetControllerReference(&instance, configMapObject, service.Scheme); err != nil {
 		return errors.Wrapf(err, "Couldn't set reference for Config Map %v object", configMapObject.Name)
 	}
 
@@ -257,11 +276,65 @@ func (service K8SService) CreateConfigMapFromData(instance v1alpha1.Sonar, confi
 		if k8serr.IsNotFound(err) {
 			cm, err = service.coreClient.ConfigMaps(configMapObject.Namespace).Create(configMapObject)
 			if err != nil {
-				return errors.Wrapf(err, "Couldn't create Config Map %v object", cm.Name)
+				return errors.Wrapf(err, "Couldn't create Config Map %v object", configMapObject.Name)
 			}
 			logV2.Info(fmt.Sprintf("ConfigMap %s/%s has been created", cm.Namespace, cm.Name))
 		}
 		return errors.Wrapf(err, "Couldn't get ConfigMap %v object", configMapObject.Name)
 	}
+	return nil
+}
+
+func (service K8SService) CreateJenkinsScript(namespace string, configMap string) error {
+	js := &jenkinsV1Api.JenkinsScript{
+		TypeMeta: metav1.TypeMeta{},
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      configMap,
+			Namespace: namespace,
+		},
+		Spec: jenkinsV1Api.JenkinsScriptSpec{
+			SourceCmName: configMap,
+		},
+	}
+
+	_, err := service.JenkinsScriptClient.Get(configMap, namespace, metav1.GetOptions{})
+	if err != nil {
+		if k8serr.IsNotFound(err) {
+			_, err = service.JenkinsScriptClient.Create(js, namespace)
+			if err != nil {
+				return err
+			}
+		}
+		return err
+	}
+	return nil
+
+}
+
+func (service K8SService) CreateJenkinsServiceAccount(namespace string, secretName string, serviceAccountType string) error {
+
+	jsa := &jenkinsV1Api.JenkinsServiceAccount{
+		TypeMeta: metav1.TypeMeta{},
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      secretName,
+			Namespace: namespace,
+		},
+		Spec: jenkinsV1Api.JenkinsServiceAccountSpec{
+			Type:        serviceAccountType,
+			Credentials: secretName,
+		},
+	}
+
+	_, err := service.JenkinsServiceAccountClient.Get(secretName, namespace, metav1.GetOptions{})
+	if err != nil {
+		if k8serr.IsNotFound(err) {
+			_, err = service.JenkinsServiceAccountClient.Create(jsa, namespace)
+			if err != nil {
+				return err
+			}
+		}
+		return err
+	}
+
 	return nil
 }

@@ -1,11 +1,11 @@
-package service
+package platform
 
 import (
 	"github.com/epmd-edp/sonar-operator/v2/pkg/apis/edp/v1alpha1"
+	"github.com/epmd-edp/sonar-operator/v2/pkg/service/platform/openshift"
 	appsV1Api "github.com/openshift/api/apps/v1"
 	routeV1Api "github.com/openshift/api/route/v1"
 	coreV1Api "k8s.io/api/core/v1"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/client-go/tools/clientcmd"
 )
@@ -21,9 +21,11 @@ type PlatformService interface {
 	CreateVolume(sonar v1alpha1.Sonar) error
 	CreateDbDeployConf(sonar v1alpha1.Sonar) error
 	CreateDeployConf(sonar v1alpha1.Sonar) error
-	CreateConfigMapFromData(instance v1alpha1.Sonar, configMapName string, configMapData map[string]string, labels map[string]string, ownerReference metav1.Object) error
+	CreateConfigMap(instance v1alpha1.Sonar, configMapName string, configMapData map[string]string) error
 	GetDeploymentConfig(instance v1alpha1.Sonar) (*appsV1Api.DeploymentConfig, error)
 	GetSecretData(namespace string, name string) (map[string][]byte, error)
+	CreateJenkinsServiceAccount(namespace string, secretName string, serviceAccountType string) error
+	CreateJenkinsScript(namespace string, configMap string) error
 }
 
 func NewPlatformService(scheme *runtime.Scheme) (PlatformService, error) {
@@ -37,7 +39,7 @@ func NewPlatformService(scheme *runtime.Scheme) (PlatformService, error) {
 		return nil, err
 	}
 
-	platform := OpenshiftService{}
+	platform := openshift.OpenshiftService{}
 
 	err = platform.Init(restConfig, scheme)
 	if err != nil {
