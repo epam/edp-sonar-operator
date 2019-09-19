@@ -13,6 +13,7 @@ import (
 	_ "k8s.io/client-go/plugin/pkg/client/auth"
 
 	jenkinsApis "github.com/epmd-edp/jenkins-operator/v2/pkg/apis"
+	keycloakApi "github.com/epmd-edp/keycloak-operator/pkg/apis"
 	"github.com/epmd-edp/sonar-operator/v2/pkg/apis"
 	"github.com/epmd-edp/sonar-operator/v2/pkg/controller"
 
@@ -24,6 +25,7 @@ import (
 	logf "sigs.k8s.io/controller-runtime/pkg/runtime/log"
 	"sigs.k8s.io/controller-runtime/pkg/runtime/signals"
 )
+
 var log = logf.Log.WithName("cmd")
 
 func printVersion() {
@@ -88,6 +90,12 @@ func main() {
 	}
 
 	if err := jenkinsApis.AddToScheme(mgr.GetScheme()); err != nil {
+		log.Error(err, "")
+		os.Exit(1)
+	}
+
+	// Setup Keycloak API.
+	if err := keycloakApi.AddToScheme(mgr.GetScheme()); err != nil {
 		log.Error(err, "")
 		os.Exit(1)
 	}

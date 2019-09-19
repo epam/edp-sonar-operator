@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/dchest/uniuri"
 	jenkinsHelper "github.com/epmd-edp/jenkins-operator/v2/pkg/controller/jenkinsscript/helper"
+	keycloakApi "github.com/epmd-edp/keycloak-operator/pkg/apis/v1/v1alpha1"
 	"github.com/epmd-edp/sonar-operator/v2/pkg/apis/edp/v1alpha1"
 	"github.com/epmd-edp/sonar-operator/v2/pkg/client/sonar"
 	pkgHelper "github.com/epmd-edp/sonar-operator/v2/pkg/helper"
@@ -14,7 +15,10 @@ import (
 	"github.com/operator-framework/operator-sdk/pkg/k8sutil"
 	"github.com/pkg/errors"
 	"gopkg.in/resty.v1"
+	k8sErr "k8s.io/apimachinery/pkg/api/errors"
+	"k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
@@ -92,32 +96,47 @@ func (s SonarServiceImpl) Integration(instance v1alpha1.Sonar) (*v1alpha1.Sonar,
 		return &instance, errors.Wrap(err, "Failed to initialize Sonar Client!")
 	}
 
-	openIdConfigMap, err := s.platformService.GetConfigmap(instance.Namespace, "keycloak-sonaropenid-config")
-	if err != nil {
-		return &instance, errors.Wrap(err, "Failed to get Keycloak OpenID configuration!")
+	realm := &keycloakApi.KeycloakRealm{}
+	nsn := types.NamespacedName{
+		Namespace: instance.Namespace,
+		Name:      "main",
 	}
-	if openIdConfigMap != nil {
-		openIdConfiguration := openIdConfigMap["openid-configuration.json"]
-		err = sc.ConfigureGeneralSettings("value", "sonar.auth.oidc.providerConfiguration", openIdConfiguration)
-		if err != nil {
-			return &instance, errors.Wrap(err, "Failed to to configure sonar.auth.oidc.providerConfiguration!")
-		}
+	err = s.k8sClient.Get(context.TODO(), nsn, realm)
+	if err != nil {
+		return &instance, err
+	}
+	if realm.Annotations == nil {
+		return &instance, errors.New("realm main does not have required annotations")
+	}
+	openIdConfiguration := realm.Annotations["openid-configuration"]
+	err = sc.ConfigureGeneralSettings("value", "sonar.auth.oidc.providerConfiguration", openIdConfiguration)
+	if err != nil {
+		return &instance, errors.Wrap(err, "Failed to to configure sonar.auth.oidc.providerConfiguration!")
 	}
 
 	sonarRoute, scheme, err := s.platformService.GetRoute(instance.Namespace, instance.Name)
+	var baseUrl string
 	if sonarRoute != nil {
-		err = sc.ConfigureGeneralSettings("value", "sonar.core.serverBaseURL", fmt.Sprintf("%v://%v", scheme, sonarRoute.Spec.Host))
+		baseUrl = fmt.Sprintf("%v://%v", scheme, sonarRoute.Spec.Host)
+		err = sc.ConfigureGeneralSettings("value", "sonar.core.serverBaseURL", baseUrl)
 		if err != nil {
 			return &instance, errors.Wrap(err, "Failed to configure sonar.core.serverBaseURL!")
 		}
 	}
-
-	keycloakClientSecretName := fmt.Sprintf("%v-is-credentials", instance.Name)
-	keycloakCredentials, err := s.platformService.GetSecretData(instance.Namespace, keycloakClientSecretName)
+	cl, err := s.getKeycloakClient(instance)
 	if err != nil {
-		return &instance, errors.Wrapf(err, "Failed to get data from Keycloak client secret %v!", keycloakClientSecretName)
+		return &instance, err
 	}
-	err = sc.ConfigureGeneralSettings("value", "sonar.auth.oidc.clientId.secured", string(keycloakCredentials["client_id"]))
+
+	if cl == nil {
+		err = s.createKeycloakClient(instance, baseUrl)
+	}
+
+	if err != nil {
+		return &instance, err
+	}
+
+	err = sc.ConfigureGeneralSettings("value", "sonar.auth.oidc.clientId.secured", instance.Name)
 	if err != nil {
 		return &instance, errors.Wrap(err, "Failed to configure sonar.auth.oidc.clientId.secured!")
 	}
@@ -137,6 +156,47 @@ func (s SonarServiceImpl) Integration(instance v1alpha1.Sonar) (*v1alpha1.Sonar,
 		return &instance, errors.Wrap(err, "Failed to configure sonar.auth.oidc.enabled!")
 	}
 	return &instance, nil
+}
+
+func (s SonarServiceImpl) getKeycloakClient(instance v1alpha1.Sonar) (*keycloakApi.KeycloakClient, error) {
+	cl := &keycloakApi.KeycloakClient{}
+	err := s.k8sClient.Get(context.TODO(), types.NamespacedName{
+		Name:      instance.Name,
+		Namespace: instance.Namespace,
+	}, cl)
+	if err != nil {
+		if k8sErr.IsNotFound(err) {
+			return nil, nil
+		}
+		return nil, err
+	}
+	return cl, nil
+}
+
+func (s SonarServiceImpl) createKeycloakClient(instance v1alpha1.Sonar, baseUrl string) error {
+	cl := &keycloakApi.KeycloakClient{
+		ObjectMeta: v1.ObjectMeta{
+			Name:      instance.Name,
+			Namespace: instance.Namespace,
+		},
+		Spec: keycloakApi.KeycloakClientSpec{
+			ClientId:                instance.Name,
+			Public:                  true,
+			WebUrl:                  baseUrl,
+			AdvancedProtocolMappers: true,
+			RealmRoles: &[]keycloakApi.RealmRole{
+				{
+					Name:      "sonar-administrators",
+					Composite: "administrator",
+				},
+				{
+					Name:      "sonar-users",
+					Composite: "developer",
+				},
+			},
+		},
+	}
+	return s.k8sClient.Create(context.TODO(), cl)
 }
 
 func (s SonarServiceImpl) ExposeConfiguration(instance v1alpha1.Sonar) (*v1alpha1.Sonar, error) {
