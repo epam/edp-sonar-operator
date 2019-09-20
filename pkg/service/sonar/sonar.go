@@ -95,25 +95,20 @@ func (s SonarServiceImpl) Integration(instance v1alpha1.Sonar) (*v1alpha1.Sonar,
 	if err != nil {
 		return &instance, errors.Wrap(err, "Failed to initialize Sonar Client!")
 	}
-
-	realm := &keycloakApi.KeycloakRealm{}
-	nsn := types.NamespacedName{
-		Namespace: instance.Namespace,
-		Name:      "main",
-	}
-	err = s.k8sClient.Get(context.TODO(), nsn, realm)
+	realm, err := s.getKeycloakRealm(instance)
 	if err != nil {
 		return &instance, err
 	}
-	if realm.Annotations == nil {
-		return &instance, errors.New("realm main does not have required annotations")
+	if realm != nil {
+		if realm.Annotations == nil {
+			return &instance, errors.New("realm main does not have required annotations")
+		}
+		openIdConfiguration := realm.Annotations["openid-configuration"]
+		err = sc.ConfigureGeneralSettings("value", "sonar.auth.oidc.providerConfiguration", openIdConfiguration)
+		if err != nil {
+			return &instance, errors.Wrap(err, "Failed to to configure sonar.auth.oidc.providerConfiguration!")
+		}
 	}
-	openIdConfiguration := realm.Annotations["openid-configuration"]
-	err = sc.ConfigureGeneralSettings("value", "sonar.auth.oidc.providerConfiguration", openIdConfiguration)
-	if err != nil {
-		return &instance, errors.Wrap(err, "Failed to to configure sonar.auth.oidc.providerConfiguration!")
-	}
-
 	sonarRoute, scheme, err := s.platformService.GetRoute(instance.Namespace, instance.Name)
 	var baseUrl string
 	if sonarRoute != nil {
@@ -156,6 +151,21 @@ func (s SonarServiceImpl) Integration(instance v1alpha1.Sonar) (*v1alpha1.Sonar,
 		return &instance, errors.Wrap(err, "Failed to configure sonar.auth.oidc.enabled!")
 	}
 	return &instance, nil
+}
+
+func (s SonarServiceImpl) getKeycloakRealm(instance v1alpha1.Sonar) (*keycloakApi.KeycloakRealm, error) {
+	realm := &keycloakApi.KeycloakRealm{}
+	err := s.k8sClient.Get(context.TODO(), types.NamespacedName{
+		Name:      "main",
+		Namespace: instance.Namespace,
+	}, realm)
+	if err != nil {
+		if k8sErr.IsNotFound(err) {
+			return nil, nil
+		}
+		return nil, err
+	}
+	return realm, nil
 }
 
 func (s SonarServiceImpl) getKeycloakClient(instance v1alpha1.Sonar) (*keycloakApi.KeycloakClient, error) {
