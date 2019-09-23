@@ -8,7 +8,6 @@ import (
 	"github.com/epmd-edp/sonar-operator/v2/pkg/service/sonar/spec"
 	"github.com/operator-framework/operator-sdk/pkg/k8sutil"
 	"github.com/pkg/errors"
-	"path/filepath"
 	"text/template"
 )
 
@@ -38,11 +37,11 @@ func ParseDefaultTemplate(data JenkinsPluginData) (bytes.Buffer, error) {
 	executableFilePath := helper.GetExecutableFilePath()
 	templatesDirectoryPath := defaultTemplatesAbsolutePath
 	if _, err := k8sutil.GetOperatorNamespace(); err != nil && err == k8sutil.ErrNoNamespace {
-		templatesDirectoryPath = fmt.Sprintf("%v\\..\\%v\\%v", executableFilePath, localConfigsRelativePath, defaultTemplatesDirectory)
+		templatesDirectoryPath = fmt.Sprintf("%v/../%v/%v", executableFilePath, localConfigsRelativePath, defaultTemplatesDirectory)
 	}
 
 	var jenkinsScriptContext bytes.Buffer
-	templateAbsolutePath := filepath.Clean(fmt.Sprintf("%v\\%v", templatesDirectoryPath, jenkinsPluginConfigFileName))
+	templateAbsolutePath := fmt.Sprintf("%v/%v", templatesDirectoryPath, jenkinsPluginConfigFileName)
 	if !sonarClientHelper.FileExists(templateAbsolutePath) {
 		errMsg := fmt.Sprintf("Template file not found in path specificed! Path: %s", templateAbsolutePath)
 		return bytes.Buffer{}, errors.New(errMsg)
