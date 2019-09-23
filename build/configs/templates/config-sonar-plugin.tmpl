@@ -30,7 +30,7 @@ SonarGlobalConfiguration sonarConf = Hudson.instance.getDescriptorByType(SonarGl
 def sonarProperties = new SonarInstallation(
         "Sonar",
         "http://{{ .ServerName }}:{{ .ServerPort }}",
-  		{{ .SecretName }},
+  		"{{ .SecretName }}",
   		Secret.fromString(StringUtils.trimToNull("")),
         "5.3",
         "",

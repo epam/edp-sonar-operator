@@ -250,35 +250,35 @@ func (s SonarServiceImpl) ExposeConfiguration(instance v1alpha1.Sonar) (*v1alpha
 		if err != nil {
 			return &instance, errors.Wrapf(err, "Failed to create secret for  %v user", ciUserName)
 		}
+	}
 
-		err = s.platformService.CreateJenkinsServiceAccount(instance.Namespace, ciUserName, "token")
-		if err != nil {
-			return &instance, errors.Wrapf(err, "Failed to create Jenkins Service Account for %v", ciUserName)
-		}
+	err = s.platformService.CreateJenkinsServiceAccount(instance.Namespace, ciUserName, "token")
+	if err != nil {
+		return &instance, errors.Wrapf(err, "Failed to create Jenkins Service Account for %v", ciUserName)
+	}
 
-		data := sonarHelper.InitNewJenkinsPluginInfo(true)
-		data.ServerName = instance.Name
-		data.SecretName = ciUserName
+	data := sonarHelper.InitNewJenkinsPluginInfo(true)
+	data.ServerName = instance.Name
+	data.SecretName = JenkinsLogin
 
-		jenkinsScriptContext, err := sonarHelper.ParseDefaultTemplate(data)
-		if err != nil {
-			return &instance, errors.Wrapf(err, "Failed to parse default Jenkins plugin template!")
-		}
+	jenkinsScriptContext, err := sonarHelper.ParseDefaultTemplate(data)
+	if err != nil {
+		return &instance, errors.Wrapf(err, "Failed to parse default Jenkins plugin template!")
+	}
 
-		configMapName := fmt.Sprintf("%s-%s", instance.Name, sonarSpec.JenkinsPluginName)
-		configMapData := map[string]string{
-			jenkinsHelper.JenkinsDefaultScriptConfigMapKey: jenkinsScriptContext.String(),
-		}
+	configMapName := fmt.Sprintf("%s-%s", instance.Name, sonarSpec.JenkinsPluginConfigPostfix)
+	configMapData := map[string]string{
+		jenkinsHelper.JenkinsDefaultScriptConfigMapKey: jenkinsScriptContext.String(),
+	}
 
-		err = s.platformService.CreateConfigMap(instance, configMapName, configMapData)
-		if err != nil {
-			return &instance, errors.Wrapf(err, "Failed to create Config Map %v", configMapName)
-		}
+	err = s.platformService.CreateConfigMap(instance, configMapName, configMapData)
+	if err != nil {
+		return &instance, errors.Wrapf(err, "Failed to create Config Map %v", configMapName)
+	}
 
-		err = s.platformService.CreateJenkinsScript(instance.Namespace, sonarSpec.JenkinsPluginName)
-		if err != nil {
-			return &instance, errors.Wrapf(err, "Failed to create Jenkins Script for %v", ciUserName)
-		}
+	err = s.platformService.CreateJenkinsScript(instance.Namespace, configMapName)
+	if err != nil {
+		return &instance, errors.Wrapf(err, "Failed to create Jenkins Script for %v", ciUserName)
 	}
 
 	readPassword := uniuri.New()
