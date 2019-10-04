@@ -24,19 +24,6 @@ type SonarSpec struct {
 	Version                    string                     `json:"version"`
 	Image                      string                     `json:"image, omitempty"`
 	Volumes                    []SonarVolumes             `json:"volumes,omitempty"`
-	SonarExternalConfiguration SonarExternalConfiguration `json:"externalConfiguration,omitempty"`
-}
-
-type SonarExternalConfigurationItem struct {
-	Name        string `json:"name"`
-	Kind        string `json:"kind"`
-	Description string `json:"description"`
-}
-
-type SonarExternalConfiguration struct {
-	ReadUser      *SonarExternalConfigurationItem `json:"readUser,omitempty"`
-	AdminUser     *SonarExternalConfigurationItem `json:"adminUser,omitempty"`
-	IsCredentials *SonarExternalConfigurationItem `json:"isCredentials,omitempty"`
 }
 
 // SonarStatus defines the observed state of Sonar

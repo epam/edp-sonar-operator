@@ -211,8 +211,6 @@ func (s SonarServiceImpl) createKeycloakClient(instance v1alpha1.Sonar, baseUrl 
 
 func (s SonarServiceImpl) ExposeConfiguration(instance v1alpha1.Sonar) (*v1alpha1.Sonar, error) {
 
-	externalConfig := v1alpha1.SonarExternalConfiguration{nil, nil, nil}
-
 	sc, err := s.initSonarClient(&instance, false)
 	if err != nil {
 		return &instance, errors.Wrap(err, "Failed to initialize Sonar Client!")
@@ -312,23 +310,14 @@ func (s SonarServiceImpl) ExposeConfiguration(instance v1alpha1.Sonar) (*v1alpha
 
 	identityServerSecretName := fmt.Sprintf("%v-is-credentials", instance.Name)
 	identityServiceClientSecret := uniuri.New()
-	identityServiceClientCredenrials := map[string][]byte{
+	identityServiceClientCredentials := map[string][]byte{
 		"client_id":     []byte(instance.Name),
 		"client_secret": []byte(identityServiceClientSecret),
 	}
 
-	err = s.platformService.CreateSecret(instance, identityServerSecretName, identityServiceClientCredenrials)
+	err = s.platformService.CreateSecret(instance, identityServerSecretName, identityServiceClientCredentials)
 	if err != nil {
 		return &instance, errors.Wrapf(err, "Failed to create secret for  %v Keycloak client!", readUserSecretName)
-	}
-
-	externalConfig.AdminUser = &v1alpha1.SonarExternalConfigurationItem{instance.Name + "-admin-password", "Secret", "Password for Sonar admin user"}
-	externalConfig.ReadUser = &v1alpha1.SonarExternalConfigurationItem{instance.Name + "-readuser-token", "Secret", "Token for read-only user"}
-	externalConfig.IsCredentials = &v1alpha1.SonarExternalConfigurationItem{instance.Name + "-is-credentials", "Secret", "Credentials for Identity Server integration"}
-
-	err = s.updateExternalConfig(&instance, externalConfig)
-	if err != nil {
-		return &instance, errors.Wrap(err, "Failed to update ExternalConfig field in Sonar spec!")
 	}
 
 	return &instance, nil
@@ -472,23 +461,10 @@ func (s SonarServiceImpl) Install(instance v1alpha1.Sonar) (*v1alpha1.Sonar, err
 
 	err = s.platformService.CreateDbDeployConf(instance)
 	if err != nil {
-		return &instance, errors.Wrapf(err, "Failed to create database Deploymetn Config for %v Sonar!", instance.Name)
+		return &instance, errors.Wrapf(err, "Failed to create database Deployment Config for %v Sonar!", instance.Name)
 	}
 
 	return &instance, nil
-}
-
-func (s SonarServiceImpl) updateExternalConfig(instance *v1alpha1.Sonar, config v1alpha1.SonarExternalConfiguration) error {
-	instance.Spec.SonarExternalConfiguration = config
-
-	err := s.k8sClient.Status().Update(context.TODO(), instance)
-	if err != nil {
-		err = s.k8sClient.Update(context.TODO(), instance)
-		if err != nil {
-			return err
-		}
-	}
-	return nil
 }
 
 func (s SonarServiceImpl) IsDeploymentConfigReady(instance v1alpha1.Sonar) (bool, error) {
