@@ -80,20 +80,23 @@ func (service *OpenshiftService) Init(config *rest.Config, scheme *runtime.Schem
 	return nil
 }
 
-// GetRoute returns Route object and connection protocol from Openshift
-func (service OpenshiftService) GetRoute(namespace string, name string) (*routeV1Api.Route, string, error) {
-	route, err := service.routeClient.Routes(namespace).Get(name, metav1.GetOptions{})
+// GetExternalEndpoint returns scheme and host name from Openshift
+func (service OpenshiftService) GetExternalEndpoint(namespace string, name string) (*string, error) {
+	r, err := service.routeClient.Routes(namespace).Get(name, metav1.GetOptions{})
 	if err != nil && k8serrors.IsNotFound(err) {
-		return nil, "", errors.New(fmt.Sprintf("Route %v in namespace %v not found", name, namespace))
+		return nil, errors.New(fmt.Sprintf("Route %v in namespace %v not found", name, namespace))
 	} else if err != nil {
-		return nil, "", err
+		return nil, err
 	}
 
 	var routeScheme = "http"
-	if route.Spec.TLS.Termination != "" {
+	if r.Spec.TLS.Termination != "" {
 		routeScheme = "https"
 	}
-	return route, routeScheme, nil
+
+	u := fmt.Sprintf("%v://%v/api", routeScheme, r.Spec.Host)
+
+	return &u, nil
 }
 func (service OpenshiftService) CreateSecurityContext(sonar v1alpha1.Sonar, sa *coreV1Api.ServiceAccount) error {
 

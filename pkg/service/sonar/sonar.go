@@ -66,11 +66,6 @@ type SonarServiceImpl struct {
 }
 
 func (s SonarServiceImpl) initSonarClient(instance *v1alpha1.Sonar, defaultPassword bool) (*sonar.SonarClient, error) {
-	sonarRoute, scheme, err := s.platformService.GetRoute(instance.Namespace, instance.Name)
-	if err != nil {
-		return nil, errors.Wrapf(err, "Unable to get route for %v", instance.Name)
-	}
-	sonarApiUrl := fmt.Sprintf("%v://%v/api", scheme, sonarRoute.Spec.Host)
 	sc := &sonar.SonarClient{}
 
 	password := DefaultPassword
@@ -83,10 +78,16 @@ func (s SonarServiceImpl) initSonarClient(instance *v1alpha1.Sonar, defaultPassw
 		password = string(credentials["password"])
 	}
 
-	err = sc.InitNewRestClient(sonarApiUrl, "admin", password)
+	u, err := s.platformService.GetExternalEndpoint(instance.Namespace, instance.Name)
+	if err != nil {
+		return nil, errors.Wrapf(err, "Unable to get route for %v", instance.Name)
+	}
+
+	err = sc.InitNewRestClient(*u, "admin", password)
 	if err != nil {
 		return nil, errors.Wrap(err, "Failed to init new Sonar client!")
 	}
+
 	return sc, nil
 }
 
@@ -109,14 +110,13 @@ func (s SonarServiceImpl) Integration(instance v1alpha1.Sonar) (*v1alpha1.Sonar,
 			return &instance, errors.Wrap(err, "Failed to to configure sonar.auth.oidc.providerConfiguration!")
 		}
 	}
-	sonarRoute, scheme, err := s.platformService.GetRoute(instance.Namespace, instance.Name)
-	var baseUrl string
-	if sonarRoute != nil {
-		baseUrl = fmt.Sprintf("%v://%v", scheme, sonarRoute.Spec.Host)
-		err = sc.ConfigureGeneralSettings("value", "sonar.core.serverBaseURL", baseUrl)
-		if err != nil {
-			return &instance, errors.Wrap(err, "Failed to configure sonar.core.serverBaseURL!")
-		}
+	url, err := s.platformService.GetExternalEndpoint(instance.Namespace, instance.Name)
+	if err != nil {
+		return nil, err
+	}
+	err = sc.ConfigureGeneralSettings("value", "sonar.core.serverBaseURL", *url)
+	if err != nil {
+		return &instance, errors.Wrap(err, "Failed to configure sonar.core.serverBaseURL!")
 	}
 	cl, err := s.getKeycloakClient(instance)
 	if err != nil {
@@ -124,7 +124,7 @@ func (s SonarServiceImpl) Integration(instance v1alpha1.Sonar) (*v1alpha1.Sonar,
 	}
 
 	if cl == nil {
-		err = s.createKeycloakClient(instance, baseUrl)
+		err = s.createKeycloakClient(instance, *url)
 	}
 
 	if err != nil {
