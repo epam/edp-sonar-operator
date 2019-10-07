@@ -3,7 +3,6 @@ package platform
 import (
 	"github.com/epmd-edp/sonar-operator/v2/pkg/apis/edp/v1alpha1"
 	"github.com/epmd-edp/sonar-operator/v2/pkg/service/platform/openshift"
-	appsV1Api "github.com/openshift/api/apps/v1"
 	routeV1Api "github.com/openshift/api/route/v1"
 	coreV1Api "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -22,7 +21,7 @@ type PlatformService interface {
 	CreateDbDeployConf(sonar v1alpha1.Sonar) error
 	CreateDeployConf(sonar v1alpha1.Sonar) error
 	CreateConfigMap(instance v1alpha1.Sonar, configMapName string, configMapData map[string]string) error
-	GetDeploymentConfig(instance v1alpha1.Sonar) (*appsV1Api.DeploymentConfig, error)
+	GetAvailiableDeploymentReplicas(instance v1alpha1.Sonar) (*int, error)
 	GetSecretData(namespace string, name string) (map[string][]byte, error)
 	CreateJenkinsServiceAccount(namespace string, secretName string, serviceAccountType string) error
 	CreateJenkinsScript(namespace string, configMap string) error

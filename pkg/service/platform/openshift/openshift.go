@@ -538,11 +538,13 @@ func newSonarDatabaseDeploymentConfig(name string, sa string, namespace string, 
 	}
 }
 
-func (service OpenshiftService) GetDeploymentConfig(instance v1alpha1.Sonar) (*appsV1Api.DeploymentConfig, error) {
-	deploymentConfig, err := service.appClient.DeploymentConfigs(instance.Namespace).Get(instance.Name, metav1.GetOptions{})
+func (service OpenshiftService) GetAvailiableDeploymentReplicas(instance v1alpha1.Sonar) (*int, error) {
+	c, err := service.appClient.DeploymentConfigs(instance.Namespace).Get(instance.Name, metav1.GetOptions{})
 	if err != nil {
 		return nil, err
 	}
 
-	return deploymentConfig, nil
+	r := int(c.Status.AvailableReplicas)
+
+	return &r, nil
 }

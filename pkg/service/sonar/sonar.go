@@ -51,7 +51,7 @@ type SonarService interface {
 	Configure(instance v1alpha1.Sonar) (*v1alpha1.Sonar, error, bool)
 	ExposeConfiguration(instance v1alpha1.Sonar) (*v1alpha1.Sonar, error)
 	Integration(instance v1alpha1.Sonar) (*v1alpha1.Sonar, error)
-	IsDeploymentConfigReady(instance v1alpha1.Sonar) (bool, error)
+	IsDeploymentReady(instance v1alpha1.Sonar) (bool, error)
 }
 
 func NewSonarService(platformService platform.PlatformService, k8sClient client.Client, k8sScheme *runtime.Scheme) SonarService {
@@ -467,17 +467,17 @@ func (s SonarServiceImpl) Install(instance v1alpha1.Sonar) (*v1alpha1.Sonar, err
 	return &instance, nil
 }
 
-func (s SonarServiceImpl) IsDeploymentConfigReady(instance v1alpha1.Sonar) (bool, error) {
-	sonarIsReady := false
+func (s SonarServiceImpl) IsDeploymentReady(instance v1alpha1.Sonar) (bool, error) {
+	isReady := false
 
-	sonarDc, err := s.platformService.GetDeploymentConfig(instance)
+	r, err := s.platformService.GetAvailiableDeploymentReplicas(instance)
 	if err != nil {
-		return sonarIsReady, err
+		return isReady, err
 	}
 
-	if sonarDc.Status.AvailableReplicas == 1 {
-		sonarIsReady = true
+	if *r == 1 {
+		isReady = true
 	}
 
-	return sonarIsReady, nil
+	return isReady, nil
 }
