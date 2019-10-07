@@ -1,7 +1,6 @@
 package kubernetes
 
 import (
-	"fmt"
 	jenkinsV1Api "github.com/epmd-edp/jenkins-operator/v2/pkg/apis/v2/v1alpha1"
 	jenkinsScriptV1Client "github.com/epmd-edp/jenkins-operator/v2/pkg/controller/jenkinsscript/client"
 	jenkinsSAV1Client "github.com/epmd-edp/jenkins-operator/v2/pkg/controller/jenkinsserviceaccount/client"
@@ -22,7 +21,7 @@ import (
 	logf "sigs.k8s.io/controller-runtime/pkg/runtime/log"
 )
 
-var logV2 = logf.Log.WithName("platform")
+var log = logf.Log.WithName("platform")
 
 type K8SService struct {
 	Scheme                      *runtime.Scheme
@@ -59,7 +58,7 @@ func (service K8SService) GetConfigmap(namespace string, name string) (map[strin
 	configmap, err := service.coreClient.ConfigMaps(namespace).Get(name, metav1.GetOptions{})
 
 	if err != nil && k8serr.IsNotFound(err) {
-		logV2.Info(fmt.Sprintf("Config map %v in namespace %v not found", name, namespace))
+		log.Info("Config map in namespace not found", "configmap name", name, "namespace", namespace)
 		return nil, nil
 	} else if err != nil {
 		return nil, err
@@ -70,7 +69,7 @@ func (service K8SService) GetConfigmap(namespace string, name string) (map[strin
 func (service K8SService) GetSecretData(namespace string, name string) (map[string][]byte, error) {
 	sonarSecret, err := service.coreClient.Secrets(namespace).Get(name, metav1.GetOptions{})
 	if err != nil && k8serr.IsNotFound(err) {
-		logV2.Info(fmt.Sprintf("Secret %v in namespace %v not found", name, namespace))
+		log.Info("Secret in namespace not found", "secret name", name, "namespace", namespace)
 		return nil, nil
 	} else if err != nil {
 		return nil, err
@@ -99,14 +98,14 @@ func (service K8SService) CreateSecret(sonar v1alpha1.Sonar, name string, data m
 	sonarSecret, err := service.coreClient.Secrets(sonarSecretObject.Namespace).Get(sonarSecretObject.Name, metav1.GetOptions{})
 
 	if err != nil && k8serr.IsNotFound(err) {
-		logV2.V(1).Info(fmt.Sprintf("Creating a new Secret %s/%s for Sonar %s", sonarSecretObject.Namespace, sonarSecretObject.Name, sonar.Name))
+		log.V(1).Info("Creating a new Secret for Sonar", "namespace", sonarSecretObject.Namespace, "secret name", sonarSecretObject.Name, "sonar name", sonar.Name)
 
 		sonarSecret, err = service.coreClient.Secrets(sonarSecretObject.Namespace).Create(sonarSecretObject)
 
 		if err != nil {
 			return err
 		}
-		logV2.Info(fmt.Sprintf("Secret %s/%s has been created", sonarSecret.Namespace, sonarSecret.Name))
+		log.Info("Secret has been created", "namespace", sonarSecret.Namespace, "secret name", sonarSecret.Name)
 
 	} else if err != nil {
 		return err
@@ -147,7 +146,7 @@ func (service K8SService) CreateVolume(sonar v1alpha1.Sonar) error {
 		sonarVolume, err := service.coreClient.PersistentVolumeClaims(sonarVolumeObject.Namespace).Get(sonarVolumeObject.Name, metav1.GetOptions{})
 
 		if err != nil && k8serr.IsNotFound(err) {
-			logV2.V(1).Info(fmt.Sprintf("Creating a new PersistantVolumeClaim %s/%s for %s", sonarVolumeObject.Namespace, sonarVolumeObject.Name, sonar.Name))
+			log.V(1).Info("Creating a new PersistentVolumeClaim", "namespace", sonarVolumeObject.Namespace, "volume name", sonarVolumeObject.Name, "sonar name", sonar.Name)
 
 			sonarVolume, err = service.coreClient.PersistentVolumeClaims(sonarVolumeObject.Namespace).Create(sonarVolumeObject)
 
@@ -155,7 +154,7 @@ func (service K8SService) CreateVolume(sonar v1alpha1.Sonar) error {
 				return err
 			}
 
-			logV2.Info(fmt.Sprintf("PersistantVolumeClaim %s/%s has been created", sonarVolume.Namespace, sonarVolume.Name))
+			log.Info("PersistentVolumeClaim has been created", "namespace", sonarVolume.Namespace, "sonar name", sonarVolume.Name)
 		} else if err != nil {
 			return err
 		}
@@ -182,7 +181,7 @@ func (service K8SService) CreateServiceAccount(sonar v1alpha1.Sonar) (*coreV1Api
 	sonarServiceAccount, err := service.coreClient.ServiceAccounts(sonarServiceAccountObject.Namespace).Get(sonarServiceAccountObject.Name, metav1.GetOptions{})
 
 	if err != nil && k8serr.IsNotFound(err) {
-		logV2.V(1).Info(fmt.Sprintf("Creating a new ServiceAccount %s/%s for Sonar %s", sonarServiceAccountObject.Namespace, sonarServiceAccountObject.Name, sonar.Name))
+		log.V(1).Info("Creating a new ServiceAccount for Sonar", "namespace", sonarServiceAccountObject.Namespace, "service account name", sonarServiceAccountObject.Name, "sonar name", sonar.Name)
 
 		sonarServiceAccount, err = service.coreClient.ServiceAccounts(sonarServiceAccountObject.Namespace).Create(sonarServiceAccountObject)
 
@@ -190,7 +189,7 @@ func (service K8SService) CreateServiceAccount(sonar v1alpha1.Sonar) (*coreV1Api
 			return nil, err
 		}
 
-		logV2.Info(fmt.Sprintf("ServiceAccount %s/%s has been created", sonarServiceAccount.Namespace, sonarServiceAccount.Name))
+		log.Info("ServiceAccount has been created", "namespace", sonarServiceAccount.Namespace, "service account name", sonarServiceAccount.Name)
 	} else if err != nil {
 		return nil, err
 	}
@@ -199,7 +198,7 @@ func (service K8SService) CreateServiceAccount(sonar v1alpha1.Sonar) (*coreV1Api
 }
 
 func (service K8SService) CreateExternalEndpoint(sonar v1alpha1.Sonar) error {
-	logV2.Info("No implementation for K8s yet.")
+	log.Info("No implementation for K8s yet.")
 	return nil
 }
 
@@ -220,7 +219,7 @@ func (service K8SService) CreateService(sonar v1alpha1.Sonar) error {
 		sonarService, err := service.coreClient.Services(sonar.Namespace).Get(serviceName, metav1.GetOptions{})
 
 		if err != nil && k8serr.IsNotFound(err) {
-			logV2.V(1).Info(fmt.Sprintf("Creating a new service %s/%s for sonar %s", sonarServiceObject.Namespace, sonarServiceObject.Name, sonar.Name))
+			log.V(1).Info("Creating a new service for sonar", "namespace", sonarServiceObject.Namespace, "service name", sonarServiceObject.Name, "sonar name", sonar.Name)
 
 			sonarService, err = service.coreClient.Services(sonarServiceObject.Namespace).Create(sonarServiceObject)
 
@@ -228,7 +227,7 @@ func (service K8SService) CreateService(sonar v1alpha1.Sonar) error {
 				return err
 			}
 
-			logV2.Info(fmt.Sprintf("Service %s/%s has been created", sonarService.Namespace, sonarService.Name))
+			log.Info("Service has been created", "namespace", sonarService.Namespace, "sonar name", sonarService.Name)
 		} else if err != nil {
 			return err
 		}
@@ -278,7 +277,7 @@ func (service K8SService) CreateConfigMap(instance v1alpha1.Sonar, configMapName
 			if err != nil {
 				return errors.Wrapf(err, "Couldn't create Config Map %v object", configMapObject.Name)
 			}
-			logV2.Info(fmt.Sprintf("ConfigMap %s/%s has been created", cm.Namespace, cm.Name))
+			log.Info("ConfigMap has been created", "namespace", cm.Namespace, "config map name", cm.Name)
 		}
 		return errors.Wrapf(err, "Couldn't get ConfigMap %v object", configMapObject.Name)
 	}

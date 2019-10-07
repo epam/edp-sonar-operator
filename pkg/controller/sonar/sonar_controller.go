@@ -210,7 +210,7 @@ func (r *ReconcileSonar) Reconcile(request reconcile.Request) (reconcile.Result,
 		return reconcile.Result{RequeueAfter: 30 * time.Second}, err
 	}
 
-	reqLogger.Info(fmt.Sprintf("Reconciling Sonar component %s/%s has been finished", request.Namespace, request.Name))
+	reqLogger.Info("Reconciling Sonar component has been finished", "namespace", request.Namespace, "name", request.Name)
 	return reconcile.Result{Requeue: false}, nil
 }
 

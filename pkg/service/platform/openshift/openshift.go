@@ -165,8 +165,7 @@ func (service OpenshiftService) CreateSecurityContext(sonar v1alpha1.Sonar, sa *
 
 	sonarSCC, err := service.securityClient.SecurityContextConstraints().Get(sonarSccObject.Name, metav1.GetOptions{})
 	if err != nil && k8serrors.IsNotFound(err) {
-		msg := fmt.Sprintf("Creating a new Security Context Constraint %s for Sonar %s", sonarSccObject.Name, sonar.Name)
-		log.V(1).Info(msg)
+		log.V(1).Info("Creating a new Security Context Constraint for Sonar", "namespace", sonar.Namespace, "sonar name", sonar.Name)
 
 		sonarSCC, err = service.securityClient.SecurityContextConstraints().Create(sonarSccObject)
 
@@ -174,7 +173,7 @@ func (service OpenshiftService) CreateSecurityContext(sonar v1alpha1.Sonar, sa *
 			return err
 		}
 
-		log.Info(fmt.Sprintf("Security Context Constraint %s has been created", sonarSCC.Name))
+		log.Info("Security Context Constraint has been created", "security context constraint name", sonarSCC.Name)
 	} else if err != nil {
 		return err
 
@@ -188,7 +187,7 @@ func (service OpenshiftService) CreateSecurityContext(sonar v1alpha1.Sonar, sa *
 				return err
 			}
 
-			log.Info(fmt.Sprintf("Security Context Constraint %s has been updated", sonarSCC.Name))
+			log.Info("Security Context Constraint %s has been updated", "sonar name", sonarSCC.Name)
 		}
 	}
 
@@ -224,14 +223,14 @@ func (service OpenshiftService) CreateExternalEndpoint(sonar v1alpha1.Sonar) err
 	sonarRoute, err := service.routeClient.Routes(sonarRouteObject.Namespace).Get(sonarRouteObject.Name, metav1.GetOptions{})
 
 	if err != nil && k8serrors.IsNotFound(err) {
-		log.V(1).Info(fmt.Sprintf("Creating a new Route for Sonar %s", sonar.Name))
+		log.V(1).Info("Creating a new Route for Sonar", "sonar name", sonar.Name)
 		sonarRoute, err = service.routeClient.Routes(sonarRouteObject.Namespace).Create(sonarRouteObject)
 
 		if err != nil {
 			return err
 		}
 
-		log.Info("Route %s/%s has been created", sonarRoute.Namespace, sonarRoute.Name)
+		log.Info("Route has been created", "namespace", sonarRoute.Namespace, "route name", sonarRoute.Name)
 	} else if err != nil {
 		return err
 	}
@@ -252,7 +251,7 @@ func (service OpenshiftService) CreateDbDeployConf(sonar v1alpha1.Sonar) error {
 	sonarDbDc, err := service.appClient.DeploymentConfigs(sonarDbDcObject.Namespace).Get(sonarDbDcObject.Name, metav1.GetOptions{})
 
 	if err != nil && k8serrors.IsNotFound(err) {
-		log.V(1).Info(fmt.Sprintf("Creating a new DeploymentConfig for Sonar %s", sonar.Name))
+		log.V(1).Info("Creating a new DeploymentConfig for Sonar", "sonar name", sonar.Name)
 
 		sonarDbDc, err = service.appClient.DeploymentConfigs(sonarDbDcObject.Namespace).Create(sonarDbDcObject)
 
@@ -260,7 +259,7 @@ func (service OpenshiftService) CreateDbDeployConf(sonar v1alpha1.Sonar) error {
 			return err
 		}
 
-		log.Info("DeploymentConfig %s/%s has been created", sonarDbDc.Namespace, sonarDbDc.Name)
+		log.Info("DeploymentConfig has been created", "namespace", sonarDbDc.Namespace, "sonar name", sonarDbDc.Name)
 	} else if err != nil {
 		return err
 	}
@@ -278,14 +277,14 @@ func (service OpenshiftService) CreateDeployConf(sonar v1alpha1.Sonar) error {
 
 	sonarDc, err := service.appClient.DeploymentConfigs(sonarDcObject.Namespace).Get(sonarDcObject.Name, metav1.GetOptions{})
 	if err != nil && k8serrors.IsNotFound(err) {
-		log.V(1).Info(fmt.Sprintf("Creating a new DeploymentConfig for Sonar %s", sonar.Name))
+		log.V(1).Info("Creating a new DeploymentConfig for Sonar", "sonar name", sonar.Name)
 
 		sonarDc, err = service.appClient.DeploymentConfigs(sonarDcObject.Namespace).Create(sonarDcObject)
 		if err != nil {
 			return err
 		}
 
-		log.Info(fmt.Sprintf("DeploymentConfig %s/%s has been created", sonarDc.Namespace, sonarDc.Name))
+		log.Info("DeploymentConfig has been created", "namespace", sonarDc.Namespace, "sonar name", sonarDc.Name)
 	} else if err != nil {
 		return err
 	}
