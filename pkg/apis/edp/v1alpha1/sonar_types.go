@@ -21,9 +21,14 @@ type SonarSpec struct {
 	// INSERT ADDITIONAL SPEC FIELDS - desired state of cluster
 	// Important: Run "operator-sdk generate k8s" to regenerate code after modifying this file
 	// Add custom validation using kubebuilder tags: https://book.kubebuilder.io/beyond_basics/generating_crd.html
-	Version                    string                     `json:"version"`
-	Image                      string                     `json:"image, omitempty"`
-	Volumes                    []SonarVolumes             `json:"volumes,omitempty"`
+	Version string         `json:"version"`
+	Image   string         `json:"image, omitempty"`
+	Volumes []SonarVolumes `json:"volumes,omitempty"`
+	EdpSpec EdpSpec        `json:"edpSpec, omitempty"`
+}
+
+type EdpSpec struct {
+	DnsWildcard string `json:"dnsWildcard"`
 }
 
 // SonarStatus defines the observed state of Sonar

@@ -17,8 +17,8 @@ type PlatformService interface {
 	CreateExternalEndpoint(sonar v1alpha1.Sonar) error
 	CreateService(sonar v1alpha1.Sonar) error
 	CreateVolume(sonar v1alpha1.Sonar) error
-	CreateDbDeployConf(sonar v1alpha1.Sonar) error
-	CreateDeployConf(sonar v1alpha1.Sonar) error
+	CreateDbDeployment(sonar v1alpha1.Sonar) error
+	CreateDeployment(sonar v1alpha1.Sonar) error
 	CreateConfigMap(instance v1alpha1.Sonar, configMapName string, configMapData map[string]string) error
 	GetAvailiableDeploymentReplicas(instance v1alpha1.Sonar) (*int, error)
 	GetSecretData(namespace string, name string) (map[string][]byte, error)

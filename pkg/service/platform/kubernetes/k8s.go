@@ -1,6 +1,7 @@
 package kubernetes
 
 import (
+	"fmt"
 	jenkinsV1Api "github.com/epmd-edp/jenkins-operator/v2/pkg/apis/v2/v1alpha1"
 	jenkinsScriptV1Client "github.com/epmd-edp/jenkins-operator/v2/pkg/controller/jenkinsscript/client"
 	jenkinsSAV1Client "github.com/epmd-edp/jenkins-operator/v2/pkg/controller/jenkinsserviceaccount/client"
@@ -9,16 +10,21 @@ import (
 	platformHelper "github.com/epmd-edp/sonar-operator/v2/pkg/service/platform/helper"
 	sonarSpec "github.com/epmd-edp/sonar-operator/v2/pkg/service/sonar/spec"
 	"github.com/pkg/errors"
+	appsV1Api "k8s.io/api/apps/v1"
 	coreV1Api "k8s.io/api/core/v1"
+	"k8s.io/api/extensions/v1beta1"
 	k8serr "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/util/intstr"
+	appsV1Client "k8s.io/client-go/kubernetes/typed/apps/v1"
 	coreV1Client "k8s.io/client-go/kubernetes/typed/core/v1"
+	extensionsV1Client "k8s.io/client-go/kubernetes/typed/extensions/v1beta1"
 	"k8s.io/client-go/rest"
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 	logf "sigs.k8s.io/controller-runtime/pkg/runtime/log"
+	"strconv"
 )
 
 var log = logf.Log.WithName("platform")
@@ -26,6 +32,8 @@ var log = logf.Log.WithName("platform")
 type K8SService struct {
 	Scheme                      *runtime.Scheme
 	coreClient                  coreV1Client.CoreV1Client
+	AppsClient                  appsV1Client.AppsV1Client
+	ExtensionsV1Client          extensionsV1Client.ExtensionsV1beta1Client
 	JenkinsScriptClient         jenkinsScriptV1Client.EdpV1Client
 	JenkinsServiceAccountClient jenkinsSAV1Client.EdpV1Client
 }
@@ -47,7 +55,19 @@ func (service *K8SService) Init(config *rest.Config, scheme *runtime.Scheme) err
 		return err
 	}
 
+	acl, err := appsV1Client.NewForConfig(config)
+	if err != nil {
+		return errors.New("appsV1 client initialization failed!")
+	}
+
+	ecl, err := extensionsV1Client.NewForConfig(config)
+	if err != nil {
+		return errors.New("extensionsV1 client initialization failed!")
+	}
+
 	service.coreClient = *coreClient
+	service.ExtensionsV1Client = *ecl
+	service.AppsClient = *acl
 	service.JenkinsScriptClient = *jenkinsScriptClient
 	service.JenkinsServiceAccountClient = *JenkinsServiceAccountClient
 	service.Scheme = scheme
@@ -162,6 +182,46 @@ func (service K8SService) CreateVolume(sonar v1alpha1.Sonar) error {
 	return nil
 }
 
+func (service K8SService) CreateDbDeployment(sonar v1alpha1.Sonar) error {
+	l := helper.GenerateLabels(sonar.Name)
+	n := sonar.Name + "-db"
+
+	o := newDatabaseDeployment(n, sonar.Name, sonar.Namespace, l)
+
+	if err := controllerutil.SetControllerReference(&sonar, o, service.Scheme); err != nil {
+		return err
+	}
+
+	_, err := service.AppsClient.Deployments(o.Namespace).Get(o.Name, metav1.GetOptions{})
+
+	if err == nil || !k8serr.IsNotFound(err) {
+		return err
+	}
+	log.V(1).Info("Creating a new Deployment for Sonar", "sonar name", sonar.Name)
+
+	_, err = service.AppsClient.Deployments(o.Namespace).Create(o)
+	return err
+}
+
+func (service K8SService) CreateDeployment(sonar v1alpha1.Sonar) error {
+	l := helper.GenerateLabels(sonar.Name)
+
+	o := newSonarDeployment(sonar.Name, sonar.Namespace, sonar.Spec.Version, l)
+	if err := controllerutil.SetControllerReference(&sonar, o, service.Scheme); err != nil {
+		return err
+	}
+
+	_, err := service.AppsClient.Deployments(o.Namespace).Get(o.Name, metav1.GetOptions{})
+	if err == nil || !k8serr.IsNotFound(err) {
+		return err
+	}
+
+	log.V(1).Info("Creating a new Deployment for Sonar", "sonar name", sonar.Name)
+	_, err = service.AppsClient.Deployments(o.Namespace).Create(o)
+
+	return err
+}
+
 func (service K8SService) CreateServiceAccount(sonar v1alpha1.Sonar) (*coreV1Api.ServiceAccount, error) {
 
 	labels := helper.GenerateLabels(sonar.Name)
@@ -198,8 +258,72 @@ func (service K8SService) CreateServiceAccount(sonar v1alpha1.Sonar) (*coreV1Api
 }
 
 func (service K8SService) CreateExternalEndpoint(sonar v1alpha1.Sonar) error {
-	log.Info("No implementation for K8s yet.")
-	return nil
+	log.V(1).Info("Creating Sonar external endpoint.",
+		"Namespace", sonar.Namespace, "Name", sonar.Name)
+
+	l := helper.GenerateLabels(sonar.Name)
+
+	s, err := service.coreClient.Services(sonar.Namespace).Get(sonar.Name, metav1.GetOptions{})
+	if err != nil {
+		log.Info("Sonar Service has not been found")
+		return err
+	}
+
+	o := &v1beta1.Ingress{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      sonar.Name,
+			Namespace: sonar.Namespace,
+			Labels:    l,
+		},
+		Spec: v1beta1.IngressSpec{
+			Rules: []v1beta1.IngressRule{
+				{
+					Host: fmt.Sprintf("%s.%s", sonar.Name, sonar.Spec.EdpSpec.DnsWildcard),
+					IngressRuleValue: v1beta1.IngressRuleValue{
+						HTTP: &v1beta1.HTTPIngressRuleValue{
+							Paths: []v1beta1.HTTPIngressPath{
+								{
+									Path: "/",
+									Backend: v1beta1.IngressBackend{
+										ServiceName: sonar.Name,
+										ServicePort: intstr.IntOrString{
+											IntVal: s.Spec.Ports[0].TargetPort.IntVal,
+										},
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+		},
+	}
+
+	if err := controllerutil.SetControllerReference(&sonar, o, service.Scheme); err != nil {
+		return err
+	}
+
+	_, err = service.ExtensionsV1Client.Ingresses(o.Namespace).Get(o.Name, metav1.GetOptions{})
+	if err == nil || !k8serr.IsNotFound(err) {
+		return err
+	}
+
+	log.V(1).Info("Creating a new Ingress for Sonar", "sonar name", sonar.Name)
+	_, err = service.ExtensionsV1Client.Ingresses(o.Namespace).Create(o)
+
+	return err
+}
+
+func (service K8SService) GetExternalEndpoint(namespace string, name string) (*string, error) {
+	r, err := service.ExtensionsV1Client.Ingresses(namespace).Get(name, metav1.GetOptions{})
+	if err != nil {
+		return nil, err
+	}
+
+	rs := "https"
+	u := fmt.Sprintf("%v://%v/api", rs, r.Spec.Rules[0].Host)
+
+	return &u, nil
 }
 
 func (service K8SService) CreateService(sonar v1alpha1.Sonar) error {
@@ -253,6 +377,216 @@ func newSonarInternalBalancingService(serviceName string, namespace string, labe
 			},
 		},
 	}, nil
+}
+
+func newSonarDeployment(name string, namespace string, version string, labels map[string]string) *appsV1Api.Deployment {
+	g, _ := strconv.ParseInt("999", 10, 64)
+	var rc int32 = 1
+
+	return &appsV1Api.Deployment{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      name,
+			Namespace: namespace,
+			Labels:    labels,
+		},
+		Spec: appsV1Api.DeploymentSpec{
+			Replicas: &rc,
+			Strategy: appsV1Api.DeploymentStrategy{
+				Type: appsV1Api.RollingUpdateDeploymentStrategyType,
+			},
+			Selector: &metav1.LabelSelector{
+				MatchLabels: labels,
+			},
+			Template: coreV1Api.PodTemplateSpec{
+				ObjectMeta: metav1.ObjectMeta{
+					Labels: labels,
+				},
+				Spec: coreV1Api.PodSpec{
+					InitContainers: []coreV1Api.Container{
+						{
+							Name:    name + "init",
+							Image:   "busybox",
+							Command: []string{"sh", "-c", "while ! nc -w 1 " + name + "-db " + strconv.Itoa(sonarSpec.DBPort) + " </dev/null; do echo waiting for " + name + "-db; sleep 10; done;"},
+						},
+					},
+					Containers: []coreV1Api.Container{
+						{
+							Name:            name,
+							Image:           sonarSpec.Image + ":" + version,
+							ImagePullPolicy: coreV1Api.PullIfNotPresent,
+							Env: []coreV1Api.EnvVar{
+								{
+									Name: "SONARQUBE_JDBC_USERNAME",
+									ValueFrom: &coreV1Api.EnvVarSource{
+										SecretKeyRef: &coreV1Api.SecretKeySelector{
+											LocalObjectReference: coreV1Api.LocalObjectReference{
+												Name: name + "-db",
+											},
+											Key: "database-user",
+										},
+									},
+								},
+								{
+									Name: "SONARQUBE_JDBC_PASSWORD",
+									ValueFrom: &coreV1Api.EnvVarSource{
+										SecretKeyRef: &coreV1Api.SecretKeySelector{
+											LocalObjectReference: coreV1Api.LocalObjectReference{
+												Name: name + "-db",
+											},
+											Key: "database-password",
+										},
+									},
+								},
+								{
+									Name:  "SONARQUBE_JDBC_URL",
+									Value: "jdbc:postgresql://" + name + "-db/sonar",
+								},
+							},
+							Ports: []coreV1Api.ContainerPort{
+								{
+									Name:          name,
+									ContainerPort: sonarSpec.Port,
+								},
+							},
+							LivenessProbe:          helper.GenerateProbe(sonarSpec.LivenessProbeDelay),
+							ReadinessProbe:         helper.GenerateProbe(sonarSpec.ReadinessProbeDelay),
+							TerminationMessagePath: "/dev/termination-log",
+							Resources: coreV1Api.ResourceRequirements{
+								Requests: map[coreV1Api.ResourceName]resource.Quantity{
+									coreV1Api.ResourceMemory: resource.MustParse(sonarSpec.MemoryRequest),
+								},
+							},
+							VolumeMounts: []coreV1Api.VolumeMount{
+								{
+									MountPath: "/opt/sonarqube/extensions/plugins",
+									Name:      "data",
+								},
+							},
+						},
+					},
+					SecurityContext: &coreV1Api.PodSecurityContext{
+						FSGroup: &g,
+					},
+					ServiceAccountName: name,
+					Volumes: []coreV1Api.Volume{
+						{
+							Name: "data",
+							VolumeSource: coreV1Api.VolumeSource{
+								PersistentVolumeClaim: &coreV1Api.PersistentVolumeClaimVolumeSource{
+									ClaimName: name + "-data",
+								},
+							},
+						},
+					},
+				},
+			},
+		},
+	}
+}
+
+func newDatabaseDeployment(name string, sa string, namespace string, labels map[string]string) *appsV1Api.Deployment {
+	var rc int32 = 1
+
+	return &appsV1Api.Deployment{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      name,
+			Namespace: namespace,
+			Labels:    labels,
+		},
+		Spec: appsV1Api.DeploymentSpec{
+			Replicas: &rc,
+			Strategy: appsV1Api.DeploymentStrategy{
+				Type: appsV1Api.RollingUpdateDeploymentStrategyType,
+			},
+			Selector: &metav1.LabelSelector{
+				MatchLabels: helper.GenerateLabels(name),
+			},
+			Template: coreV1Api.PodTemplateSpec{
+				ObjectMeta: metav1.ObjectMeta{
+					Labels: helper.GenerateLabels(name),
+				},
+				Spec: coreV1Api.PodSpec{
+					Containers: []coreV1Api.Container{
+						{
+							Name:            name,
+							Image:           sonarSpec.DbImage,
+							ImagePullPolicy: coreV1Api.PullIfNotPresent,
+							Env: []coreV1Api.EnvVar{
+								{
+									Name:  "PGDATA",
+									Value: "/var/lib/postgresql/data/pgdata",
+								},
+								{
+									Name:  "POSTGRES_DB",
+									Value: "sonar",
+								},
+								{
+									Name: "POD_IP",
+									ValueFrom: &coreV1Api.EnvVarSource{
+										FieldRef: &coreV1Api.ObjectFieldSelector{
+											FieldPath: "status.podIP",
+										},
+									},
+								},
+								{
+									Name: "POSTGRES_USER",
+									ValueFrom: &coreV1Api.EnvVarSource{
+										SecretKeyRef: &coreV1Api.SecretKeySelector{
+											LocalObjectReference: coreV1Api.LocalObjectReference{
+												Name: name,
+											},
+											Key: "database-user",
+										},
+									},
+								},
+								{
+									Name: "POSTGRES_PASSWORD",
+									ValueFrom: &coreV1Api.EnvVarSource{
+										SecretKeyRef: &coreV1Api.SecretKeySelector{
+											LocalObjectReference: coreV1Api.LocalObjectReference{
+												Name: name,
+											},
+											Key: "database-password",
+										},
+									},
+								},
+							},
+							Ports: []coreV1Api.ContainerPort{
+								{
+									ContainerPort: sonarSpec.DBPort,
+								},
+							},
+							LivenessProbe:          helper.GenerateDbProbe(sonarSpec.DbLivenessProbeDelay),
+							ReadinessProbe:         helper.GenerateDbProbe(sonarSpec.DbReadinessProbeDelay),
+							TerminationMessagePath: "/dev/termination-log",
+							Resources: coreV1Api.ResourceRequirements{
+								Requests: map[coreV1Api.ResourceName]resource.Quantity{
+									coreV1Api.ResourceMemory: resource.MustParse(sonarSpec.MemoryRequest),
+								},
+							},
+							VolumeMounts: []coreV1Api.VolumeMount{
+								{
+									MountPath: "/var/lib/postgresql/data",
+									Name:      "data",
+								},
+							},
+						},
+					},
+					ServiceAccountName: sa,
+					Volumes: []coreV1Api.Volume{
+						{
+							Name: "data",
+							VolumeSource: coreV1Api.VolumeSource{
+								PersistentVolumeClaim: &coreV1Api.PersistentVolumeClaimVolumeSource{
+									ClaimName: name,
+								},
+							},
+						},
+					},
+				},
+			},
+		},
+	}
 }
 
 func (service K8SService) CreateConfigMap(instance v1alpha1.Sonar, configMapName string, configMapData map[string]string) error {
@@ -336,4 +670,15 @@ func (service K8SService) CreateJenkinsServiceAccount(namespace string, secretNa
 	}
 
 	return nil
+}
+
+func (service K8SService) GetAvailiableDeploymentReplicas(instance v1alpha1.Sonar) (*int, error) {
+	c, err := service.AppsClient.Deployments(instance.Namespace).Get(instance.Name, metav1.GetOptions{})
+	if err != nil {
+		return nil, err
+	}
+
+	r := int(c.Status.AvailableReplicas)
+
+	return &r, nil
 }

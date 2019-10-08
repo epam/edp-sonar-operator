@@ -439,7 +439,7 @@ func (s SonarServiceImpl) Install(instance v1alpha1.Sonar) (*v1alpha1.Sonar, err
 		return &instance, errors.Wrapf(err, "Failed to create Security Context for %v Sonar!", instance.Name)
 	}
 
-	err = s.platformService.CreateDeployConf(instance)
+	err = s.platformService.CreateDeployment(instance)
 	if err != nil {
 		return &instance, errors.Wrapf(err, "Failed to create Deployment Config for %v Sonar!", instance.Name)
 	}
@@ -459,7 +459,7 @@ func (s SonarServiceImpl) Install(instance v1alpha1.Sonar) (*v1alpha1.Sonar, err
 		return &instance, errors.Wrapf(err, "Failed to create Volume for %v Sonar!", instance.Name)
 	}
 
-	err = s.platformService.CreateDbDeployConf(instance)
+	err = s.platformService.CreateDbDeployment(instance)
 	if err != nil {
 		return &instance, errors.Wrapf(err, "Failed to create database Deployment Config for %v Sonar!", instance.Name)
 	}

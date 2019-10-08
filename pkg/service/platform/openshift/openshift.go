@@ -20,7 +20,6 @@ import (
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
-	"k8s.io/apimachinery/pkg/util/intstr"
 	"k8s.io/client-go/rest"
 	"reflect"
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
@@ -98,6 +97,7 @@ func (service OpenshiftService) GetExternalEndpoint(namespace string, name strin
 
 	return &u, nil
 }
+
 func (service OpenshiftService) CreateSecurityContext(sonar v1alpha1.Sonar, sa *coreV1Api.ServiceAccount) error {
 
 	labels := helper.GenerateLabels(sonar.Name)
@@ -241,7 +241,7 @@ func (service OpenshiftService) CreateExternalEndpoint(sonar v1alpha1.Sonar) err
 	return nil
 }
 
-func (service OpenshiftService) CreateDbDeployConf(sonar v1alpha1.Sonar) error {
+func (service OpenshiftService) CreateDbDeployment(sonar v1alpha1.Sonar) error {
 	labels := helper.GenerateLabels(sonar.Name)
 	name := sonar.Name + "-db"
 
@@ -257,7 +257,6 @@ func (service OpenshiftService) CreateDbDeployConf(sonar v1alpha1.Sonar) error {
 		log.V(1).Info("Creating a new DeploymentConfig for Sonar", "sonar name", sonar.Name)
 
 		sonarDbDc, err = service.appClient.DeploymentConfigs(sonarDbDcObject.Namespace).Create(sonarDbDcObject)
-
 		if err != nil {
 			return err
 		}
@@ -270,7 +269,7 @@ func (service OpenshiftService) CreateDbDeployConf(sonar v1alpha1.Sonar) error {
 	return nil
 }
 
-func (service OpenshiftService) CreateDeployConf(sonar v1alpha1.Sonar) error {
+func (service OpenshiftService) CreateDeployment(sonar v1alpha1.Sonar) error {
 	labels := helper.GenerateLabels(sonar.Name)
 
 	sonarDcObject := newSonarDeploymentConfig(sonar.Name, sonar.Namespace, sonar.Spec.Version, labels)
@@ -293,39 +292,6 @@ func (service OpenshiftService) CreateDeployConf(sonar v1alpha1.Sonar) error {
 	}
 
 	return nil
-}
-
-func generateProbe(delay int32) *coreV1Api.Probe {
-	return &coreV1Api.Probe{
-		FailureThreshold:    5,
-		InitialDelaySeconds: delay,
-		PeriodSeconds:       20,
-		SuccessThreshold:    1,
-		Handler: coreV1Api.Handler{
-			HTTPGet: &coreV1Api.HTTPGetAction{
-				Port: intstr.IntOrString{
-					IntVal: sonarSpec.Port,
-				},
-				Path: "/",
-			},
-		},
-		TimeoutSeconds: 5,
-	}
-}
-
-func generateDbProbe(delay int32) *coreV1Api.Probe {
-	return &coreV1Api.Probe{
-		FailureThreshold:    5,
-		InitialDelaySeconds: delay,
-		PeriodSeconds:       20,
-		SuccessThreshold:    1,
-		Handler: coreV1Api.Handler{
-			Exec: &coreV1Api.ExecAction{
-				Command: []string{"sh", "-c", "exec pg_isready --host $POD_IP"},
-			},
-		},
-		TimeoutSeconds: 5,
-	}
 }
 
 func newSonarDeploymentConfig(name string, namespace string, version string, labels map[string]string) *appsV1Api.DeploymentConfig {
@@ -398,8 +364,8 @@ func newSonarDeploymentConfig(name string, namespace string, version string, lab
 									ContainerPort: sonarSpec.Port,
 								},
 							},
-							LivenessProbe:          generateProbe(sonarSpec.LivenessProbeDelay),
-							ReadinessProbe:         generateProbe(sonarSpec.ReadinessProbeDelay),
+							LivenessProbe:          helper.GenerateProbe(sonarSpec.LivenessProbeDelay),
+							ReadinessProbe:         helper.GenerateProbe(sonarSpec.ReadinessProbeDelay),
 							TerminationMessagePath: "/dev/termination-log",
 							Resources: coreV1Api.ResourceRequirements{
 								Requests: map[coreV1Api.ResourceName]resource.Quantity{
@@ -507,8 +473,8 @@ func newSonarDatabaseDeploymentConfig(name string, sa string, namespace string, 
 									ContainerPort: sonarSpec.DBPort,
 								},
 							},
-							LivenessProbe:          generateDbProbe(sonarSpec.DbLivenessProbeDelay),
-							ReadinessProbe:         generateDbProbe(sonarSpec.DbReadinessProbeDelay),
+							LivenessProbe:          helper.GenerateDbProbe(sonarSpec.DbLivenessProbeDelay),
+							ReadinessProbe:         helper.GenerateDbProbe(sonarSpec.DbReadinessProbeDelay),
 							TerminationMessagePath: "/dev/termination-log",
 							Resources: coreV1Api.ResourceRequirements{
 								Requests: map[coreV1Api.ResourceName]resource.Quantity{
