@@ -451,7 +451,7 @@ func (s SonarServiceImpl) Install(instance v1alpha1.Sonar) (*v1alpha1.Sonar, err
 
 	err = s.platformService.CreateExternalEndpoint(instance)
 	if err != nil {
-		return &instance, errors.Wrapf(err, "Failed to create Route for %v Sonar!", instance.Name)
+		return &instance, errors.Wrapf(err, "Failed to create External Endpoint for %v Sonar!", instance.Name)
 	}
 
 	err = s.platformService.CreateVolume(instance)

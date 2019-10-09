@@ -38,8 +38,8 @@ type K8SService struct {
 	JenkinsServiceAccountClient jenkinsSAV1Client.EdpV1Client
 }
 
-func (service *K8SService) Init(config *rest.Config, scheme *runtime.Scheme) error {
 
+func (service *K8SService) Init(config *rest.Config, scheme *runtime.Scheme) error {
 	coreClient, err := coreV1Client.NewForConfig(config)
 	if err != nil {
 		return err
@@ -201,6 +201,10 @@ func (service K8SService) CreateDbDeployment(sonar v1alpha1.Sonar) error {
 
 	_, err = service.AppsClient.Deployments(o.Namespace).Create(o)
 	return err
+}
+
+func (service K8SService) CreateSecurityContext(sonar v1alpha1.Sonar, sa *coreV1Api.ServiceAccount) error {
+	return nil
 }
 
 func (service K8SService) CreateDeployment(sonar v1alpha1.Sonar) error {

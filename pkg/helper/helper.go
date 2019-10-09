@@ -6,6 +6,8 @@ import (
 	logf "sigs.k8s.io/controller-runtime/pkg/runtime/log"
 )
 
+const platformType string = "PLATFORM_TYPE"
+
 var log = logf.Log.WithName("helper_sonar")
 
 func GetExecutableFilePath() string {
@@ -21,4 +23,8 @@ func GenerateLabels(name string) map[string]string {
 	return map[string]string{
 		"app": name,
 	}
+}
+
+func GetPlatformTypeEnv() string {
+	return os.Getenv(platformType)
 }

@@ -3,9 +3,10 @@ package sonar
 import (
 	"context"
 	"fmt"
-	"github.com/epmd-edp/jenkins-operator/v2/pkg/controller/helper"
+	"github.com/epmd-edp/sonar-operator/v2/pkg/helper"
 	"github.com/epmd-edp/sonar-operator/v2/pkg/service/platform"
 	"github.com/epmd-edp/sonar-operator/v2/pkg/service/sonar"
+	"os"
 	"time"
 
 	v2v1alpha1 "github.com/epmd-edp/sonar-operator/v2/pkg/apis/edp/v1alpha1"
@@ -32,6 +33,7 @@ const (
 	StatusExposeFinish     = "configs exposed"
 	StatusIntegrationStart = "integration started"
 	StatusReady            = "ready"
+	DefaultRequeueTime     = 30
 )
 
 var log = logf.Log.WithName("controller_sonar")
@@ -51,7 +53,12 @@ func Add(mgr manager.Manager) error {
 func newReconciler(mgr manager.Manager) reconcile.Reconciler {
 	scheme := mgr.GetScheme()
 	client := mgr.GetClient()
-	platformService, _ := platform.NewPlatformService(scheme)
+	platformType := helper.GetPlatformTypeEnv()
+	platformService, err := platform.NewPlatformService(platformType, scheme, &client)
+	if err != nil {
+		log.Error(err, "")
+		os.Exit(1)
+	}
 
 	sonarService := sonar.NewSonarService(platformService, client, scheme)
 	return &ReconcileSonar{
@@ -113,45 +120,45 @@ func (r *ReconcileSonar) Reconcile(request reconcile.Request) (reconcile.Result,
 		reqLogger.Info("Installation has been started")
 		err = r.updateStatus(instance, StatusInstall)
 		if err != nil {
-			return reconcile.Result{RequeueAfter: helper.DefaultRequeueTime * time.Second}, err
+			return reconcile.Result{RequeueAfter: DefaultRequeueTime * time.Second}, err
 		}
 	}
 
 	instance, err = r.service.Install(*instance)
 	if err != nil {
 		r.updateStatus(instance, StatusFailed)
-		return reconcile.Result{RequeueAfter: helper.DefaultRequeueTime * time.Second}, errorsf.Wrapf(err, "Installation has been failed")
+		return reconcile.Result{RequeueAfter: DefaultRequeueTime * time.Second}, errorsf.Wrapf(err, "Installation has been failed")
 	}
 
 	if instance.Status.Status == StatusInstall {
 		log.Info("Installation has finished")
 		err = r.updateStatus(instance, StatusCreated)
 		if err != nil {
-			return reconcile.Result{RequeueAfter: helper.DefaultRequeueTime * time.Second}, err
+			return reconcile.Result{RequeueAfter: DefaultRequeueTime * time.Second}, err
 		}
 	}
 
 	if dcIsReady, err := r.service.IsDeploymentReady(*instance); err != nil {
-		return reconcile.Result{RequeueAfter: helper.DefaultRequeueTime * time.Second}, errorsf.Wrapf(err, "Checking if Deployment configs is ready has been failed")
+		return reconcile.Result{RequeueAfter: DefaultRequeueTime * time.Second}, errorsf.Wrapf(err, "Checking if Deployment configs is ready has been failed")
 	} else if !dcIsReady {
 		reqLogger.Info("Deployment config is not ready for configuration yet")
-		return reconcile.Result{RequeueAfter: helper.DefaultRequeueTime * time.Second}, nil
+		return reconcile.Result{RequeueAfter: DefaultRequeueTime * time.Second}, nil
 	}
 
 	if instance.Status.Status == StatusCreated || instance.Status.Status == "" {
 		reqLogger.Info("Configuration has started")
 		err := r.updateStatus(instance, StatusConfiguring)
 		if err != nil {
-			return reconcile.Result{RequeueAfter: helper.DefaultRequeueTime * time.Second}, err
+			return reconcile.Result{RequeueAfter: DefaultRequeueTime * time.Second}, err
 		}
 	}
 
 	instance, err, isFinished := r.service.Configure(*instance)
 	if err != nil {
 		reqLogger.Error(err, "Configuration has failed")
-		return reconcile.Result{RequeueAfter: helper.DefaultRequeueTime * time.Second}, errorsf.Wrapf(err, "Configuration failed")
+		return reconcile.Result{RequeueAfter: DefaultRequeueTime * time.Second}, errorsf.Wrapf(err, "Configuration failed")
 	} else if !isFinished {
-		return reconcile.Result{RequeueAfter: helper.DefaultRequeueTime * time.Second}, nil
+		return reconcile.Result{RequeueAfter: DefaultRequeueTime * time.Second}, nil
 	}
 
 	if instance.Status.Status == StatusConfiguring {
