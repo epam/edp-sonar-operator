@@ -325,7 +325,7 @@ func (service K8SService) GetExternalEndpoint(namespace string, name string) (*s
 	}
 
 	rs := "https"
-	u := fmt.Sprintf("%v://%v/api", rs, r.Spec.Rules[0].Host)
+	u := fmt.Sprintf("%v://%v", rs, r.Spec.Rules[0].Host)
 
 	return &u, nil
 }

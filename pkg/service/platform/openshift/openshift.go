@@ -93,7 +93,7 @@ func (service OpenshiftService) GetExternalEndpoint(namespace string, name strin
 		routeScheme = "https"
 	}
 
-	u := fmt.Sprintf("%v://%v/api", routeScheme, r.Spec.Host)
+	u := fmt.Sprintf("%v://%v", routeScheme, r.Spec.Host)
 
 	return &u, nil
 }

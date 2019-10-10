@@ -83,7 +83,7 @@ func (s SonarServiceImpl) initSonarClient(instance *v1alpha1.Sonar, defaultPassw
 		return nil, errors.Wrapf(err, "Unable to get route for %v", instance.Name)
 	}
 
-	err = sc.InitNewRestClient(*u, "admin", password)
+	err = sc.InitNewRestClient(fmt.Sprintf("%v/api", *u), "admin", password)
 	if err != nil {
 		return nil, errors.Wrap(err, "Failed to init new Sonar client!")
 	}
