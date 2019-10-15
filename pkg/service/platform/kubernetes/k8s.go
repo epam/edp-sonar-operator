@@ -282,7 +282,7 @@ func (service K8SService) CreateExternalEndpoint(sonar v1alpha1.Sonar) error {
 		Spec: v1beta1.IngressSpec{
 			Rules: []v1beta1.IngressRule{
 				{
-					Host: fmt.Sprintf("%s.%s", sonar.Name, sonar.Spec.EdpSpec.DnsWildcard),
+					Host: fmt.Sprintf("%s-%s.%s", sonar.Name,sonar.Namespace, sonar.Spec.EdpSpec.DnsWildcard),
 					IngressRuleValue: v1beta1.IngressRuleValue{
 						HTTP: &v1beta1.HTTPIngressRuleValue{
 							Paths: []v1beta1.HTTPIngressPath{
