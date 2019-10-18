@@ -102,6 +102,7 @@ func (service OpenshiftService) CreateSecurityContext(sonar v1alpha1.Sonar, sa *
 
 	labels := helper.GenerateLabels(sonar.Name)
 	priority := int32(1)
+	uid := int64(999)
 
 	project, err := service.projectClient.Projects().Get(sonar.Namespace, metav1.GetOptions{})
 	if err != nil && k8serrors.IsNotFound(err) {
@@ -137,15 +138,20 @@ func (service OpenshiftService) CreateSecurityContext(sonar v1alpha1.Sonar, sa *
 		AllowedFlexVolumes:       []securityV1Api.AllowedFlexVolume{},
 		DefaultAddCapabilities:   []coreV1Api.Capability{},
 		FSGroup: securityV1Api.FSGroupStrategyOptions{
-			Type:   securityV1Api.FSGroupStrategyRunAsAny,
-			Ranges: []securityV1Api.IDRange{},
+			Type: securityV1Api.FSGroupStrategyMustRunAs,
+			Ranges: []securityV1Api.IDRange{
+				{
+					Min: uid,
+					Max: uid,
+				},
+			},
 		},
 		Groups:                 []string{},
 		Priority:               &priority,
 		ReadOnlyRootFilesystem: false,
 		RunAsUser: securityV1Api.RunAsUserStrategyOptions{
-			Type:        securityV1Api.RunAsUserStrategyRunAsAny,
-			UID:         nil,
+			Type:        securityV1Api.RunAsUserStrategyMustRunAs,
+			UID:         &uid,
 			UIDRangeMin: nil,
 			UIDRangeMax: nil,
 		},
