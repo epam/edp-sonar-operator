@@ -429,12 +429,12 @@ func (s SonarServiceImpl) Install(instance v1alpha1.Sonar) (*v1alpha1.Sonar, err
 		return &instance, errors.Wrapf(err, "Failed to create password for Admin in %s Sonar!", instance.Name)
 	}
 
-	sa, err := s.platformService.CreateServiceAccount(instance)
+	_, err = s.platformService.CreateServiceAccount(instance)
 	if err != nil {
 		return &instance, errors.Wrapf(err, "Failed to create Service Account for %v Sonar!", instance.Name)
 	}
 
-	err = s.platformService.CreateSecurityContext(instance, sa)
+	err = s.platformService.CreateSecurityContext(instance)
 	if err != nil {
 		return &instance, errors.Wrapf(err, "Failed to create Security Context for %v Sonar!", instance.Name)
 	}

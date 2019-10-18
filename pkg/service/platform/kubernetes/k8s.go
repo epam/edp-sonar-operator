@@ -38,7 +38,6 @@ type K8SService struct {
 	JenkinsServiceAccountClient jenkinsSAV1Client.EdpV1Client
 }
 
-
 func (service *K8SService) Init(config *rest.Config, scheme *runtime.Scheme) error {
 	coreClient, err := coreV1Client.NewForConfig(config)
 	if err != nil {
@@ -203,7 +202,7 @@ func (service K8SService) CreateDbDeployment(sonar v1alpha1.Sonar) error {
 	return err
 }
 
-func (service K8SService) CreateSecurityContext(sonar v1alpha1.Sonar, sa *coreV1Api.ServiceAccount) error {
+func (service K8SService) CreateSecurityContext(sonar v1alpha1.Sonar) error {
 	return nil
 }
 
@@ -282,7 +281,7 @@ func (service K8SService) CreateExternalEndpoint(sonar v1alpha1.Sonar) error {
 		Spec: v1beta1.IngressSpec{
 			Rules: []v1beta1.IngressRule{
 				{
-					Host: fmt.Sprintf("%s-%s.%s", sonar.Name,sonar.Namespace, sonar.Spec.EdpSpec.DnsWildcard),
+					Host: fmt.Sprintf("%s-%s.%s", sonar.Name, sonar.Namespace, sonar.Spec.EdpSpec.DnsWildcard),
 					IngressRuleValue: v1beta1.IngressRuleValue{
 						HTTP: &v1beta1.HTTPIngressRuleValue{
 							Paths: []v1beta1.HTTPIngressPath{
@@ -490,6 +489,7 @@ func newSonarDeployment(name string, namespace string, version string, labels ma
 
 func newDatabaseDeployment(name string, sa string, namespace string, labels map[string]string) *appsV1Api.Deployment {
 	var rc int32 = 1
+	var uid int64 = 999
 
 	return &appsV1Api.Deployment{
 		ObjectMeta: metav1.ObjectMeta{
@@ -510,6 +510,10 @@ func newDatabaseDeployment(name string, sa string, namespace string, labels map[
 					Labels: helper.GenerateLabels(name),
 				},
 				Spec: coreV1Api.PodSpec{
+					SecurityContext: &coreV1Api.PodSecurityContext{
+						RunAsUser: &uid,
+						FSGroup:   &uid,
+					},
 					Containers: []coreV1Api.Container{
 						{
 							Name:            name,

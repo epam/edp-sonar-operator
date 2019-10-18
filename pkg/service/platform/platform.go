@@ -23,7 +23,7 @@ type PlatformService interface {
 	GetConfigmap(namespace string, name string) (map[string]string, error)
 	GetExternalEndpoint(namespace string, name string) (*string, error)
 	CreateServiceAccount(sonar v1alpha1.Sonar) (*coreV1Api.ServiceAccount, error)
-	CreateSecurityContext(sonar v1alpha1.Sonar, sa *coreV1Api.ServiceAccount) error
+	CreateSecurityContext(sonar v1alpha1.Sonar) error
 	CreateExternalEndpoint(sonar v1alpha1.Sonar) error
 	CreateService(sonar v1alpha1.Sonar) error
 	CreateVolume(sonar v1alpha1.Sonar) error

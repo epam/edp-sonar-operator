@@ -98,7 +98,7 @@ func (service OpenshiftService) GetExternalEndpoint(namespace string, name strin
 	return &u, nil
 }
 
-func (service OpenshiftService) CreateSecurityContext(sonar v1alpha1.Sonar, sa *coreV1Api.ServiceAccount) error {
+func (service OpenshiftService) CreateSecurityContext(sonar v1alpha1.Sonar) error {
 
 	labels := helper.GenerateLabels(sonar.Name)
 	priority := int32(1)
@@ -164,12 +164,8 @@ func (service OpenshiftService) CreateSecurityContext(sonar v1alpha1.Sonar, sa *
 			Ranges: nil,
 		},
 		Users: []string{
-			"system:serviceaccount:" + sonar.Namespace + ":" + sonar.Name,
+			fmt.Sprintf("system:serviceaccount:%v:%v", sonar.Namespace, sonar.Name),
 		},
-	}
-
-	if err := controllerutil.SetControllerReference(&sonar, sonarSccObject, service.Scheme); err != nil {
-		return err
 	}
 
 	sonarSCC, err := service.securityClient.SecurityContextConstraints().Get(sonarSccObject.Name, metav1.GetOptions{})
