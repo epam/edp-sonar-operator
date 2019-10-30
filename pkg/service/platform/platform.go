@@ -34,6 +34,7 @@ type PlatformService interface {
 	GetSecretData(namespace string, name string) (map[string][]byte, error)
 	CreateJenkinsServiceAccount(namespace string, secretName string, serviceAccountType string) error
 	CreateJenkinsScript(namespace string, configMap string) error
+	CreateEDPComponentIfNotExist(sonar v1alpha1.Sonar, url string, icon string) error
 }
 
 func NewPlatformService(platformType string, scheme *runtime.Scheme, client *client.Client) (PlatformService, error) {

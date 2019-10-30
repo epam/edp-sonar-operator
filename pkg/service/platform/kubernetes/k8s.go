@@ -2,6 +2,8 @@ package kubernetes
 
 import (
 	"fmt"
+	edpCompApi "github.com/epmd-edp/edp-component-operator/pkg/apis/v1/v1alpha1"
+	edpCompClient "github.com/epmd-edp/edp-component-operator/pkg/client"
 	jenkinsV1Api "github.com/epmd-edp/jenkins-operator/v2/pkg/apis/v2/v1alpha1"
 	jenkinsScriptV1Client "github.com/epmd-edp/jenkins-operator/v2/pkg/controller/jenkinsscript/client"
 	jenkinsSAV1Client "github.com/epmd-edp/jenkins-operator/v2/pkg/controller/jenkinsserviceaccount/client"
@@ -36,6 +38,7 @@ type K8SService struct {
 	ExtensionsV1Client          extensionsV1Client.ExtensionsV1beta1Client
 	JenkinsScriptClient         jenkinsScriptV1Client.EdpV1Client
 	JenkinsServiceAccountClient jenkinsSAV1Client.EdpV1Client
+	edpCompClient               edpCompClient.EDPComponentV1Client
 }
 
 func (service *K8SService) Init(config *rest.Config, scheme *runtime.Scheme) error {
@@ -64,11 +67,17 @@ func (service *K8SService) Init(config *rest.Config, scheme *runtime.Scheme) err
 		return errors.New("extensionsV1 client initialization failed!")
 	}
 
+	compCl, err := edpCompClient.NewForConfig(config)
+	if err != nil {
+		return errors.Wrap(err, "failed to init edp component client")
+	}
+
 	service.coreClient = *coreClient
 	service.ExtensionsV1Client = *ecl
 	service.AppsClient = *acl
 	service.JenkinsScriptClient = *jenkinsScriptClient
 	service.JenkinsServiceAccountClient = *JenkinsServiceAccountClient
+	service.edpCompClient = *compCl
 	service.Scheme = scheme
 	return nil
 }
@@ -689,4 +698,38 @@ func (service K8SService) GetAvailiableDeploymentReplicas(instance v1alpha1.Sona
 	r := int(c.Status.AvailableReplicas)
 
 	return &r, nil
+}
+
+func (service K8SService) CreateEDPComponentIfNotExist(sonar v1alpha1.Sonar, url string, icon string) error {
+	comp, err := service.edpCompClient.
+		EDPComponents(sonar.Namespace).
+		Get(sonar.Name, metav1.GetOptions{})
+	if err == nil {
+		log.Info("edp component already exists", "name", comp.Name)
+		return nil
+	}
+	if k8serr.IsNotFound(err) {
+		return service.createEDPComponent(sonar, url, icon)
+	}
+	return errors.Wrapf(err, "failed to get edp component: %v", sonar.Name)
+}
+
+func (service K8SService) createEDPComponent(sonar v1alpha1.Sonar, url string, icon string) error {
+	obj := &edpCompApi.EDPComponent{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: sonar.Name,
+		},
+		Spec: edpCompApi.EDPComponentSpec{
+			Type: "sonar",
+			Url:  url,
+			Icon: icon,
+		},
+	}
+	if err := controllerutil.SetControllerReference(&sonar, obj, service.Scheme); err != nil {
+		return err
+	}
+	_, err := service.edpCompClient.
+		EDPComponents(sonar.Namespace).
+		Create(obj)
+	return err
 }

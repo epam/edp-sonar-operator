@@ -1,10 +1,13 @@
 package sonar
 
 import (
+	"bufio"
 	"context"
+	"encoding/base64"
 	"fmt"
 	"github.com/dchest/uniuri"
 	jenkinsHelper "github.com/epmd-edp/jenkins-operator/v2/pkg/controller/jenkinsscript/helper"
+	platformHelper "github.com/epmd-edp/jenkins-operator/v2/pkg/service/platform/helper"
 	keycloakApi "github.com/epmd-edp/keycloak-operator/pkg/apis/v1/v1alpha1"
 	"github.com/epmd-edp/sonar-operator/v2/pkg/apis/edp/v1alpha1"
 	"github.com/epmd-edp/sonar-operator/v2/pkg/client/sonar"
@@ -15,10 +18,12 @@ import (
 	"github.com/operator-framework/operator-sdk/pkg/k8sutil"
 	"github.com/pkg/errors"
 	"gopkg.in/resty.v1"
+	"io/ioutil"
 	k8sErr "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
+	"os"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
@@ -39,6 +44,9 @@ const (
 	defaultProfileAbsolutePath = defaultConfigFilesAbsolutePath + localConfigsRelativePath + "/" + defaultQualityProfilesFileName
 
 	defaultQualityProfilesFileName = "quality-profile.xml"
+
+	imgFolder = "img"
+	sonarIcon = "sonar.svg"
 )
 
 type Client struct {
@@ -320,7 +328,40 @@ func (s SonarServiceImpl) ExposeConfiguration(instance v1alpha1.Sonar) (*v1alpha
 		return &instance, errors.Wrapf(err, "Failed to create secret for  %v Keycloak client!", readUserSecretName)
 	}
 
-	return &instance, nil
+	err = s.createEDPComponent(instance)
+
+	return &instance, err
+}
+
+func (s SonarServiceImpl) createEDPComponent(sonar v1alpha1.Sonar) error {
+	url, err := s.platformService.GetExternalEndpoint(sonar.Namespace, sonar.Name)
+	if err != nil {
+		return err
+	}
+	icon, err := getIcon()
+	if err != nil {
+		return err
+	}
+	return s.platformService.CreateEDPComponentIfNotExist(sonar, *url, *icon)
+}
+
+func getIcon() (*string, error) {
+	p, err := platformHelper.CreatePathToTemplateDirectory(imgFolder)
+	if err != nil {
+		return nil, err
+	}
+	fp := fmt.Sprintf("%v/%v", p, sonarIcon)
+	f, err := os.Open(fp)
+	if err != nil {
+		return nil, err
+	}
+	reader := bufio.NewReader(f)
+	content, err := ioutil.ReadAll(reader)
+	if err != nil {
+		return nil, err
+	}
+	encoded := base64.StdEncoding.EncodeToString(content)
+	return &encoded, nil
 }
 
 func (s SonarServiceImpl) Configure(instance v1alpha1.Sonar) (*v1alpha1.Sonar, error, bool) {
@@ -329,7 +370,6 @@ func (s SonarServiceImpl) Configure(instance v1alpha1.Sonar) (*v1alpha1.Sonar, e
 		return &instance, errors.Wrap(err, "Failed to initialize Sonar Client!"), false
 	}
 
-	// TODO(Serhii Shydlovskyi): Error handling here ?
 	sc.WaitForStatusIsUp(60, 10)
 
 	adminSecretName := fmt.Sprintf("%v-admin-password", instance.Name)
@@ -338,7 +378,6 @@ func (s SonarServiceImpl) Configure(instance v1alpha1.Sonar) (*v1alpha1.Sonar, e
 		return &instance, errors.Wrapf(err, "Failed to get secret data from %v!", adminSecretName), false
 	}
 	password := string(credentials["password"])
-	// TODO(Serhii Shydlovskyi): Add check for password presence. Breaks status update.
 	sc.ChangePassword("admin", DefaultPassword, password)
 
 	sc, err = s.initSonarClient(&instance, false)
