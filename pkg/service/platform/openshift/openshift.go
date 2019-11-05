@@ -324,7 +324,13 @@ func newSonarDeploymentConfig(name string, namespace string, version string, lab
 						{
 							Name:    name + "init",
 							Image:   "busybox",
-							Command: []string{"sh", "-c", "while ! nc -w 1 " + name + "-db " + strconv.Itoa(sonarSpec.DBPort) + " </dev/null; do echo waiting for " + name + "-db; sleep 10; done;"},
+							Command: []string{"sh", "-c", "wget -P /opt/sonarqube/extensions/plugins/ https://github.com/vaulttec/sonar-auth-oidc/releases/download/v1.0.4/sonar-auth-oidc-plugin-1.0.4.jar; while ! nc -w 1 " + name + "-db " + strconv.Itoa(sonarSpec.DBPort) + " </dev/null; do echo waiting for " + name + "-db; sleep 10; done;"},
+							VolumeMounts: []coreV1Api.VolumeMount{
+								{
+									MountPath: "/opt/sonarqube/extensions/plugins",
+									Name:      "data",
+								},
+							},
 						},
 					},
 					Containers: []coreV1Api.Container{
