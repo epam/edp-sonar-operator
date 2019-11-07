@@ -394,6 +394,7 @@ func newSonarInternalBalancingService(serviceName string, namespace string, labe
 func newSonarDeployment(name string, namespace string, version string, labels map[string]string) *appsV1Api.Deployment {
 	g, _ := strconv.ParseInt("999", 10, 64)
 	var rc int32 = 1
+	t := true
 
 	return &appsV1Api.Deployment{
 		ObjectMeta: metav1.ObjectMeta{
@@ -463,6 +464,9 @@ func newSonarDeployment(name string, namespace string, version string, labels ma
 							LivenessProbe:          helper.GenerateProbe(sonarSpec.LivenessProbeDelay),
 							ReadinessProbe:         helper.GenerateProbe(sonarSpec.ReadinessProbeDelay),
 							TerminationMessagePath: "/dev/termination-log",
+							SecurityContext: &coreV1Api.SecurityContext{
+								AllowPrivilegeEscalation: &t,
+							},
 							Resources: coreV1Api.ResourceRequirements{
 								Requests: map[coreV1Api.ResourceName]resource.Quantity{
 									coreV1Api.ResourceMemory: resource.MustParse(sonarSpec.MemoryRequest),
@@ -478,6 +482,8 @@ func newSonarDeployment(name string, namespace string, version string, labels ma
 					},
 					SecurityContext: &coreV1Api.PodSecurityContext{
 						FSGroup: &g,
+						RunAsUser: &g,
+						RunAsNonRoot: &t,
 					},
 					ServiceAccountName: name,
 					Volumes: []coreV1Api.Volume{
@@ -499,6 +505,8 @@ func newSonarDeployment(name string, namespace string, version string, labels ma
 func newDatabaseDeployment(name string, sa string, namespace string, labels map[string]string) *appsV1Api.Deployment {
 	var rc int32 = 1
 	var uid int64 = 999
+	f := false
+	t := true
 
 	return &appsV1Api.Deployment{
 		ObjectMeta: metav1.ObjectMeta{
@@ -520,8 +528,9 @@ func newDatabaseDeployment(name string, sa string, namespace string, labels map[
 				},
 				Spec: coreV1Api.PodSpec{
 					SecurityContext: &coreV1Api.PodSecurityContext{
-						RunAsUser: &uid,
-						FSGroup:   &uid,
+						RunAsUser:    &uid,
+						FSGroup:      &uid,
+						RunAsNonRoot: &t,
 					},
 					Containers: []coreV1Api.Container{
 						{
@@ -580,6 +589,9 @@ func newDatabaseDeployment(name string, sa string, namespace string, labels map[
 								Requests: map[coreV1Api.ResourceName]resource.Quantity{
 									coreV1Api.ResourceMemory: resource.MustParse(sonarSpec.MemoryRequest),
 								},
+							},
+							SecurityContext: &coreV1Api.SecurityContext{
+								AllowPrivilegeEscalation: &f,
 							},
 							VolumeMounts: []coreV1Api.VolumeMount{
 								{
