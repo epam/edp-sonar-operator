@@ -13,6 +13,11 @@ spec:
         name: sonar-operator-v2
     spec:
       serviceAccountName: edp
+      securityContext:
+        runAsUser: 1001 
+        runAsNonRoot: true
+        runAsGroup: 1001
+        fsGroup: 1001
       containers:
         - name: sonar-operator-v2
           # Replace this with the built image name
@@ -20,6 +25,8 @@ spec:
           command:
           - sonar-operator
           imagePullPolicy: Always
+          securityContext:
+            allowPrivilegeEscalation: false
           env:
             - name: WATCH_NAMESPACE
               value: REPLACE_VALUE
