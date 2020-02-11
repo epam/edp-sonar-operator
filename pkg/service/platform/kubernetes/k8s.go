@@ -218,7 +218,7 @@ func (service K8SService) CreateSecurityContext(sonar v1alpha1.Sonar) error {
 func (service K8SService) CreateDeployment(sonar v1alpha1.Sonar) error {
 	l := helper.GenerateLabels(sonar.Name)
 
-	o := newSonarDeployment(sonar.Name, sonar.Namespace, sonar.Spec.Version, l)
+	o := newSonarDeployment(sonar.Name, sonar.Namespace, sonar.Spec.Image, l, sonar.Spec.Version )
 	if err := controllerutil.SetControllerReference(&sonar, o, service.Scheme); err != nil {
 		return err
 	}
@@ -391,7 +391,7 @@ func newSonarInternalBalancingService(serviceName string, namespace string, labe
 	}, nil
 }
 
-func newSonarDeployment(name string, namespace string, version string, labels map[string]string) *appsV1Api.Deployment {
+func newSonarDeployment(name string, namespace string, image string, labels map[string]string, version string) *appsV1Api.Deployment {
 	g, _ := strconv.ParseInt("999", 10, 64)
 	var rc int32 = 1
 	t := true
@@ -425,7 +425,7 @@ func newSonarDeployment(name string, namespace string, version string, labels ma
 					Containers: []coreV1Api.Container{
 						{
 							Name:            name,
-							Image:           sonarSpec.Image + ":" + version,
+							Image:           fmt.Sprintf("%s:%s", image, version),
 							ImagePullPolicy: coreV1Api.PullIfNotPresent,
 							Env: []coreV1Api.EnvVar{
 								{
