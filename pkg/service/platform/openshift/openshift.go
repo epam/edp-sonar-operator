@@ -104,19 +104,9 @@ func (service OpenshiftService) CreateSecurityContext(sonar v1alpha1.Sonar) erro
 	priority := int32(1)
 	uid := int64(999)
 
-	project, err := service.projectClient.Projects().Get(sonar.Namespace, metav1.GetOptions{})
-	if err != nil && k8serrors.IsNotFound(err) {
-		return errors.New(fmt.Sprintf("Unable to retrieve project %s", sonar.Namespace))
-	}
-
-	displayName := project.GetObjectMeta().GetAnnotations()["openshift.io/display-name"]
-	if displayName == "" {
-		return errors.New(fmt.Sprintf("Project display name does not set"))
-	}
-
 	sonarSccObject := &securityV1Api.SecurityContextConstraints{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      fmt.Sprintf("%s-%s", sonar.Name, displayName),
+			Name:      fmt.Sprintf("%s-%s", sonar.Name, sonar.Namespace),
 			Namespace: sonar.Namespace,
 			Labels:    labels,
 		},
