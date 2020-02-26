@@ -481,8 +481,8 @@ func newSonarDeployment(name string, namespace string, version string, labels ma
 						},
 					},
 					SecurityContext: &coreV1Api.PodSecurityContext{
-						FSGroup: &g,
-						RunAsUser: &g,
+						FSGroup:      &g,
+						RunAsUser:    &g,
 						RunAsNonRoot: &t,
 					},
 					ServiceAccountName: name,
@@ -537,6 +537,7 @@ func newDatabaseDeployment(name string, sa string, namespace string, labels map[
 							Name:            name,
 							Image:           sonarSpec.DbImage,
 							ImagePullPolicy: coreV1Api.PullIfNotPresent,
+							Args:            []string{"-Dsonar.search.javaAdditionalOpts=-Dnode.store.allow_mmapfs=false"},
 							Env: []coreV1Api.EnvVar{
 								{
 									Name:  "PGDATA",
