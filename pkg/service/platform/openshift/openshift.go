@@ -322,6 +322,7 @@ func newSonarDeploymentConfig(name string, namespace string, image string, label
 							Name:            name,
 							Image:           fmt.Sprintf("%s:%s", image, version),
 							ImagePullPolicy: coreV1Api.PullIfNotPresent,
+							Args:            []string{"-Dsonar.search.javaAdditionalOpts=-Dnode.store.allow_mmapfs=false"},
 							Env: []coreV1Api.EnvVar{
 								{
 									Name: "SONARQUBE_JDBC_USERNAME",

@@ -218,7 +218,7 @@ func (service K8SService) CreateSecurityContext(sonar v1alpha1.Sonar) error {
 func (service K8SService) CreateDeployment(sonar v1alpha1.Sonar) error {
 	l := helper.GenerateLabels(sonar.Name)
 
-	o := newSonarDeployment(sonar.Name, sonar.Namespace, sonar.Spec.Image, l, sonar.Spec.Version )
+	o := newSonarDeployment(sonar.Name, sonar.Namespace, sonar.Spec.Image, l, sonar.Spec.Version)
 	if err := controllerutil.SetControllerReference(&sonar, o, service.Scheme); err != nil {
 		return err
 	}
@@ -481,8 +481,8 @@ func newSonarDeployment(name string, namespace string, image string, labels map[
 						},
 					},
 					SecurityContext: &coreV1Api.PodSecurityContext{
-						FSGroup: &g,
-						RunAsUser: &g,
+						FSGroup:      &g,
+						RunAsUser:    &g,
 						RunAsNonRoot: &t,
 					},
 					ServiceAccountName: name,
@@ -537,6 +537,7 @@ func newDatabaseDeployment(name string, sa string, namespace string, labels map[
 							Name:            name,
 							Image:           sonarSpec.DbImage,
 							ImagePullPolicy: coreV1Api.PullIfNotPresent,
+							Args:            []string{"-Dsonar.search.javaAdditionalOpts=-Dnode.store.allow_mmapfs=false"},
 							Env: []coreV1Api.EnvVar{
 								{
 									Name:  "PGDATA",
