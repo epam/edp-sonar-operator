@@ -218,7 +218,7 @@ func (service K8SService) CreateSecurityContext(sonar v1alpha1.Sonar) error {
 func (service K8SService) CreateDeployment(sonar v1alpha1.Sonar) error {
 	l := helper.GenerateLabels(sonar.Name)
 
-	o := newSonarDeployment(sonar.Name, sonar.Namespace, sonar.Spec.Image, l, sonar.Spec.Version)
+	o := newSonarDeployment(sonar, l)
 	if err := controllerutil.SetControllerReference(&sonar, o, service.Scheme); err != nil {
 		return err
 	}
@@ -281,6 +281,13 @@ func (service K8SService) CreateExternalEndpoint(sonar v1alpha1.Sonar) error {
 		return err
 	}
 
+	hostname := fmt.Sprintf("%v-%v.%v", sonar.Name, sonar.Namespace, sonar.Spec.EdpSpec.DnsWildcard)
+	path := "/"
+	if len(sonar.Spec.BasePath) != 0 {
+		hostname = sonar.Spec.EdpSpec.DnsWildcard
+		path = fmt.Sprintf("/%v", sonar.Spec.BasePath)
+	}
+
 	o := &v1beta1.Ingress{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      sonar.Name,
@@ -290,12 +297,12 @@ func (service K8SService) CreateExternalEndpoint(sonar v1alpha1.Sonar) error {
 		Spec: v1beta1.IngressSpec{
 			Rules: []v1beta1.IngressRule{
 				{
-					Host: fmt.Sprintf("%s-%s.%s", sonar.Name, sonar.Namespace, sonar.Spec.EdpSpec.DnsWildcard),
+					Host: hostname,
 					IngressRuleValue: v1beta1.IngressRuleValue{
 						HTTP: &v1beta1.HTTPIngressRuleValue{
 							Paths: []v1beta1.HTTPIngressPath{
 								{
-									Path: "/",
+									Path: path,
 									Backend: v1beta1.IngressBackend{
 										ServiceName: sonar.Name,
 										ServicePort: intstr.IntOrString{
@@ -333,7 +340,7 @@ func (service K8SService) GetExternalEndpoint(namespace string, name string) (*s
 	}
 
 	rs := "https"
-	u := fmt.Sprintf("%v://%v", rs, r.Spec.Rules[0].Host)
+	u := fmt.Sprintf("%v://%v%v", rs, r.Spec.Rules[0].Host, r.Spec.Rules[0].HTTP.Paths[0].Path)
 
 	return &u, nil
 }
@@ -391,15 +398,20 @@ func newSonarInternalBalancingService(serviceName string, namespace string, labe
 	}, nil
 }
 
-func newSonarDeployment(name string, namespace string, image string, labels map[string]string, version string) *appsV1Api.Deployment {
+func newSonarDeployment(sonar v1alpha1.Sonar, labels map[string]string) *appsV1Api.Deployment {
 	g, _ := strconv.ParseInt("999", 10, 64)
 	var rc int32 = 1
 	t := true
 
+	sonarWebContextEnv := "/"
+	if len(sonar.Spec.BasePath) != 0 {
+		sonarWebContextEnv = fmt.Sprintf("%v%v", sonarWebContextEnv, sonar.Spec.BasePath)
+	}
+
 	return &appsV1Api.Deployment{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      name,
-			Namespace: namespace,
+			Name:      sonar.Name,
+			Namespace: sonar.Namespace,
 			Labels:    labels,
 		},
 		Spec: appsV1Api.DeploymentSpec{
@@ -417,23 +429,24 @@ func newSonarDeployment(name string, namespace string, image string, labels map[
 				Spec: coreV1Api.PodSpec{
 					InitContainers: []coreV1Api.Container{
 						{
-							Name:    name + "init",
+							Name:    sonar.Name + "init",
 							Image:   "busybox",
-							Command: []string{"sh", "-c", "while ! nc -w 1 " + name + "-db " + strconv.Itoa(sonarSpec.DBPort) + " </dev/null; do echo waiting for " + name + "-db; sleep 10; done;"},
+							Command: []string{"sh", "-c", "while ! nc -w 1 " + sonar.Name + "-db " + strconv.Itoa(sonarSpec.DBPort) + " </dev/null; do echo waiting for " + sonar.Name + "-db; sleep 10; done;"},
 						},
 					},
 					Containers: []coreV1Api.Container{
 						{
-							Name:            name,
-							Image:           fmt.Sprintf("%s:%s", image, version),
+							Name:            sonar.Name,
+							Image:           fmt.Sprintf("%s:%s", sonar.Spec.Image, sonar.Spec.Version),
 							ImagePullPolicy: coreV1Api.PullIfNotPresent,
+							Args:            []string{"-Dsonar.search.javaAdditionalOpts=-Dnode.store.allow_mmapfs=false"},
 							Env: []coreV1Api.EnvVar{
 								{
 									Name: "SONARQUBE_JDBC_USERNAME",
 									ValueFrom: &coreV1Api.EnvVarSource{
 										SecretKeyRef: &coreV1Api.SecretKeySelector{
 											LocalObjectReference: coreV1Api.LocalObjectReference{
-												Name: name + "-db",
+												Name: sonar.Name + "-db",
 											},
 											Key: "database-user",
 										},
@@ -444,7 +457,7 @@ func newSonarDeployment(name string, namespace string, image string, labels map[
 									ValueFrom: &coreV1Api.EnvVarSource{
 										SecretKeyRef: &coreV1Api.SecretKeySelector{
 											LocalObjectReference: coreV1Api.LocalObjectReference{
-												Name: name + "-db",
+												Name: sonar.Name + "-db",
 											},
 											Key: "database-password",
 										},
@@ -452,17 +465,21 @@ func newSonarDeployment(name string, namespace string, image string, labels map[
 								},
 								{
 									Name:  "SONARQUBE_JDBC_URL",
-									Value: "jdbc:postgresql://" + name + "-db/sonar",
+									Value: "jdbc:postgresql://" + sonar.Name + "-db/sonar",
+								},
+								{
+									Name:  "sonar.web.context",
+									Value: sonarWebContextEnv,
 								},
 							},
 							Ports: []coreV1Api.ContainerPort{
 								{
-									Name:          name,
+									Name:          sonar.Name,
 									ContainerPort: sonarSpec.Port,
 								},
 							},
-							LivenessProbe:          helper.GenerateProbe(sonarSpec.LivenessProbeDelay),
-							ReadinessProbe:         helper.GenerateProbe(sonarSpec.ReadinessProbeDelay),
+							LivenessProbe:          helper.GenerateProbe(sonarSpec.LivenessProbeDelay, sonarWebContextEnv),
+							ReadinessProbe:         helper.GenerateProbe(sonarSpec.ReadinessProbeDelay, sonarWebContextEnv),
 							TerminationMessagePath: "/dev/termination-log",
 							SecurityContext: &coreV1Api.SecurityContext{
 								AllowPrivilegeEscalation: &t,
@@ -485,13 +502,13 @@ func newSonarDeployment(name string, namespace string, image string, labels map[
 						RunAsUser:    &g,
 						RunAsNonRoot: &t,
 					},
-					ServiceAccountName: name,
+					ServiceAccountName: sonar.Name,
 					Volumes: []coreV1Api.Volume{
 						{
 							Name: "data",
 							VolumeSource: coreV1Api.VolumeSource{
 								PersistentVolumeClaim: &coreV1Api.PersistentVolumeClaimVolumeSource{
-									ClaimName: name + "-data",
+									ClaimName: sonar.Name + "-data",
 								},
 							},
 						},
@@ -537,7 +554,6 @@ func newDatabaseDeployment(name string, sa string, namespace string, labels map[
 							Name:            name,
 							Image:           sonarSpec.DbImage,
 							ImagePullPolicy: coreV1Api.PullIfNotPresent,
-							Args:            []string{"-Dsonar.search.javaAdditionalOpts=-Dnode.store.allow_mmapfs=false"},
 							Env: []coreV1Api.EnvVar{
 								{
 									Name:  "PGDATA",

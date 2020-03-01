@@ -357,8 +357,8 @@ func newSonarDeploymentConfig(name string, namespace string, image string, label
 									ContainerPort: sonarSpec.Port,
 								},
 							},
-							LivenessProbe:          helper.GenerateProbe(sonarSpec.LivenessProbeDelay),
-							ReadinessProbe:         helper.GenerateProbe(sonarSpec.ReadinessProbeDelay),
+							LivenessProbe:          helper.GenerateProbe(sonarSpec.LivenessProbeDelay, "/"),
+							ReadinessProbe:         helper.GenerateProbe(sonarSpec.ReadinessProbeDelay, "/"),
 							TerminationMessagePath: "/dev/termination-log",
 							Resources: coreV1Api.ResourceRequirements{
 								Requests: map[coreV1Api.ResourceName]resource.Quantity{

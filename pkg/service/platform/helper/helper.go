@@ -12,7 +12,7 @@ func GenerateLabels(name string) map[string]string {
 	}
 }
 
-func GenerateProbe(delay int32) *coreV1Api.Probe {
+func GenerateProbe(delay int32, probePath string) *coreV1Api.Probe {
 	return &coreV1Api.Probe{
 		FailureThreshold:    5,
 		InitialDelaySeconds: delay,
@@ -23,7 +23,7 @@ func GenerateProbe(delay int32) *coreV1Api.Probe {
 				Port: intstr.IntOrString{
 					IntVal: sonarSpec.Port,
 				},
-				Path: "/",
+				Path: probePath,
 			},
 		},
 		TimeoutSeconds: 5,
