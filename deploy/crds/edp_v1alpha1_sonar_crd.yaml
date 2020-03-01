@@ -29,62 +29,11 @@ spec:
           type: object
         spec:
           properties:
-            externalConfiguration:
-              properties:
-                adminUser:
-                  properties:
-                    description:
-                      type: string
-                    kind:
-                      type: string
-                    name:
-                      type: string
-                  required:
-                  - name
-                  - kind
-                  - description
-                  type: object
-                ciUser:
-                  properties:
-                    description:
-                      type: string
-                    kind:
-                      type: string
-                    name:
-                      type: string
-                  required:
-                  - name
-                  - kind
-                  - description
-                  type: object
-                isCredentials:
-                  properties:
-                    description:
-                      type: string
-                    kind:
-                      type: string
-                    name:
-                      type: string
-                  required:
-                  - name
-                  - kind
-                  - description
-                  type: object
-                readUser:
-                  properties:
-                    description:
-                      type: string
-                    kind:
-                      type: string
-                    name:
-                      type: string
-                  required:
-                  - name
-                  - kind
-                  - description
-                  type: object
-              type: object
             version:
+              type: string
+            image:
+              type: string
+            basePath:
               type: string
             volumes:
               items:
@@ -100,6 +49,7 @@ spec:
               type: array
           required:
           - version
+          - image
           type: object
         status:
           type: object
