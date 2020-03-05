@@ -1,0 +1,58 @@
+{{- if eq .Values.platform "openshift" -}}
+apiVersion: authorization.openshift.io/v1
+kind: ClusterRole
+metadata:
+  annotations:
+    openshift.io/description: Role for {{ .Values.name }}-edp service account
+    openshift.io/reconcile-protect: "false"
+  name: {{ .Values.name }}-{{ .Values.namespace }}-clusterrole
+rules:
+- apiGroups:
+    - '*'
+  attributeRestrictions: null
+  resources:
+    - securitycontextconstraints
+  verbs:
+    - patch
+    - update
+    - delete
+    - get
+    - list
+    - create
+- apiGroups:
+    - '*'
+  attributeRestrictions: null
+  resources:
+    - sonars
+    - sonars/finalizers
+    - sonars/status
+    - jenkins
+    - jenkins/finalizers
+    - jenkins/status
+    - jenkinses
+    - jenkinses/finalizers
+    - jenkinses/status
+    - jenkinsserviceaccounts
+    - jenkinsserviceaccounts/finalizers
+    - jenkinsserviceaccounts/status
+    - jenkinsscripts
+    - jenkinsscripts/finalizers
+    - jenkinsscripts/status
+    - jenkinsfolders
+    - jenkinsfolders/finalizers
+    - jenkinsfolders/status
+    - edpcomponents
+    - edpcomponents/finalizers
+    - edpcomponents/status
+    - keycloaks
+    - keycloaks/finalizers
+    - keycloaks/status
+    - keycloakclients
+    - keycloakclients/finalizers
+    - keycloakclients/status
+    - keycloakrealms
+    - keycloakrealms/finalizers
+    - keycloakrealms/status
+  verbs:
+    - '*'
+{{ end }}
