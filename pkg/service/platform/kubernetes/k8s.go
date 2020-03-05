@@ -402,6 +402,10 @@ func newSonarDeployment(sonar v1alpha1.Sonar, labels map[string]string) *appsV1A
 	g, _ := strconv.ParseInt("999", 10, 64)
 	var rc int32 = 1
 	t := true
+	i := sonar.Spec.Image
+	if i == "" {
+		i = sonarSpec.Image
+	}
 
 	sonarWebContextEnv := "/"
 	if len(sonar.Spec.BasePath) != 0 {
@@ -427,6 +431,7 @@ func newSonarDeployment(sonar v1alpha1.Sonar, labels map[string]string) *appsV1A
 					Labels: labels,
 				},
 				Spec: coreV1Api.PodSpec{
+					ImagePullSecrets: sonar.Spec.ImagePullSecrets,
 					InitContainers: []coreV1Api.Container{
 						{
 							Name:    sonar.Name + "init",
@@ -437,7 +442,7 @@ func newSonarDeployment(sonar v1alpha1.Sonar, labels map[string]string) *appsV1A
 					Containers: []coreV1Api.Container{
 						{
 							Name:            sonar.Name,
-							Image:           sonar.Spec.Image + ":" + sonar.Spec.Version,
+							Image:           i + ":" + sonar.Spec.Version,
 							ImagePullPolicy: coreV1Api.PullIfNotPresent,
 							Args:            []string{"-Dsonar.search.javaAdditionalOpts=-Dnode.store.allow_mmapfs=false"},
 							Env: []coreV1Api.EnvVar{
