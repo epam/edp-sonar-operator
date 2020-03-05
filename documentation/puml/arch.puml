@@ -1,0 +1,49 @@
+@startuml
+
+skinparam class {
+    BackgroundColor #white
+	BackgroundColor<<wip>> LightGoldenRodYellow
+	BackgroundColor<<tbd>> Khaki
+}
+
+package sonar-operator {
+    class Sonar {
+        -- spec --
+        String image
+        String version
+        String basePath
+        []SonarVolumes volumes
+        EdpSpec edpSpec
+        -- status --
+        Boolean available
+        Date lastTimeUpdated
+        String status
+        String externalUrl
+    }
+
+    EdpSpec "1" *-- "1" Sonar
+    class EdpSpec <internal> {
+        String dnsWildcard
+    }
+
+    SonarVolumes "0..*" *-- "1" Sonar
+    class SonarVolumes <internal> {
+        String name
+        String storageClass
+        String capacity
+    }
+}
+
+
+JenkinsServiceAccount <-d- Sonar : creates sonar-ciuser-token
+JenkinsScript <-d- Sonar : creates sonar-jenkins-plugin-config
+EDPComponent <-d- Sonar : creates
+KeycloakClient <-d- Sonar : creates
+
+legend
+|<back:LightGoldenRodYellow>    </back>| Work In Progress |
+|<back:White>    </back>| Implemented |
+|<back:Khaki>    </back>| TBD |
+endlegend
+
+@enduml
