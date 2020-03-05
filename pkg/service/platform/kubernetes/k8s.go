@@ -427,6 +427,7 @@ func newSonarDeployment(sonar v1alpha1.Sonar, labels map[string]string) *appsV1A
 					Labels: labels,
 				},
 				Spec: coreV1Api.PodSpec{
+					ImagePullSecrets: sonar.Spec.ImagePullSecrets,
 					InitContainers: []coreV1Api.Container{
 						{
 							Name:    sonar.Name + "init",
