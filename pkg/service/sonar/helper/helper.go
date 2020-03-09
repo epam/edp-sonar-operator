@@ -23,6 +23,7 @@ const (
 type JenkinsPluginData struct {
 	ServerName string
 	ServerPort int
+	ServerPath string
 	SecretName string
 }
 

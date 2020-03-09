@@ -6,6 +6,7 @@ import (
 	"encoding/base64"
 	"fmt"
 	"github.com/dchest/uniuri"
+	jenkinsApi "github.com/epmd-edp/jenkins-operator/v2/pkg/apis/v2/v1alpha1"
 	jenkinsHelper "github.com/epmd-edp/jenkins-operator/v2/pkg/controller/jenkinsscript/helper"
 	platformHelper "github.com/epmd-edp/jenkins-operator/v2/pkg/service/platform/helper"
 	keycloakApi "github.com/epmd-edp/keycloak-operator/pkg/apis/v1/v1alpha1"
@@ -23,6 +24,7 @@ import (
 	"k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
+	"log"
 	"os"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
@@ -33,10 +35,9 @@ const (
 	ReaduserLogin           = "read"
 	ReaduserUsername        = "Read-only user"
 	NonInteractiveGroupName = "non-interactive-users"
-	WebhookUrl              = "http://jenkins:8080/sonarqube-webhook/"
+	WebhookUrl              = "sonarqube-webhook/"
 	DefaultPassword         = "admin"
 	ClaimName               = "roles"
-	SonarPort               = 9000
 
 	defaultConfigFilesAbsolutePath = "/usr/local/"
 	localConfigsRelativePath       = "configs"
@@ -266,6 +267,10 @@ func (s SonarServiceImpl) ExposeConfiguration(instance v1alpha1.Sonar) (*v1alpha
 	data := sonarHelper.InitNewJenkinsPluginInfo(true)
 	data.ServerName = instance.Name
 	data.SecretName = JenkinsLogin
+	data.ServerPath = ""
+	if len(instance.Spec.BasePath) != 0 {
+		data.ServerPath = fmt.Sprintf("/%v", instance.Spec.BasePath)
+	}
 
 	jenkinsScriptContext, err := sonarHelper.ParseDefaultTemplate(data)
 	if err != nil {
@@ -425,9 +430,12 @@ func (s SonarServiceImpl) Configure(instance v1alpha1.Sonar) (*v1alpha1.Sonar, e
 		return &instance, errors.Wrapf(err, "Failed to add scan permission for %v group!", NonInteractiveGroupName), false
 	}
 
-	err = sc.AddWebhook(JenkinsLogin, WebhookUrl)
-	if err != nil {
-		return &instance, errors.Wrap(err, "Failed to add Jenkins webhook!"), false
+	jenkinsUrl := s.getInternalJenkinsUrl(instance.Namespace)
+	if jenkinsUrl != nil {
+		err = sc.AddWebhook(JenkinsLogin, fmt.Sprintf("%v/%v", *jenkinsUrl, WebhookUrl))
+		if err != nil {
+			return &instance, errors.Wrap(err, "Failed to add Jenkins webhook!"), false
+		}
 	}
 
 	err = sc.ConfigureGeneralSettings("values", "sonar.typescript.lcov.reportPaths", "coverage/lcov.info")
@@ -519,4 +527,28 @@ func (s SonarServiceImpl) IsDeploymentReady(instance v1alpha1.Sonar) (bool, erro
 	}
 
 	return isReady, nil
+}
+
+func (s SonarServiceImpl) getInternalJenkinsUrl(namespace string) *string {
+	options := client.ListOptions{Namespace: namespace}
+	jenkinsList := &jenkinsApi.JenkinsList{}
+
+	err := s.k8sClient.List(context.TODO(), &options, jenkinsList)
+	if err != nil {
+		log.Printf("Unable to get Jenkins CRs in namespace %v", namespace)
+		return nil
+	}
+
+	if len(jenkinsList.Items) == 0 {
+		log.Printf("Jenkins installation is not found in namespace %v", namespace)
+		return nil
+	}
+
+	jenkins := jenkinsList.Items[0]
+	basePath := ""
+	if len(jenkins.Spec.BasePath) > 0 {
+		basePath = fmt.Sprintf("/%v", jenkins.Spec.BasePath)
+	}
+	jenkinsInternalUrl := fmt.Sprintf("http://jenkins.%s:8080%v", namespace, basePath)
+	return &jenkinsInternalUrl
 }

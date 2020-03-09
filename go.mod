@@ -7,7 +7,7 @@ replace git.apache.org/thrift.git => github.com/apache/thrift v0.12.0
 require (
 	github.com/dchest/uniuri v0.0.0-20160212164326-8902c56451e9
 	github.com/epmd-edp/edp-component-operator v0.0.1-2
-	github.com/epmd-edp/jenkins-operator/v2 v2.2.0-92
+	github.com/epmd-edp/jenkins-operator/v2 v2.2.1-131.0.20200302103622-f60cf5cf627e
 	github.com/epmd-edp/keycloak-operator v1.0.31-alpha-56
 	github.com/googleapis/gnostic v0.3.1 // indirect
 	github.com/openshift/api v3.9.0+incompatible

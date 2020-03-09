@@ -730,11 +730,10 @@ func (service K8SService) GetAvailiableDeploymentReplicas(instance v1alpha1.Sona
 }
 
 func (service K8SService) CreateEDPComponentIfNotExist(sonar v1alpha1.Sonar, url string, icon string) error {
-	comp, err := service.edpCompClient.
+	_, err := service.edpCompClient.
 		EDPComponents(sonar.Namespace).
 		Get(sonar.Name, metav1.GetOptions{})
 	if err == nil {
-		log.Info("edp component already exists", "name", comp.Name)
 		return nil
 	}
 	if k8serr.IsNotFound(err) {
