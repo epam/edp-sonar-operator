@@ -29,7 +29,7 @@ import com.cloudbees.plugins.credentials.impl.*
 SonarGlobalConfiguration sonarConf = Hudson.instance.getDescriptorByType(SonarGlobalConfiguration.class)
 def sonarProperties = new SonarInstallation(
         "Sonar",
-        "http://{{ .ServerName }}:{{ .ServerPort }}",
+        "http://{{ .ServerName }}:{{ .ServerPort }}{{ .ServerPath }}",
   		"{{ .SecretName }}",
   		Secret.fromString(StringUtils.trimToNull("")),
         "5.3",
