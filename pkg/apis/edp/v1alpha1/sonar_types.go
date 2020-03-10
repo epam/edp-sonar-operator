@@ -1,6 +1,7 @@
 package v1alpha1
 
 import (
+	coreV1Api "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"time"
 )
@@ -21,10 +22,11 @@ type SonarSpec struct {
 	// INSERT ADDITIONAL SPEC FIELDS - desired state of cluster
 	// Important: Run "operator-sdk generate k8s" to regenerate code after modifying this file
 	// Add custom validation using kubebuilder tags: https://book.kubebuilder.io/beyond_basics/generating_crd.html
-	Version                    string                     `json:"version"`
-	Image                      string                     `json:"image, omitempty"`
-	Volumes                    []SonarVolumes             `json:"volumes,omitempty"`
-	SonarExternalConfiguration SonarExternalConfiguration `json:"externalConfiguration,omitempty"`
+	Version                    string                           `json:"version"`
+	Image                      string                           `json:"image,omitempty"`
+	ImagePullSecrets           []coreV1Api.LocalObjectReference `json:"imagePullSecrets,omitempty"`
+	Volumes                    []SonarVolumes                   `json:"volumes,omitempty"`
+	SonarExternalConfiguration SonarExternalConfiguration       `json:"externalConfiguration,omitempty"`
 }
 
 type SonarExternalConfigurationItem struct {

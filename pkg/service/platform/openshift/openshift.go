@@ -271,7 +271,7 @@ func (service OpenshiftService) CreateDbDeployConf(sonar v1alpha1.Sonar) error {
 func (service OpenshiftService) CreateDeployConf(sonar v1alpha1.Sonar) error {
 	labels := helper.GenerateLabels(sonar.Name)
 
-	sonarDcObject := newSonarDeploymentConfig(sonar.Name, sonar.Namespace, sonar.Spec.Version, labels)
+	sonarDcObject := newSonarDeploymentConfig(sonar.Name, sonar.Namespace, sonar.Spec.Version, labels, sonar.Spec.Image, sonar.Spec.ImagePullSecrets)
 	if err := controllerutil.SetControllerReference(&sonar, sonarDcObject, service.Scheme); err != nil {
 		return err
 	}
@@ -326,7 +326,7 @@ func generateDbProbe(delay int32) *coreV1Api.Probe {
 	}
 }
 
-func newSonarDeploymentConfig(name string, namespace string, version string, labels map[string]string) *appsV1Api.DeploymentConfig {
+func newSonarDeploymentConfig(name string, namespace string, version string, labels map[string]string, image string, ips []coreV1Api.LocalObjectReference) *appsV1Api.DeploymentConfig {
 	fsGroup, _ := strconv.ParseInt("999", 10, 64)
 	return &appsV1Api.DeploymentConfig{
 		ObjectMeta: metav1.ObjectMeta{
@@ -350,6 +350,7 @@ func newSonarDeploymentConfig(name string, namespace string, version string, lab
 					Labels: labels,
 				},
 				Spec: coreV1Api.PodSpec{
+					ImagePullSecrets: ips,
 					InitContainers: []coreV1Api.Container{
 						{
 							Name:    name + "init",
@@ -360,7 +361,7 @@ func newSonarDeploymentConfig(name string, namespace string, version string, lab
 					Containers: []coreV1Api.Container{
 						{
 							Name:            name,
-							Image:           sonarSpec.Image + ":" + version,
+							Image:           image + ":" + version,
 							ImagePullPolicy: coreV1Api.PullIfNotPresent,
 							Env: []coreV1Api.EnvVar{
 								{
