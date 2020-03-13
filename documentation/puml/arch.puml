@@ -14,6 +14,7 @@ package sonar-operator {
         String basePath
         []SonarVolumes volumes
         EdpSpec edpSpec
+        []LocalObjectReference imagePullSecrets
         -- status --
         Boolean available
         Date lastTimeUpdated
@@ -34,7 +35,10 @@ package sonar-operator {
     }
 }
 
-
+class LocalObjectReference {
+    String name
+}
+Sonar -l-> LocalObjectReference : imagePullSecrets
 JenkinsServiceAccount <-d- Sonar : creates sonar-ciuser-token
 JenkinsScript <-d- Sonar : creates sonar-jenkins-plugin-config
 EDPComponent <-d- Sonar : creates
