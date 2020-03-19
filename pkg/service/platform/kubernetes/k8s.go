@@ -27,6 +27,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 	logf "sigs.k8s.io/controller-runtime/pkg/runtime/log"
 	"strconv"
+	"strings"
 )
 
 var log = logf.Log.WithName("platform")
@@ -340,7 +341,8 @@ func (service K8SService) GetExternalEndpoint(namespace string, name string) (*s
 	}
 
 	rs := "https"
-	u := fmt.Sprintf("%v://%v%v", rs, r.Spec.Rules[0].Host, r.Spec.Rules[0].HTTP.Paths[0].Path)
+	u := fmt.Sprintf("%v://%v%v", rs, r.Spec.Rules[0].Host,
+		strings.TrimRight(r.Spec.Rules[0].HTTP.Paths[0].Path, "/"))
 
 	return &u, nil
 }
