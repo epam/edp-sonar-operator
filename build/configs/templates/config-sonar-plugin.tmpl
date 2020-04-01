@@ -32,6 +32,7 @@ def sonarProperties = new SonarInstallation(
         "http://{{ .ServerName }}:{{ .ServerPort }}{{ .ServerPath }}",
   		"{{ .SecretName }}",
   		Secret.fromString(StringUtils.trimToNull("")),
+  		"",
         "5.3",
         "",
   		"",
