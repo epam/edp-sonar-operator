@@ -1,13 +1,7 @@
 name: sonar-operator
 namespace: ""
 platform: "openshift"
-cdPipelineName: ""
-cdPipelineStageName: ""
 dnsWildcard: ""
-database:
-  required: false
-ingress:
-  required: false
 image:
-  name: sonar-operator
-  version: latest
+  name: epamedp/sonar-operator
+  version: v2.3.0
