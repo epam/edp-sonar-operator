@@ -1,7 +1,6 @@
 name: sonar-operator
 namespace: ""
 platform: "openshift"
-dnsWildcard: ""
 image:
   name: epamedp/sonar-operator
   version: v2.3.0
