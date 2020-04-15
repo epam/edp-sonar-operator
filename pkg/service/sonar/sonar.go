@@ -24,6 +24,7 @@ import (
 	"k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
+	"k8s.io/apimachinery/pkg/util/json"
 	"log"
 	"os"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -114,11 +115,21 @@ func (s SonarServiceImpl) Integration(instance v1alpha1.Sonar) (*v1alpha1.Sonar,
 			return &instance, errors.New("realm main does not have required annotations")
 		}
 		openIdConfiguration := realm.Annotations["openid-configuration"]
-		err = sc.ConfigureGeneralSettings("value", "sonar.auth.oidc.providerConfiguration", openIdConfiguration)
+		var c map[string]interface{}
+		err := json.Unmarshal([]byte(openIdConfiguration), &c)
 		if err != nil {
-			return &instance, errors.Wrap(err, "Failed to to configure sonar.auth.oidc.providerConfiguration!")
+			return &instance, errors.Wrap(err, "failed to unmarshal OpenID configuration")
+		}
+		if len(c["issuer"].(string)) > 0 {
+			err = sc.ConfigureGeneralSettings("value", "sonar.auth.oidc.issuerUri", c["issuer"].(string))
+			if err != nil {
+				return &instance, errors.Wrap(err, "failed to to configure sonar.auth.oidc.issuerUri")
+			}
+		} else {
+			return &instance, errors.New("issuer field in oidc configuration is empty or configuration is invalid")
 		}
 	}
+
 	url, err := s.platformService.GetExternalEndpoint(instance.Namespace, instance.Name)
 	if err != nil {
 		return nil, err
