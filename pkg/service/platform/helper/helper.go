@@ -6,6 +6,10 @@ import (
 	"k8s.io/apimachinery/pkg/util/intstr"
 )
 
+const (
+	UrlCutset = "!\"#$%&'()*+,-./@:;<=>[\\]^_`{|}~"
+)
+
 func GenerateLabels(name string) map[string]string {
 	return map[string]string{
 		"app": name,
