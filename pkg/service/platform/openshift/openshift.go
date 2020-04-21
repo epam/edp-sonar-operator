@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/epmd-edp/sonar-operator/v2/pkg/apis/edp/v1alpha1"
 	"github.com/epmd-edp/sonar-operator/v2/pkg/service/platform/helper"
+	platformHelper "github.com/epmd-edp/sonar-operator/v2/pkg/service/platform/helper"
 	"github.com/epmd-edp/sonar-operator/v2/pkg/service/platform/kubernetes"
 	sonarSpec "github.com/epmd-edp/sonar-operator/v2/pkg/service/sonar/spec"
 	appsV1Api "github.com/openshift/api/apps/v1"
@@ -25,6 +26,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 	logf "sigs.k8s.io/controller-runtime/pkg/runtime/log"
 	"strconv"
+	"strings"
 )
 
 var log = logf.Log.WithName("platform")
@@ -92,8 +94,9 @@ func (service OpenshiftService) GetExternalEndpoint(namespace string, name strin
 	if r.Spec.TLS.Termination != "" {
 		routeScheme = "https"
 	}
+	p := strings.TrimRight(r.Spec.Path, platformHelper.UrlCutset)
 
-	u := fmt.Sprintf("%v://%v", routeScheme, r.Spec.Host)
+	u := fmt.Sprintf("%v://%v%v", routeScheme, r.Spec.Host, p)
 
 	return &u, nil
 }
@@ -200,8 +203,14 @@ func (service OpenshiftService) CreateSecurityContext(sonar v1alpha1.Sonar) erro
 }
 
 func (service OpenshiftService) CreateExternalEndpoint(sonar v1alpha1.Sonar) error {
-
 	labels := helper.GenerateLabels(sonar.Name)
+
+	hostname := fmt.Sprintf("%v-%v.%v", sonar.Name, sonar.Namespace, sonar.Spec.EdpSpec.DnsWildcard)
+	path := "/"
+	if len(sonar.Spec.BasePath) != 0 {
+		hostname = sonar.Spec.EdpSpec.DnsWildcard
+		path = fmt.Sprintf("/%v(/|$)(.*)", sonar.Spec.BasePath)
+	}
 
 	sonarRouteObject := &routeV1Api.Route{
 		ObjectMeta: metav1.ObjectMeta{
@@ -210,6 +219,8 @@ func (service OpenshiftService) CreateExternalEndpoint(sonar v1alpha1.Sonar) err
 			Labels:    labels,
 		},
 		Spec: routeV1Api.RouteSpec{
+			Path: path,
+			Host: hostname,
 			TLS: &routeV1Api.TLSConfig{
 				Termination:                   routeV1Api.TLSTerminationEdge,
 				InsecureEdgeTerminationPolicy: routeV1Api.InsecureEdgeTerminationPolicyRedirect,
@@ -274,7 +285,7 @@ func (service OpenshiftService) CreateDbDeployment(sonar v1alpha1.Sonar) error {
 func (service OpenshiftService) CreateDeployment(sonar v1alpha1.Sonar) error {
 	labels := helper.GenerateLabels(sonar.Name)
 
-	sonarDcObject := newSonarDeploymentConfig(sonar.Name, sonar.Namespace, sonar.Spec.Image, labels, sonar.Spec.Version, sonar.Spec.ImagePullSecrets)
+	sonarDcObject := newSonarDeploymentConfig(sonar, labels)
 	if err := controllerutil.SetControllerReference(&sonar, sonarDcObject, service.Scheme); err != nil {
 		return err
 	}
@@ -296,16 +307,21 @@ func (service OpenshiftService) CreateDeployment(sonar v1alpha1.Sonar) error {
 	return nil
 }
 
-func newSonarDeploymentConfig(name string, namespace string, image string, labels map[string]string, version string, imagePullSecrets []coreV1Api.LocalObjectReference) *appsV1Api.DeploymentConfig {
+func newSonarDeploymentConfig(sonar v1alpha1.Sonar, labels map[string]string) *appsV1Api.DeploymentConfig {
+	sonarWebContextEnv := "/"
+	if len(sonar.Spec.BasePath) != 0 {
+		sonarWebContextEnv = fmt.Sprintf("%v%v", sonarWebContextEnv, sonar.Spec.BasePath)
+	}
+
 	fsGroup, _ := strconv.ParseInt("999", 10, 64)
-	i := image
+	i := sonarSpec.Image
 	if i == "" {
 		i = sonarSpec.Image
 	}
 	return &appsV1Api.DeploymentConfig{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      name,
-			Namespace: namespace,
+			Name:      sonar.Name,
+			Namespace: sonar.Namespace,
 			Labels:    labels,
 		},
 		Spec: appsV1Api.DeploymentConfigSpec{
@@ -324,18 +340,18 @@ func newSonarDeploymentConfig(name string, namespace string, image string, label
 					Labels: labels,
 				},
 				Spec: coreV1Api.PodSpec{
-					ImagePullSecrets: imagePullSecrets,
+					ImagePullSecrets: sonar.Spec.ImagePullSecrets,
 					InitContainers: []coreV1Api.Container{
 						{
-							Name:    name + "init",
+							Name:    sonar.Name + "init",
 							Image:   "busybox",
-							Command: []string{"sh", "-c", "while ! nc -w 1 " + name + "-db " + strconv.Itoa(sonarSpec.DBPort) + " </dev/null; do echo waiting for " + name + "-db; sleep 10; done;"},
+							Command: []string{"sh", "-c", "while ! nc -w 1 " + sonar.Name + "-db " + strconv.Itoa(sonarSpec.DBPort) + " </dev/null; do echo waiting for " + sonar.Name + "-db; sleep 10; done;"},
 						},
 					},
 					Containers: []coreV1Api.Container{
 						{
-							Name:            name,
-							Image:           i + ":" + version,
+							Name:            sonar.Name,
+							Image:           fmt.Sprintf("%s:%s", i, sonar.Spec.Version),
 							ImagePullPolicy: coreV1Api.PullIfNotPresent,
 							Args:            []string{"-Dsonar.search.javaAdditionalOpts=-Dnode.store.allow_mmapfs=false"},
 							Env: []coreV1Api.EnvVar{
@@ -344,7 +360,7 @@ func newSonarDeploymentConfig(name string, namespace string, image string, label
 									ValueFrom: &coreV1Api.EnvVarSource{
 										SecretKeyRef: &coreV1Api.SecretKeySelector{
 											LocalObjectReference: coreV1Api.LocalObjectReference{
-												Name: name + "-db",
+												Name: sonar.Name + "-db",
 											},
 											Key: "database-user",
 										},
@@ -355,7 +371,7 @@ func newSonarDeploymentConfig(name string, namespace string, image string, label
 									ValueFrom: &coreV1Api.EnvVarSource{
 										SecretKeyRef: &coreV1Api.SecretKeySelector{
 											LocalObjectReference: coreV1Api.LocalObjectReference{
-												Name: name + "-db",
+												Name: sonar.Name + "-db",
 											},
 											Key: "database-password",
 										},
@@ -363,12 +379,16 @@ func newSonarDeploymentConfig(name string, namespace string, image string, label
 								},
 								{
 									Name:  "SONARQUBE_JDBC_URL",
-									Value: "jdbc:postgresql://" + name + "-db/sonar",
+									Value: "jdbc:postgresql://" + sonar.Name + "-db/sonar",
+								},
+								{
+									Name:  "sonar.web.context",
+									Value: sonarWebContextEnv,
 								},
 							},
 							Ports: []coreV1Api.ContainerPort{
 								{
-									Name:          name,
+									Name:          sonar.Name,
 									ContainerPort: sonarSpec.Port,
 								},
 							},
@@ -391,13 +411,13 @@ func newSonarDeploymentConfig(name string, namespace string, image string, label
 					SecurityContext: &coreV1Api.PodSecurityContext{
 						FSGroup: &fsGroup,
 					},
-					ServiceAccountName: name,
+					ServiceAccountName: sonar.Name,
 					Volumes: []coreV1Api.Volume{
 						{
 							Name: "data",
 							VolumeSource: coreV1Api.VolumeSource{
 								PersistentVolumeClaim: &coreV1Api.PersistentVolumeClaimVolumeSource{
-									ClaimName: name + "-data",
+									ClaimName: sonar.Name + "-data",
 								},
 							},
 						},

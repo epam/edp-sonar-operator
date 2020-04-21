@@ -342,7 +342,7 @@ func (service K8SService) GetExternalEndpoint(namespace string, name string) (*s
 
 	rs := "https"
 	u := fmt.Sprintf("%v://%v%v", rs, r.Spec.Rules[0].Host,
-		strings.TrimRight(r.Spec.Rules[0].HTTP.Paths[0].Path, "/"))
+		strings.TrimRight(r.Spec.Rules[0].HTTP.Paths[0].Path, platformHelper.UrlCutset))
 
 	return &u, nil
 }
