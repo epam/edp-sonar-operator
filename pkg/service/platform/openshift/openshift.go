@@ -314,7 +314,7 @@ func newSonarDeploymentConfig(sonar v1alpha1.Sonar, labels map[string]string) *a
 	}
 
 	fsGroup, _ := strconv.ParseInt("999", 10, 64)
-	i := sonarSpec.Image
+	i := sonar.Spec.Image
 	if i == "" {
 		i = sonarSpec.Image
 	}
