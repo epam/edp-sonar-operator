@@ -4,7 +4,8 @@ metadata:
   name: example-sonar
 spec:
   image: "sonarqube"
-  version: "7.6-community"
+  initImage: "busybox"
+  version: "7.9-community"
   basePath: ""
   edpSpec:
     dnsWildcard: core-platform.aws.main.edp.projects.epam.com

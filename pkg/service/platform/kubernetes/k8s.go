@@ -433,7 +433,7 @@ func newSonarDeployment(sonar v1alpha1.Sonar, labels map[string]string) *appsV1A
 					InitContainers: []coreV1Api.Container{
 						{
 							Name:    sonar.Name + "init",
-							Image:   "busybox",
+							Image:   sonar.Spec.InitImage,
 							Command: []string{"sh", "-c", "while ! nc -w 1 " + sonar.Name + "-db " + strconv.Itoa(sonarSpec.DBPort) + " </dev/null; do echo waiting for " + sonar.Name + "-db; sleep 10; done;"},
 						},
 					},

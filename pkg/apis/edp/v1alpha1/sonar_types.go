@@ -24,6 +24,7 @@ type SonarSpec struct {
 	// Add custom validation using kubebuilder tags: https://book.kubebuilder.io/beyond_basics/generating_crd.html
 	Version          string                           `json:"version"`
 	Image            string                           `json:"image"`
+	InitImage        string                           `json:"initImage"`
 	BasePath         string                           `json:"basePath,omitempty"`
 	Volumes          []SonarVolumes                   `json:"volumes,omitempty"`
 	EdpSpec          EdpSpec                          `json:"edpSpec,omitempty"`
