@@ -5,6 +5,7 @@ metadata:
 spec:
   image: "sonarqube"
   initImage: "busybox"
+  dbImage: "postgres:9.6"
   version: "7.9-community"
   basePath: ""
   edpSpec:

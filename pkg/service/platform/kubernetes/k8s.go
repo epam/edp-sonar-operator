@@ -195,7 +195,7 @@ func (service K8SService) CreateDbDeployment(sonar v1alpha1.Sonar) error {
 	l := helper.GenerateLabels(sonar.Name)
 	n := sonar.Name + "-db"
 
-	o := newDatabaseDeployment(n, sonar.Name, sonar.Namespace, l)
+	o := newDatabaseDeployment(n, sonar.Name, sonar.Namespace, l, sonar.Spec.DBImage)
 
 	if err := controllerutil.SetControllerReference(&sonar, o, service.Scheme); err != nil {
 		return err
@@ -522,7 +522,7 @@ func newSonarDeployment(sonar v1alpha1.Sonar, labels map[string]string) *appsV1A
 	}
 }
 
-func newDatabaseDeployment(name string, sa string, namespace string, labels map[string]string) *appsV1Api.Deployment {
+func newDatabaseDeployment(name string, sa string, namespace string, labels map[string]string, dbImage string) *appsV1Api.Deployment {
 	var rc int32 = 1
 	var uid int64 = 999
 	f := false
@@ -555,7 +555,7 @@ func newDatabaseDeployment(name string, sa string, namespace string, labels map[
 					Containers: []coreV1Api.Container{
 						{
 							Name:            name,
-							Image:           sonarSpec.DbImage,
+							Image:           dbImage,
 							ImagePullPolicy: coreV1Api.PullIfNotPresent,
 							Env: []coreV1Api.EnvVar{
 								{

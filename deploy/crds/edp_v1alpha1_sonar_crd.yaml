@@ -37,6 +37,8 @@ spec:
               type: string
             initImage:
               type: string
+            dbImage:
+              type: string
             edpSpec:
               properties:
                 dnsWildcard:
@@ -62,6 +64,7 @@ spec:
           required:
             - image
             - initImage
+            - dbImage
             - version
             - edpSpec
           type: object

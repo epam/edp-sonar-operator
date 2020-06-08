@@ -237,7 +237,7 @@ func (service OpenshiftService) CreateDbDeployment(sonar v1alpha1.Sonar) error {
 	labels := helper.GenerateLabels(sonar.Name)
 	name := sonar.Name + "-db"
 
-	sonarDbDcObject := newSonarDatabaseDeploymentConfig(name, sonar.Name, sonar.Namespace, labels)
+	sonarDbDcObject := newSonarDatabaseDeploymentConfig(name, sonar.Name, sonar.Namespace, labels, sonar.Spec.DBImage)
 
 	if err := controllerutil.SetControllerReference(&sonar, sonarDbDcObject, service.Scheme); err != nil {
 		return err
@@ -394,7 +394,7 @@ func newSonarDeploymentConfig(name string, namespace string, image string, label
 	}
 }
 
-func newSonarDatabaseDeploymentConfig(name string, sa string, namespace string, labels map[string]string) *appsV1Api.DeploymentConfig {
+func newSonarDatabaseDeploymentConfig(name string, sa string, namespace string, labels map[string]string, dbImage string) *appsV1Api.DeploymentConfig {
 	return &appsV1Api.DeploymentConfig{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      name,
@@ -420,7 +420,7 @@ func newSonarDatabaseDeploymentConfig(name string, sa string, namespace string, 
 					Containers: []coreV1Api.Container{
 						{
 							Name:            name,
-							Image:           sonarSpec.DbImage,
+							Image:           dbImage,
 							ImagePullPolicy: coreV1Api.PullIfNotPresent,
 							Env: []coreV1Api.EnvVar{
 								{

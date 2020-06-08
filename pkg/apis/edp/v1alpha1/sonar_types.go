@@ -25,6 +25,7 @@ type SonarSpec struct {
 	Version          string                           `json:"version"`
 	Image            string                           `json:"image"`
 	InitImage        string                           `json:"initImage"`
+	DBImage          string                           `json:"dbImage"`
 	BasePath         string                           `json:"basePath,omitempty"`
 	Volumes          []SonarVolumes                   `json:"volumes,omitempty"`
 	EdpSpec          EdpSpec                          `json:"edpSpec,omitempty"`
