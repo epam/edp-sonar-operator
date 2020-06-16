@@ -1,0 +1,19 @@
+{{- if .Values.sonar.deploy -}}
+apiVersion: v2.edp.epam.com/v1alpha1
+kind: Sonar
+metadata:
+  name: sonar
+spec:
+  edpSpec:
+    dnsWildcard: {{ .Values.sonar.dnsWildCard }}
+  type: Sonar
+  image: {{.Values.sonar.image}}
+  version: {{.Values.sonar.version}}
+  volumes:
+    - capacity: 1Gi
+      name: data
+      storage_class: gp2
+    - capacity: 1Gi
+      name: db
+      storage_class: gp2
+{{end}}
