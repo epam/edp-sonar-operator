@@ -10,4 +10,4 @@ sonar:
   name: "sonar"
   image: "sonarqube"
   version: "7.9-community"
-  dnsWildCard: ""
+  dnsWildCard: "delivery.aws.main.edp.projects.epam.com"
