@@ -1,6 +1,6 @@
 module github.com/epmd-edp/sonar-operator/v2
 
-go 1.12
+go 1.14
 
 replace git.apache.org/thrift.git => github.com/apache/thrift v0.12.0
 
