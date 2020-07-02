@@ -72,6 +72,7 @@ github.com/epmd-edp/jenkins-operator/v2 v2.1.0-47/go.mod h1:n5IZrwC++e8lEAxac12v
 github.com/epmd-edp/jenkins-operator/v2 v2.1.0-61/go.mod h1:n5IZrwC++e8lEAxac12vei/DJCSLGGV9Na/io9wmhWs=
 github.com/epmd-edp/jenkins-operator/v2 v2.2.1-131.0.20200302103622-f60cf5cf627e h1:kixxkuSs9poS0bRSoXuAxI7ZqJSZrYqLCRpmUo+NOLk=
 github.com/epmd-edp/jenkins-operator/v2 v2.2.1-131.0.20200302103622-f60cf5cf627e/go.mod h1:bzA4/nlMuDByTC9nj7EhyA8CA2DTb6yKkHm2ID7YT1w=
+github.com/epmd-edp/jenkins-operator/v2 v2.3.0-130.0.20200416062406-16c330e09a19 h1:SQ3SNRr4pJTqWQ2CPwAtaxg3lyzcZj5mHla4Sv6n5B0=
 github.com/epmd-edp/jenkins-operator/v2 v2.3.0-130.0.20200416062406-16c330e09a19/go.mod h1:lhEvImddh3dQ60upbreE1/7GZUoe5pkFRQuxDs3vZFA=
 github.com/epmd-edp/keycloak-operator v1.0.18-alpha-39/go.mod h1:n78SGdVQhCkr29STKtz2qKDnYBiWk4TUoGATKF6nOH8=
 github.com/epmd-edp/keycloak-operator v1.0.31-alpha-56 h1:xVXmJ2hXrjGX3R/kSIhEPBuefLaHeHIcrof1mKBDTkg=

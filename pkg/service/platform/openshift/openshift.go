@@ -246,9 +246,8 @@ func (service OpenshiftService) CreateExternalEndpoint(sonar v1alpha1.Sonar) err
 
 func (service OpenshiftService) CreateDbDeployment(sonar v1alpha1.Sonar) error {
 	labels := helper.GenerateLabels(sonar.Name)
-	name := sonar.Name + "-db"
 
-	sonarDbDcObject := newSonarDatabaseDeploymentConfig(name, sonar.Name, sonar.Namespace, labels)
+	sonarDbDcObject := newSonarDatabaseDeploymentConfig(sonar, labels)
 
 	if err := controllerutil.SetControllerReference(&sonar, sonarDbDcObject, service.Scheme); err != nil {
 		return err
@@ -330,7 +329,7 @@ func newSonarDeploymentConfig(sonar v1alpha1.Sonar, labels map[string]string) *a
 					InitContainers: []coreV1Api.Container{
 						{
 							Name:    sonar.Name + "init",
-							Image:   "busybox",
+							Image:   sonar.Spec.InitImage,
 							Command: []string{"sh", "-c", "while ! nc -w 1 " + sonar.Name + "-db " + strconv.Itoa(sonarSpec.DBPort) + " </dev/null; do echo waiting for " + sonar.Name + "-db; sleep 10; done;"},
 						},
 					},
@@ -414,11 +413,12 @@ func newSonarDeploymentConfig(sonar v1alpha1.Sonar, labels map[string]string) *a
 	}
 }
 
-func newSonarDatabaseDeploymentConfig(name string, sa string, namespace string, labels map[string]string) *appsV1Api.DeploymentConfig {
+func newSonarDatabaseDeploymentConfig(sonar v1alpha1.Sonar, labels map[string]string) *appsV1Api.DeploymentConfig {
+	name := sonar.Name + "-db"
 	return &appsV1Api.DeploymentConfig{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      name,
-			Namespace: namespace,
+			Namespace: sonar.Namespace,
 			Labels:    labels,
 		},
 		Spec: appsV1Api.DeploymentConfigSpec{
@@ -440,7 +440,7 @@ func newSonarDatabaseDeploymentConfig(name string, sa string, namespace string, 
 					Containers: []coreV1Api.Container{
 						{
 							Name:            name,
-							Image:           sonarSpec.DbImage,
+							Image:           sonar.Spec.DBImage,
 							ImagePullPolicy: coreV1Api.PullIfNotPresent,
 							Env: []coreV1Api.EnvVar{
 								{
@@ -503,7 +503,7 @@ func newSonarDatabaseDeploymentConfig(name string, sa string, namespace string, 
 							},
 						},
 					},
-					ServiceAccountName: sa,
+					ServiceAccountName: name,
 					Volumes: []coreV1Api.Volume{
 						{
 							Name: "data",

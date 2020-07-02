@@ -35,6 +35,10 @@ spec:
                 modifying this file Add custom validation using kubebuilder tags:
                 https://book.kubebuilder.io/beyond_basics/generating_crd.html'
               type: string
+            initImage:
+              type: string
+            dbImage:
+              type: string
             edpSpec:
               properties:
                 dnsWildcard:
@@ -59,6 +63,8 @@ spec:
               type: array
           required:
             - image
+            - initImage
+            - dbImage
             - version
             - edpSpec
           type: object

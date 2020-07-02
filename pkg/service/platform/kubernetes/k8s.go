@@ -193,9 +193,8 @@ func (service K8SService) CreateVolume(sonar v1alpha1.Sonar) error {
 
 func (service K8SService) CreateDbDeployment(sonar v1alpha1.Sonar) error {
 	l := helper.GenerateLabels(sonar.Name)
-	n := sonar.Name + "-db"
 
-	o := newDatabaseDeployment(n, sonar.Name, sonar.Namespace, l)
+	o := newDatabaseDeployment(sonar, l)
 
 	if err := controllerutil.SetControllerReference(&sonar, o, service.Scheme); err != nil {
 		return err
@@ -433,7 +432,7 @@ func newSonarDeployment(sonar v1alpha1.Sonar, labels map[string]string) *appsV1A
 					InitContainers: []coreV1Api.Container{
 						{
 							Name:    sonar.Name + "init",
-							Image:   "busybox",
+							Image:   sonar.Spec.InitImage,
 							Command: []string{"sh", "-c", "while ! nc -w 1 " + sonar.Name + "-db " + strconv.Itoa(sonarSpec.DBPort) + " </dev/null; do echo waiting for " + sonar.Name + "-db; sleep 10; done;"},
 						},
 					},
@@ -522,16 +521,17 @@ func newSonarDeployment(sonar v1alpha1.Sonar, labels map[string]string) *appsV1A
 	}
 }
 
-func newDatabaseDeployment(name string, sa string, namespace string, labels map[string]string) *appsV1Api.Deployment {
+func newDatabaseDeployment(sonar v1alpha1.Sonar, labels map[string]string) *appsV1Api.Deployment {
 	var rc int32 = 1
 	var uid int64 = 999
 	f := false
 	t := true
+	name := sonar.Name + "-db"
 
 	return &appsV1Api.Deployment{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      name,
-			Namespace: namespace,
+			Namespace: sonar.Namespace,
 			Labels:    labels,
 		},
 		Spec: appsV1Api.DeploymentSpec{
@@ -555,7 +555,7 @@ func newDatabaseDeployment(name string, sa string, namespace string, labels map[
 					Containers: []coreV1Api.Container{
 						{
 							Name:            name,
-							Image:           sonarSpec.DbImage,
+							Image:           sonar.Spec.DBImage,
 							ImagePullPolicy: coreV1Api.PullIfNotPresent,
 							Env: []coreV1Api.EnvVar{
 								{
@@ -621,7 +621,7 @@ func newDatabaseDeployment(name string, sa string, namespace string, labels map[
 							},
 						},
 					},
-					ServiceAccountName: sa,
+					ServiceAccountName: name,
 					Volumes: []coreV1Api.Volume{
 						{
 							Name: "data",

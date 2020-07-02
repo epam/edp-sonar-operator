@@ -7,6 +7,8 @@ spec:
   edpSpec:
     dnsWildcard: {{ .Values.sonar.dnsWildCard }}
   type: Sonar
+  initImage: {{.Values.sonar.initImage}}
+  dbImage: {{.Values.sonar.dbImage}}
   image: {{.Values.sonar.image}}
   version: {{.Values.sonar.version}}
   volumes:
