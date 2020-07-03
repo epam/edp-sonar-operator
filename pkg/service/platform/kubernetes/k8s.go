@@ -621,7 +621,7 @@ func newDatabaseDeployment(sonar v1alpha1.Sonar, labels map[string]string) *apps
 							},
 						},
 					},
-					ServiceAccountName: name,
+					ServiceAccountName: sonar.Name,
 					Volumes: []coreV1Api.Volume{
 						{
 							Name: "data",
