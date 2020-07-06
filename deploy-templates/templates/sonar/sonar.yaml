@@ -5,7 +5,7 @@ metadata:
   name: sonar
 spec:
   edpSpec:
-    dnsWildcard: {{ .Values.sonar.dnsWildCard }}
+    dnsWildcard: {{ .Values.edp.dnsWildCard }}
   type: Sonar
   initImage: {{.Values.sonar.initImage}}
   dbImage: {{.Values.sonar.dbImage}}
