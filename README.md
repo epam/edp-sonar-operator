@@ -1,9 +1,8 @@
-# How to Install Operator
+# EDP Sonar-operator
 
-EDP installation can be applied on two container orchestration platforms: OpenShift and Kubernetes.
+## Overview
 
-_**NOTE:** Installation of operators is platform-independent, that is why there is a unified instruction for deploying._
-
+Sonar-operator is an EDP operator that is responsible for installing and configuring Sonarqube.
 
 ### Prerequisites
 1. Linux machine or Windows Subsystem for Linux instance with [Helm 3](https://helm.sh/docs/intro/install/) installed;
@@ -11,22 +10,50 @@ _**NOTE:** Installation of operators is platform-independent, that is why there 
 3. EDP project/namespace is deployed by following one of the instructions: [edp-install-openshift](https://github.com/epmd-edp/edp-install/blob/master/documentation/openshift_install_edp.md#edp-project) or [edp-install-kubernetes](https://github.com/epmd-edp/edp-install/blob/master/documentation/kubernetes_install_edp.md#edp-namespace).
 
 ### Installation
-* Go to the [releases](https://github.com/epmd-edp/sonar-operator/releases) page of this repository, choose a version, download an archive and unzip it;
+In order to install the EDP Sonar-operator, follow the steps below:
 
-_**NOTE:** It is highly recommended to use the latest released version._
+1. To add the Helm EPAMEDP Charts for local client, run "helm repo add":
+     ```bash
+     helm repo add epamedp https://chartmuseum.demo.edp-epam.com/
+     ```
+2. Choose available Helm chart version:
+    ```bash
+     helm search repo epamedp/sonar-operator
+    ```
+   Example response:
+   ```
+     NAME                    CHART VERSION   APP VERSION     DESCRIPTION
+     epamedp/sonar-operator  v2.4.0                          Helm chart for Golang application/service deplo...
+     ```
 
-* Go to the unzipped directory and deploy operator:
-```bash
-helm install sonar-operator --namespace <edp_cicd_project> --set name=sonar-operator --set namespace=<edp_cicd_project> --set platform=<platform_type> --set image.name=epamedp/sonar-operator --set image.version=<operator_version> --set dnsWildcard=<dns_wildcard> deploy-templates
+    _**NOTE:** It is highly recommended to use the latest released version._
+3. Deploy operator:
+
+Full available chart parameters list:
 ```
-
-- _<edp_cicd_project> - a namespace or a project name (in case of OpenShift) that is created by one of the instructions: [edp-install-openshift](https://github.com/epmd-edp/edp-install/blob/master/documentation/openshift_install_edp.md#install-edp) or [edp-install-kubernetes](https://github.com/epmd-edp/edp-install/blob/master/documentation/kubernetes_install_edp.md#install-edp);_ 
-
-- _<platform_type> - a platform type that can be "kubernetes" or "openshift";_
-
-- _<operator_version> - a selected release version;_
-
-- _<dns_wildcard> - a cluster DNS wildcard name_.
+    - <chart_version>                        # Helm chart version;
+    - global.edpName                         # a namespace or a project name (in case of OpenShift);
+    - global.platform                        # "openShift" or "kubernetes";
+    - global.dnsWildCard                     # a cluster DNS wildcard name;
+    - image.name                             # EDP jenkins-oprator Docker image name. The released image can be found on https://hub.docker.com/r/epamedp/sonar-operator;
+    - image.version                          # EDP sonar-oprator Docker image tag. The released image can be found on https://hub.docker.com/r/epamedp/sonar-operator/tags;
+    - sonar.deploy                           # If true Sonarqube CR will be added and Sonarqube instance will be deployed
+    - sonar.name                             # Sonar custom resource name
+    - sonar.image                            # Sonarqube Docker image name. Default supported is "sonarqube";
+    - sonar.version                          # Sonarqube Docker image tag. Default supported is "7.9-community";
+    - sonar.initImage                        # Init Docker image for Sonarqube deployment. Default is "busybox";
+    - sonar.dbImage                          # Docker image name for Sonarqube Database. Default in "postgres:9.6";
+    - sonar.dataVolumeStorageClass           # Storageclass for Sonarqube data volume. Default is "gp2";
+    - sonar.dataVolumeCapacity               # Sonarqube data volume capacity. Default is "1Gi";
+    - sonar.dbVolumeStorageClass             # Storageclass for Sonarqube database volume. Default is "gp2";
+    - sonar.dbVolumeCapacity                 # Sonarqube database volume capacity. Default is "1Gi".
+    - sonar.imagePullSecrets                 # Secrets to pull from private Docker registry;
+    - sonar.basePath                         # Base path for Sonarqube URL.
+```
+Set your parameters and launching a Helm chart deployment. Example command:
+```bash
+helm install sonar-operator epamedp/sonar-operator --version <chart_version> --namespace <edp_cicd_project> --set name=sonar-operator --set global.edpName=<edp_cicd_project> --set global.platform=<platform_type> --set global.dnsWildCard=<cluster_DNS_wildcard> --set image.name=epamedp/sonar-operator --set image.version=<operator_version>
+```
 
 * Check the <edp_cicd_project> namespace that should contain Deployment with your operator in a running status
 

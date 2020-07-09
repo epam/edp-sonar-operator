@@ -1,6 +1,9 @@
+global:
+  edpName: ""
+  platform: "openshift"
+  dnsWildCard: "delivery.aws.main.edp.projects.epam.com"
+
 name: sonar-operator
-namespace: ""
-platform: "openshift"
 image:
   name: epamedp/sonar-operator
   version: v2.4.0
@@ -12,6 +15,7 @@ sonar:
   version: "7.9-community"
   initImage: "busybox"
   dbImage: "postgres:9.6"
-
-edp:
-  dnsWildCard: ""
+  dataVolumeStorageClass: gp2
+  dataVolumeCapacity: 1Gi
+  dbVolumeStorageClass: gp2
+  dbVolumeCapacity: 1Gi
