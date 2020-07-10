@@ -11,7 +11,7 @@ spec:
   dbImage: {{.Values.sonar.dbImage}}
   image: {{.Values.sonar.image}}
   version: {{.Values.sonar.version}}
-  basePath: {{.Values.sonar.basePath}}
+  basePath: "{{.Values.sonar.basePath}}"
   {{- if .Values.sonar.imagePullSecrets}}
   imagePullSecrets:
     {{- range .Values.sonar.imagePullSecrets }}
