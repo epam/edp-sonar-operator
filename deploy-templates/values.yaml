@@ -15,6 +15,8 @@ sonar:
   version: "7.9-community"
   initImage: "busybox"
   dbImage: "postgres:9.6"
+  basePath: ""
+  imagePullSecrets:
   dataVolumeStorageClass: gp2
   dataVolumeCapacity: 1Gi
   dbVolumeStorageClass: gp2
