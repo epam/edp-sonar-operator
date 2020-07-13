@@ -19,10 +19,10 @@ spec:
     {{- end -}}
   {{end}}
   volumes:
-    - capacity: {{ .Values.sonar.dataVolumeCapacity }}
+    - capacity: {{ .Values.sonar.storage.data.size }}
       name: data
-      storage_class: {{ .Values.sonar.dataVolumeStorageClass }}
-    - capacity: {{ .Values.sonar.dbVolumeCapacity }}
+      storage_class: {{ .Values.sonar.storage.data.class }}
+    - capacity: {{ .Values.sonar.storage.database.size }}
       name: db
-      storage_class: {{ .Values.sonar.dbVolumeStorageClass }}
+      storage_class: {{ .Values.sonar.storage.database.class }}
 {{end}}

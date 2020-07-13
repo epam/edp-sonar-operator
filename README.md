@@ -48,7 +48,11 @@ Full available chart parameters list:
     - sonar.dbVolumeStorageClass             # Storageclass for Sonarqube database volume. Default is "gp2";
     - sonar.dbVolumeCapacity                 # Sonarqube database volume capacity. Default is "1Gi".
     - sonar.imagePullSecrets                 # Secrets to pull from private Docker registry;
-    - sonar.basePath                         # Base path for Sonarqube URL.
+    - sonar.basePath                         # Base path for Sonarqube URL;
+    - sonar.storage.data.class               # Storageclass for Sonar data volume. Default is "gp2";
+    - sonar.storage.data.size                # Sonar data volume size. Default is "1Gi";
+    - sonar.storage.database.class           # Storageclass for Sonar database volume. Default is "gp2";
+    - sonar.storage.database.size            # Sonar database volume size. Default is "1Gi".
 ```
 Set your parameters and launching a Helm chart deployment. Example command:
 ```bash
