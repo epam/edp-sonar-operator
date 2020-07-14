@@ -1,36 +1,38 @@
-# EDP Sonar-operator
+# Sonar Operator
 
+Get acquainted with the Sonar Operator and the installation process as well as the local development, 
+and architecture scheme.
 ## Overview
 
-Sonar-operator is an EDP operator that is responsible for installing and configuring Sonarqube.
+Sonar Operator is an EDP operator that is responsible for installing and configuring SonarQube.
 
-### Prerequisites
+_**NOTE:** Operator is platform-independent, that is why there is a unified instruction for deploying._
+
+## Prerequisites
 1. Linux machine or Windows Subsystem for Linux instance with [Helm 3](https://helm.sh/docs/intro/install/) installed;
 2. Cluster admin access to the cluster;
 3. EDP project/namespace is deployed by following one of the instructions: [edp-install-openshift](https://github.com/epmd-edp/edp-install/blob/master/documentation/openshift_install_edp.md#edp-project) or [edp-install-kubernetes](https://github.com/epmd-edp/edp-install/blob/master/documentation/kubernetes_install_edp.md#edp-namespace).
 
-### Installation
-In order to install the EDP Sonar-operator, follow the steps below:
+## Installation
+In order to install the EDP Sonar Operator, follow the steps below:
 
 1. To add the Helm EPAMEDP Charts for local client, run "helm repo add":
      ```bash
      helm repo add epamedp https://chartmuseum.demo.edp-epam.com/
      ```
 2. Choose available Helm chart version:
-    ```bash
+     ```bash
      helm search repo epamedp/sonar-operator
-    ```
-   Example response:
-   ```
      NAME                    CHART VERSION   APP VERSION     DESCRIPTION
      epamedp/sonar-operator  v2.4.0                          Helm chart for Golang application/service deplo...
      ```
 
     _**NOTE:** It is highly recommended to use the latest released version._
+    
 3. Deploy operator:
 
-Full available chart parameters list:
-```
+    Full available chart parameters list:
+    ```
     - <chart_version>                        # Helm chart version;
     - global.edpName                         # a namespace or a project name (in case of OpenShift);
     - global.platform                        # a platform type that can be "kubernetes" or "openshift";
@@ -53,13 +55,18 @@ Full available chart parameters list:
     - sonar.storage.data.size                # Sonar data volume size. Default is "1Gi";
     - sonar.storage.database.class           # Storageclass for Sonar database volume. Default is "gp2";
     - sonar.storage.database.size            # Sonar database volume size. Default is "1Gi".
-```
-Set your parameters and launching a Helm chart deployment. Example command:
-```bash
-helm install sonar-operator epamedp/sonar-operator --version <chart_version> --namespace <edp_cicd_project> --set name=sonar-operator --set global.edpName=<edp_cicd_project> --set global.platform=<platform_type> --set global.dnsWildCard=<cluster_DNS_wildcard> --set image.name=epamedp/sonar-operator --set image.version=<operator_version>
-```
+    ```
+   
+4. Install operator in the <edp_cicd_project> namespace with the helm command; find below the installation command example:
+    ```bash
+    helm install sonar-operator epamedp/sonar-operator --version <chart_version> --namespace <edp_cicd_project> --set name=sonar-operator --set global.edpName=<edp_cicd_project> --set global.platform=<platform_type> --set global.dnsWildCard=<cluster_DNS_wildcard>
+    ```
 
-* Check the <edp_cicd_project> namespace that should contain Deployment with your operator in a running status
+5. Check the <edp_cicd_project> namespace that should contain operator deployment with your operator in a running status.
 
-### Local Development
+## Local Development
 In order to develop the operator, first set up a local environment. For details, please refer to the [Local Development](documentation/local-development.md) page.
+
+### Related Articles
+
+- [Architecture Scheme of Sonar Operator](documentation/arch.md)
