@@ -1,3 +1,4 @@
+{{ if eq .Values.global.platform "openshift" }}
 allowHostDirVolumePlugin: false
 allowHostIPC: true
 allowHostNetwork: false
@@ -38,3 +39,4 @@ volumes:
   - persistentVolumeClaim
   - projected
   - secret
+{{end}}
