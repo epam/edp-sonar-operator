@@ -4,10 +4,7 @@ allowHostNetwork: false
 allowHostPID: false
 allowHostPorts: false
 allowPrivilegedContainer: false
-allowedCapabilities: null
-allowedFlexVolumes: null
 apiVersion: security.openshift.io/v1
-defaultAddCapabilities: null
 fsGroup:
   ranges:
     - max: 999
@@ -21,7 +18,6 @@ metadata:
   name: sonar-{{.Values.global.edpName}}
 priority: 1
 readOnlyRootFilesystem: false
-requiredDropCapabilities: null
 runAsUser:
   type: MustRunAs
   uid: 999
