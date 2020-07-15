@@ -1,0 +1,20 @@
+{{ if eq .Values.global.platform "kubernetes" }}
+kind: Ingress
+apiVersion: extensions/v1beta1
+metadata:
+  name: sonar
+  labels:
+    app: sonar
+spec:
+  rules:
+    - host: {{if .Values.sonar.basePath}}{{ .Values.global.dnsWildCard }}{{else}}sonar-{{ .Values.global.edpName }}.{{ .Values.global.dnsWildCard }}{{end}}
+      http:
+        paths:
+          - path: {{if .Values.sonar.basePath}}/{{.Values.sonar.basePath}}(/|$)(.*){{else}}/{{end}}
+            backend:
+              serviceName: sonar
+              servicePort: 9000
+status:
+  loadBalancer:
+    ingress:
+{{ end }}

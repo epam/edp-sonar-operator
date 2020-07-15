@@ -1,0 +1,116 @@
+{{if eq .Values.global.platform "openshift"}}
+{{if .Values.sonar.deploy}}
+apiVersion: apps.openshift.io/v1
+kind: DeploymentConfig
+metadata:
+  labels:
+    app: sonar
+  name: sonar
+spec:
+  replicas: 1
+  revisionHistoryLimit: 10
+  selector:
+    app: sonar
+  strategy:
+    activeDeadlineSeconds: 21600
+    resources: {}
+    rollingParams:
+      intervalSeconds: 1
+      maxSurge: 25%
+      maxUnavailable: 25%
+      timeoutSeconds: 600
+      updatePeriodSeconds: 1
+    type: Rolling
+  template:
+    metadata:
+      labels:
+        app: sonar
+    spec:
+      {{- if .Values.sonar.imagePullSecrets}}
+      imagePullSecrets:
+        {{- range .Values.sonar.imagePullSecrets }}
+        - {{. -}}
+        {{- end -}}
+      {{end}}
+      containers:
+        - args:
+            - -Dsonar.search.javaAdditionalOpts=-Dnode.store.allow_mmapfs=false
+          env:
+            - name: SONARQUBE_JDBC_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  key: database-user
+                  name: sonar-db
+            - name: SONARQUBE_JDBC_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  key: database-password
+                  name: sonar-db
+            - name: SONARQUBE_JDBC_URL
+              value: jdbc:postgresql://sonar-db/sonar
+            - name: sonar.web.context
+              value: {{if .Values.sonar.basePath}}"/{{.Values.sonar.basePath}}"{{else}}/{{end}}
+          image: "{{.Values.sonar.image}}:{{.Values.sonar.version}}"
+          imagePullPolicy: IfNotPresent
+          livenessProbe:
+            failureThreshold: 5
+            httpGet:
+              path: /
+              port: 9000
+              scheme: HTTP
+            initialDelaySeconds: 180
+            periodSeconds: 20
+            successThreshold: 1
+            timeoutSeconds: 5
+          name: sonar
+          ports:
+            - containerPort: 9000
+              name: sonar
+              protocol: TCP
+          readinessProbe:
+            failureThreshold: 5
+            httpGet:
+              path: /
+              port: 9000
+              scheme: HTTP
+            initialDelaySeconds: 60
+            periodSeconds: 20
+            successThreshold: 1
+            timeoutSeconds: 5
+          resources:
+            requests:
+              memory: 500Mi
+          terminationMessagePath: /dev/termination-log
+          terminationMessagePolicy: File
+          volumeMounts:
+            - mountPath: /opt/sonarqube/extensions/plugins
+              name: data
+      dnsPolicy: ClusterFirst
+      initContainers:
+        - command:
+            - sh
+            - -c
+            - while ! nc -w 1 sonar-db 5432 </dev/null; do echo waiting for sonar-db;
+              sleep 10; done;
+          image: {{.Values.sonar.initImage}}
+          imagePullPolicy: Always
+          name: sonarinit
+          resources: {}
+          terminationMessagePath: /dev/termination-log
+          terminationMessagePolicy: File
+      restartPolicy: Always
+      schedulerName: default-scheduler
+      securityContext:
+        fsGroup: 999
+      serviceAccount: sonar
+      serviceAccountName: sonar
+      terminationGracePeriodSeconds: 30
+      volumes:
+        - name: data
+          persistentVolumeClaim:
+            claimName: sonar-data
+  test: false
+  triggers:
+    - type: ConfigChange
+{{end}}
+{{end}}

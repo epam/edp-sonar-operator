@@ -29,7 +29,21 @@ In order to install the EDP Sonar Operator, follow the steps below:
 
     _**NOTE:** It is highly recommended to use the latest released version._
     
-3. Deploy operator:
+3. Create secrets:
+
+Openshift
+```bash
+oc -n <global.edpName> create secret generic sonar-db --from-literal=database-user=admin --from-literal=database-password=<password>
+oc -n <global.edpName> create secret generic sonar-admin-password --from-literal=user=admin --from-literal=password=<password>
+```
+
+Kubernetes: 
+```bash
+kubectl -n <global.edpName> create secret generic sonar-db --from-literal=database-user=admin --from-literal=database-password=<password>
+kubectl -n <global.edpName> create secret generic sonar-admin-password --from-literal=user=admin --from-literal=password=<password>
+```
+
+4. Deploy operator:
 
     Full available chart parameters list:
     ```
