@@ -14,6 +14,7 @@ spec:
   to:
     kind: Service
     name: sonar
+    weight: 100
   wildcardPolicy: None
 status:
   ingress: []
