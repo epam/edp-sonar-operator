@@ -1,0 +1,20 @@
+{{ if eq .Values.global.platform "openshift" }}
+apiVersion: route.openshift.io/v1
+kind: Route
+metadata:
+  labels:
+    app: sonar
+  name: sonar
+spec:
+  host: {{if .Values.sonar.basePath}}{{ .Values.global.dnsWildCard }}{{else}}sonar-{{.Values.global.edpName}}.{{.Values.global.dnsWildCard}}{{end}}
+  path: {{if .Values.sonar.basePath}}/{{.Values.sonar.basePath}}(/|$)(.*){{else}}/{{end}}
+  tls:
+    insecureEdgeTerminationPolicy: Redirect
+    termination: edge
+  to:
+    kind: Service
+    name: sonar
+  wildcardPolicy: None
+status:
+  ingress: []
+{{ end }}
