@@ -1,6 +1,6 @@
 {{if eq .Values.global.platform "kubernetes"}}
 {{if .Values.sonar.deploy}}
-apiVersion: extensions/v1beta1
+apiVersion: apps/v1
 kind: Deployment
 metadata:
   labels:
