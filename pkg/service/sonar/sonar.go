@@ -401,7 +401,7 @@ func (s SonarServiceImpl) Configure(instance v1alpha1.Sonar) (*v1alpha1.Sonar, e
 		return &instance, errors.Wrap(err, "Failed to initialize Sonar Client!"), false
 	}
 
-	plugins := []string{"authoidc", "checkstyle", "findbugs", "pmd", "jacoco", "xml", "javascript", "go", "ansible", "yaml"}
+	plugins := []string{"authoidc", "checkstyle", "findbugs", "pmd", "jacoco", "xml", "javascript", "go", "ansible", "yaml", "python"}
 	err = sc.InstallPlugins(plugins)
 	if err != nil {
 		return &instance, errors.Wrap(err, "Failed to install plugins for Sonar!"), false
