@@ -751,9 +751,10 @@ func (service K8SService) createEDPComponent(sonar v1alpha1.Sonar, url string, i
 			Name: sonar.Name,
 		},
 		Spec: edpCompApi.EDPComponentSpec{
-			Type: "sonar",
-			Url:  url,
-			Icon: icon,
+			Type:    "sonar",
+			Url:     url,
+			Icon:    icon,
+			Visible: true,
 		},
 	}
 	if err := controllerutil.SetControllerReference(&sonar, obj, service.Scheme); err != nil {
