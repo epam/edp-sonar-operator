@@ -1,7 +1,6 @@
 package sonar
 
 import (
-	"gotest.tools/assert"
 	logger "log"
 	"testing"
 )
@@ -34,51 +33,6 @@ func TestExampleConfiguration_checkProfileExist(t *testing.T) {
 	}
 
 	logger.Println(result, exist)
-}
-
-func TestExampleConfiguration_UploadProfile(t *testing.T) {
-	cs := SonarClient{}
-	err := cs.InitNewRestClient(url, username, token)
-	if err != nil {
-		logger.Print(err)
-	}
-
-	id, err := cs.UploadProfile(profileName, ProfilePath)
-	if err != nil {
-		logger.Print(err)
-	}
-
-	logger.Println(*id)
-}
-
-func TestExampleConfiguration_checkInstallPlugins(t *testing.T) {
-	sc := SonarClient{}
-	err := sc.InitNewRestClient(url, username, token)
-	if err != nil {
-		logger.Print(err)
-	}
-
-	plugins := []string{"pmd"}
-	err = sc.InstallPlugins(plugins)
-	if err != nil {
-		logger.Print(err)
-	}
-}
-
-func TestExampleConfiguration_checkGroupExist(t *testing.T) {
-	cs := SonarClient{}
-	err := cs.InitNewRestClient(url, username, token)
-	if err != nil {
-		logger.Print(err)
-	}
-
-	exist, err := cs.checkGroupExist(groupName)
-	if err != nil {
-		logger.Print(err)
-	}
-	logger.Println(exist)
-
-	assert.Equal(t, exist, true)
 }
 
 func TestExampleConfiguration_CreateGroup(t *testing.T) {
@@ -161,19 +115,6 @@ func TestExampleConfiguration_CheckUserToken(t *testing.T) {
 	logger.Println(exist)
 }
 
-func TestExampleConfiguration_GenerateUserToken(t *testing.T) {
-	sc := SonarClient{}
-	err := sc.InitNewRestClient(url, username, token)
-	if err != nil {
-		logger.Print(err)
-	}
-
-	tokenPass, err := sc.GenerateUserToken(jenkinsUsername)
-	if err != nil {
-		logger.Print(*tokenPass, err)
-	}
-}
-
 func TestExampleConfiguration_checkWebhook(t *testing.T) {
 	sc := SonarClient{}
 	err := sc.InitNewRestClient(url, username, token)
@@ -187,17 +128,4 @@ func TestExampleConfiguration_checkWebhook(t *testing.T) {
 	}
 
 	logger.Println(exist)
-}
-
-func TestExampleConfiguration_AddWebhook(t *testing.T) {
-	sc := SonarClient{}
-	err := sc.InitNewRestClient(url, username, token)
-	if err != nil {
-		logger.Print(err)
-	}
-
-	err = sc.AddWebhook(webhookName, webhookUrl)
-	if err != nil {
-		logger.Print(err)
-	}
 }
