@@ -1,12 +1,12 @@
 global:
-  edpName: ""
+  edpName: "edp"
   platform: "openshift"
-  dnsWildCard: "delivery.aws.main.edp.projects.epam.com"
+  dnsWildCard: ""
 
 name: sonar-operator
 image:
   name: epamedp/sonar-operator
-  version: v2.4.0
+  version: v2.5.0
   
 sonar:
   deploy: true
