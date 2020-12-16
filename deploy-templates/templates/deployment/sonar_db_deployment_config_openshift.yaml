@@ -47,7 +47,7 @@ spec:
                 secretKeyRef:
                   key: database-password
                   name: sonar-db
-          image: {{.Values.sonar.dbImage}}
+          image: {{.Values.sonar.db.image}}
           imagePullPolicy: IfNotPresent
           livenessProbe:
             exec:

@@ -75,8 +75,7 @@ spec:
             successThreshold: 1
             timeoutSeconds: 5
           resources:
-            requests:
-              memory: 500Mi
+{{ toYaml .Values.sonar.resources | indent 12 }}
           securityContext:
             allowPrivilegeEscalation: true
           terminationMessagePath: /dev/termination-log

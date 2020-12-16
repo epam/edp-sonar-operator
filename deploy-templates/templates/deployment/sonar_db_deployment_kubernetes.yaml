@@ -44,7 +44,7 @@ spec:
                 secretKeyRef:
                   key: database-password
                   name: sonar-db
-          image: {{.Values.sonar.dbImage}}
+          image: {{.Values.sonar.db.image}}
           imagePullPolicy: IfNotPresent
           livenessProbe:
             exec:
@@ -73,8 +73,7 @@ spec:
             successThreshold: 1
             timeoutSeconds: 5
           resources:
-            requests:
-              memory: 500Mi
+{{ toYaml .Values.sonar.db.resources | indent 12 }}
           securityContext:
             allowPrivilegeEscalation: false
           terminationMessagePath: /dev/termination-log
