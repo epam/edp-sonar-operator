@@ -8,7 +8,7 @@ spec:
     dnsWildcard: {{ .Values.global.dnsWildCard }}
   type: Sonar
   initImage: {{.Values.sonar.initImage}}
-  dbImage: {{.Values.sonar.dbImage}}
+  dbImage: {{.Values.sonar.db.image}}
   image: {{.Values.sonar.image}}
   version: {{.Values.sonar.version}}
   basePath: "{{.Values.sonar.basePath}}"
