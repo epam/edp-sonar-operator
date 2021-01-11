@@ -6,7 +6,8 @@ global:
 name: sonar-operator
 image:
   name: epamedp/sonar-operator
-  version: v2.4.0
+  # if not defined then .Chart.AppVersion is used
+  version:
 
 resources:
   limits:
