@@ -10,7 +10,6 @@ image:
 
 resources:
   limits:
-    cpu: 200m
     memory: 192Mi
   requests:
     cpu: 50m
@@ -34,7 +33,6 @@ sonar:
 
   resources:
     limits:
-      cpu: 2
       memory: 3Gi
     requests:
       cpu: 100m
@@ -44,7 +42,6 @@ sonar:
     image: "postgres:9.6"
     resources:
       limits:
-        cpu: 200m
         memory: 512Mi
       requests:
         cpu: 50m
