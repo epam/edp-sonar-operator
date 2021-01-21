@@ -5,6 +5,11 @@ metadata:
   name: sonar
   labels:
     app: sonar
+    {{- include "sonar-operator.labels" . | nindent 4 }}
+  {{- with .Values.sonar.ingress.annotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
 spec:
   rules:
     - host: {{if .Values.sonar.basePath}}{{ .Values.global.dnsWildCard }}{{else}}sonar-{{ .Values.global.edpName }}.{{ .Values.global.dnsWildCard }}{{end}}

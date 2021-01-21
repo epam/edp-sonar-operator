@@ -4,6 +4,7 @@ metadata:
   name: "sonar-db"
   labels:
     app: sonar
+    {{- include "sonar-operator.labels" . | nindent 4 }}
 spec:
   accessModes:
     - ReadWriteOnce

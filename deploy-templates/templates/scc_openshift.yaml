@@ -19,6 +19,7 @@ kind: SecurityContextConstraints
 metadata:
   labels:
     app: sonar
+    {{- include "sonar-operator.labels" . | nindent 4 }}
   name: sonar-{{.Values.global.edpName}}
 priority: 1
 readOnlyRootFilesystem: false

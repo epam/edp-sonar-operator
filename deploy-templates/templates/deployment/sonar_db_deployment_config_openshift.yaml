@@ -3,9 +3,14 @@
 apiVersion: apps.openshift.io/v1
 kind: DeploymentConfig
 metadata:
+  name: sonar-db
   labels:
     app: sonar
-  name: sonar-db
+    {{- include "sonar-operator.labels" . | nindent 4 }}
+  {{- with .Values.sonar.db.annotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
 spec:
   replicas: 1
   revisionHistoryLimit: 10
@@ -94,6 +99,18 @@ spec:
         - name: data
           persistentVolumeClaim:
             claimName: sonar-db
+      {{- with .Values.sonar.db.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.sonar.db.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.sonar.db.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
   test: false
   triggers:
     - type: ConfigChange

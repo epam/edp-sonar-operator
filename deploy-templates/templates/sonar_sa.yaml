@@ -4,3 +4,4 @@ metadata:
   name: sonar
   labels:
     app: sonar
+    {{- include "sonar-operator.labels" . | nindent 4 }}

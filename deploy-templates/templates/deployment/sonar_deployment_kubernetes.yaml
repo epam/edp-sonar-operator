@@ -3,9 +3,14 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
+  name: sonar
   labels:
     app: sonar
-  name: sonar
+    {{- include "sonar-operator.labels" . | nindent 4 }}
+  {{- with .Values.sonar.annotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
 spec:
   progressDeadlineSeconds: 600
   replicas: 1
@@ -109,5 +114,17 @@ spec:
         - name: data
           persistentVolumeClaim:
             claimName: sonar-data
+      {{- with .Values.sonar.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.sonar.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.sonar.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
 {{end}}
 {{end}}

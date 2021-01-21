@@ -4,6 +4,10 @@ global:
   dnsWildCard: "delivery.aws.main.edp.projects.epam.com"
 
 name: sonar-operator
+annotations: {}
+nodeSelector: {}
+tolerations: []
+affinity: {}
 image:
   name: epamedp/sonar-operator
   # if not defined then .Chart.AppVersion is used
@@ -31,6 +35,12 @@ sonar:
     database:
       class: gp2
       size: 1Gi
+  annotations: {}
+  nodeSelector: {}
+  tolerations: []
+  affinity: {}
+  ingress:
+    annotations: {}
 
   resources:
     limits:
@@ -47,3 +57,7 @@ sonar:
       requests:
         cpu: 50m
         memory: 64Mi
+    annotations: {}
+    nodeSelector: {}
+    tolerations: []
+    affinity: {}
