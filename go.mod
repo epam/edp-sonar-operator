@@ -19,7 +19,6 @@ require (
 	github.com/totherme/unstructured v0.0.0-20170821094912-3faf2d56d8b8
 	github.com/xeipuuv/gojsonpointer v0.0.0-20190905194746-02993c407bfb // indirect
 	gopkg.in/resty.v1 v1.12.0
-	gotest.tools v2.2.0+incompatible
 	k8s.io/api v0.0.0-20190222213804-5cb15d344471
 	k8s.io/apimachinery v0.0.0-20190221213512-86fb29eff628
 	k8s.io/client-go v0.0.0-20190228174230-b40b2a5939e4

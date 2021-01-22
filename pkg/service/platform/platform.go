@@ -6,7 +6,6 @@ import (
 	"github.com/epmd-edp/sonar-operator/v2/pkg/service/platform/kubernetes"
 	"github.com/epmd-edp/sonar-operator/v2/pkg/service/platform/openshift"
 	"github.com/pkg/errors"
-	coreV1Api "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/client-go/tools/clientcmd"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -20,15 +19,7 @@ const (
 
 type PlatformService interface {
 	CreateSecret(sonar v1alpha1.Sonar, name string, data map[string][]byte) error
-	GetConfigmap(namespace string, name string) (map[string]string, error)
 	GetExternalEndpoint(namespace string, name string) (*string, error)
-	CreateServiceAccount(sonar v1alpha1.Sonar) (*coreV1Api.ServiceAccount, error)
-	CreateSecurityContext(sonar v1alpha1.Sonar) error
-	CreateExternalEndpoint(sonar v1alpha1.Sonar) error
-	CreateService(sonar v1alpha1.Sonar) error
-	CreateVolume(sonar v1alpha1.Sonar) error
-	CreateDbDeployment(sonar v1alpha1.Sonar) error
-	CreateDeployment(sonar v1alpha1.Sonar) error
 	CreateConfigMap(instance v1alpha1.Sonar, configMapName string, configMapData map[string]string) error
 	GetAvailiableDeploymentReplicas(instance v1alpha1.Sonar) (*int, error)
 	GetSecretData(namespace string, name string) (map[string][]byte, error)

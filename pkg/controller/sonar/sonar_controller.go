@@ -124,12 +124,6 @@ func (r *ReconcileSonar) Reconcile(request reconcile.Request) (reconcile.Result,
 		}
 	}
 
-	instance, err = r.service.Install(*instance)
-	if err != nil {
-		r.updateStatus(instance, StatusFailed)
-		return reconcile.Result{RequeueAfter: DefaultRequeueTime * time.Second}, errorsf.Wrapf(err, "Installation has been failed")
-	}
-
 	if instance.Status.Status == StatusInstall {
 		log.Info("Installation has finished")
 		err = r.updateStatus(instance, StatusCreated)

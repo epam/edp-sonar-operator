@@ -56,8 +56,6 @@ type Client struct {
 }
 
 type SonarService interface {
-	// This is an entry point for service package. Invoked in err = r.service.Install(*instance) sonar_controller.go, Reconcile method.
-	Install(instance v1alpha1.Sonar) (*v1alpha1.Sonar, error)
 	Configure(instance v1alpha1.Sonar) (*v1alpha1.Sonar, error, bool)
 	ExposeConfiguration(instance v1alpha1.Sonar) (*v1alpha1.Sonar, error)
 	Integration(instance v1alpha1.Sonar) (*v1alpha1.Sonar, error)
@@ -381,6 +379,28 @@ func getIcon() (*string, error) {
 }
 
 func (s SonarServiceImpl) Configure(instance v1alpha1.Sonar) (*v1alpha1.Sonar, error, bool) {
+	dbSecret := map[string][]byte{
+		"database-user":     []byte("admin"),
+		"database-password": []byte(uniuri.New()),
+	}
+
+	sonarDbName := fmt.Sprintf("%v-db", instance.Name)
+	err := s.platformService.CreateSecret(instance, sonarDbName, dbSecret)
+	if err != nil {
+		return &instance, errors.Wrapf(err, "Failed to create secret for %s", sonarDbName), false
+	}
+
+	adminSecret := map[string][]byte{
+		"user":     []byte("admin"),
+		"password": []byte(uniuri.New()),
+	}
+
+	adminSecretName := fmt.Sprintf("%v-admin-password", instance.Name)
+	err = s.platformService.CreateSecret(instance, adminSecretName, adminSecret)
+	if err != nil {
+		return &instance, errors.Wrapf(err, "Failed to create password for Admin in %s Sonar!", instance.Name), false
+	}
+
 	sc, err := s.initSonarClient(&instance, true)
 	if err != nil {
 		return &instance, errors.Wrap(err, "Failed to initialize Sonar Client!"), false
@@ -388,7 +408,6 @@ func (s SonarServiceImpl) Configure(instance v1alpha1.Sonar) (*v1alpha1.Sonar, e
 
 	sc.WaitForStatusIsUp(60, 10)
 
-	adminSecretName := fmt.Sprintf("%v-admin-password", instance.Name)
 	credentials, err := s.platformService.GetSecretData(instance.Namespace, adminSecretName)
 	if err != nil {
 		return &instance, errors.Wrapf(err, "Failed to get secret data from %v!", adminSecretName), false
@@ -460,69 +479,6 @@ func (s SonarServiceImpl) Configure(instance v1alpha1.Sonar) (*v1alpha1.Sonar, e
 	}
 
 	return &instance, nil, true
-}
-
-// Invoking install method against SonarServiceImpl object should trigger list of methods, stored in client edp.PlatformService
-func (s SonarServiceImpl) Install(instance v1alpha1.Sonar) (*v1alpha1.Sonar, error) {
-
-	dbSecret := map[string][]byte{
-		"database-user":     []byte("admin"),
-		"database-password": []byte(uniuri.New()),
-	}
-
-	sonarDbName := fmt.Sprintf("%v-db", instance.Name)
-	err := s.platformService.CreateSecret(instance, sonarDbName, dbSecret)
-	if err != nil {
-		return &instance, errors.Wrapf(err, "Failed to create secret for %s", sonarDbName)
-	}
-
-	adminSecret := map[string][]byte{
-		"user":     []byte("admin"),
-		"password": []byte(uniuri.New()),
-	}
-
-	adminSecretName := fmt.Sprintf("%v-admin-password", instance.Name)
-	err = s.platformService.CreateSecret(instance, adminSecretName, adminSecret)
-	if err != nil {
-		return &instance, errors.Wrapf(err, "Failed to create password for Admin in %s Sonar!", instance.Name)
-	}
-
-	_, err = s.platformService.CreateServiceAccount(instance)
-	if err != nil {
-		return &instance, errors.Wrapf(err, "Failed to create Service Account for %v Sonar!", instance.Name)
-	}
-
-	err = s.platformService.CreateSecurityContext(instance)
-	if err != nil {
-		return &instance, errors.Wrapf(err, "Failed to create Security Context for %v Sonar!", instance.Name)
-	}
-
-	err = s.platformService.CreateDeployment(instance)
-	if err != nil {
-		return &instance, errors.Wrapf(err, "Failed to create Deployment Config for %v Sonar!", instance.Name)
-	}
-
-	err = s.platformService.CreateService(instance)
-	if err != nil {
-		return &instance, errors.Wrapf(err, "Failed to create Service for %v Sonar!", instance.Name)
-	}
-
-	err = s.platformService.CreateExternalEndpoint(instance)
-	if err != nil {
-		return &instance, errors.Wrapf(err, "Failed to create External Endpoint for %v Sonar!", instance.Name)
-	}
-
-	err = s.platformService.CreateVolume(instance)
-	if err != nil {
-		return &instance, errors.Wrapf(err, "Failed to create Volume for %v Sonar!", instance.Name)
-	}
-
-	err = s.platformService.CreateDbDeployment(instance)
-	if err != nil {
-		return &instance, errors.Wrapf(err, "Failed to create database Deployment Config for %v Sonar!", instance.Name)
-	}
-
-	return &instance, nil
 }
 
 func (s SonarServiceImpl) IsDeploymentReady(instance v1alpha1.Sonar) (bool, error) {
