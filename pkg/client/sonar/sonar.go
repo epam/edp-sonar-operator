@@ -716,3 +716,14 @@ func checkValue(value interface{}, valueToCheck string) bool {
 	}
 	return false
 }
+
+func (sc SonarClient) SetProjectsDefaultVisibility(visibility string) error {
+	resp, err := sc.resty.R().
+		SetBody(fmt.Sprintf("organization=default-organization&projectVisibility=%v", visibility)).
+		SetHeader("Content-Type", "application/x-www-form-urlencoded").
+		Post("/projects/update_default_visibility")
+	if err != nil || resp.IsError() {
+		return err
+	}
+	return nil
+}

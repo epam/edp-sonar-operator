@@ -168,6 +168,13 @@ func (s SonarServiceImpl) Integration(instance v1alpha1.Sonar) (*v1alpha1.Sonar,
 	if err != nil {
 		return &instance, errors.Wrap(err, "Failed to configure sonar.auth.oidc.enabled!")
 	}
+
+	dv := "private"
+	log.Printf("trying to set %v visibility for projects as default", dv)
+	if err := sc.SetProjectsDefaultVisibility(dv); err != nil {
+		return nil, errors.Wrapf(err, "couldn't set default %v visibility for projects", dv)
+	}
+
 	return &instance, nil
 }
 
