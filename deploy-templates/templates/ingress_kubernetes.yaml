@@ -19,7 +19,4 @@ spec:
             backend:
               serviceName: sonar
               servicePort: 9000
-status:
-  loadBalancer:
-    ingress:
 {{ end }}
