@@ -282,7 +282,7 @@ func (s SonarServiceImpl) ExposeConfiguration(instance v1alpha1.Sonar) (*v1alpha
 
 	data := sonarHelper.InitNewJenkinsPluginInfo(true)
 	data.ServerName = instance.Name
-	data.SecretName = JenkinsLogin
+	data.SecretName = ciUserName
 	data.ServerPath = ""
 	if len(instance.Spec.BasePath) != 0 {
 		data.ServerPath = fmt.Sprintf("/%v", instance.Spec.BasePath)
