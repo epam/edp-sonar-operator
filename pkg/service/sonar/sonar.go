@@ -6,17 +6,16 @@ import (
 	"encoding/base64"
 	"fmt"
 	"github.com/dchest/uniuri"
-	jenkinsApi "github.com/epmd-edp/jenkins-operator/v2/pkg/apis/v2/v1alpha1"
-	jenkinsHelper "github.com/epmd-edp/jenkins-operator/v2/pkg/controller/jenkinsscript/helper"
-	platformHelper "github.com/epmd-edp/jenkins-operator/v2/pkg/service/platform/helper"
-	keycloakApi "github.com/epmd-edp/keycloak-operator/pkg/apis/v1/v1alpha1"
-	"github.com/epmd-edp/sonar-operator/v2/pkg/apis/edp/v1alpha1"
-	"github.com/epmd-edp/sonar-operator/v2/pkg/client/sonar"
-	pkgHelper "github.com/epmd-edp/sonar-operator/v2/pkg/helper"
-	"github.com/epmd-edp/sonar-operator/v2/pkg/service/platform"
-	sonarHelper "github.com/epmd-edp/sonar-operator/v2/pkg/service/sonar/helper"
-	sonarSpec "github.com/epmd-edp/sonar-operator/v2/pkg/service/sonar/spec"
-	"github.com/operator-framework/operator-sdk/pkg/k8sutil"
+	jenkinsApi "github.com/epam/edp-jenkins-operator/v2/pkg/apis/v2/v1alpha1"
+	jenkinsHelper "github.com/epam/edp-jenkins-operator/v2/pkg/controller/jenkinsscript/helper"
+	platformHelper "github.com/epam/edp-jenkins-operator/v2/pkg/service/platform/helper"
+	keycloakApi "github.com/epam/edp-keycloak-operator/pkg/apis/v1/v1alpha1"
+	"github.com/epam/edp-sonar-operator/v2/pkg/apis/edp/v1alpha1"
+	"github.com/epam/edp-sonar-operator/v2/pkg/client/sonar"
+	pkgHelper "github.com/epam/edp-sonar-operator/v2/pkg/helper"
+	"github.com/epam/edp-sonar-operator/v2/pkg/service/platform"
+	sonarHelper "github.com/epam/edp-sonar-operator/v2/pkg/service/sonar/helper"
+	sonarSpec "github.com/epam/edp-sonar-operator/v2/pkg/service/sonar/spec"
 	"github.com/pkg/errors"
 	"gopkg.in/resty.v1"
 	"io/ioutil"
@@ -436,7 +435,7 @@ func (s SonarServiceImpl) Configure(instance v1alpha1.Sonar) (*v1alpha1.Sonar, e
 	executableFilePath := pkgHelper.GetExecutableFilePath()
 	profilePath := defaultProfileAbsolutePath
 
-	if _, err := k8sutil.GetOperatorNamespace(); err != nil && err == k8sutil.ErrNoNamespace {
+	if !pkgHelper.RunningInCluster() {
 		profilePath = fmt.Sprintf("%v\\..\\%v\\%v", executableFilePath, localConfigsRelativePath, defaultQualityProfilesFileName)
 	}
 	_, err = sc.UploadProfile("EDP way", profilePath)
@@ -507,7 +506,7 @@ func (s SonarServiceImpl) getInternalJenkinsUrl(namespace string) *string {
 	options := client.ListOptions{Namespace: namespace}
 	jenkinsList := &jenkinsApi.JenkinsList{}
 
-	err := s.k8sClient.List(context.TODO(), &options, jenkinsList)
+	err := s.k8sClient.List(context.TODO(), jenkinsList, &options)
 	if err != nil {
 		log.Printf("Unable to get Jenkins CRs in namespace %v", namespace)
 		return nil

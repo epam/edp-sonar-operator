@@ -1,11 +1,12 @@
 package openshift
 
 import (
+	"context"
 	"errors"
 	"fmt"
-	"github.com/epmd-edp/sonar-operator/v2/pkg/apis/edp/v1alpha1"
-	platformHelper "github.com/epmd-edp/sonar-operator/v2/pkg/service/platform/helper"
-	"github.com/epmd-edp/sonar-operator/v2/pkg/service/platform/kubernetes"
+	"github.com/epam/edp-sonar-operator/v2/pkg/apis/edp/v1alpha1"
+	platformHelper "github.com/epam/edp-sonar-operator/v2/pkg/service/platform/helper"
+	"github.com/epam/edp-sonar-operator/v2/pkg/service/platform/kubernetes"
 	appsV1client "github.com/openshift/client-go/apps/clientset/versioned/typed/apps/v1"
 	projectV1Client "github.com/openshift/client-go/project/clientset/versioned/typed/project/v1"
 	routeV1Client "github.com/openshift/client-go/route/clientset/versioned/typed/route/v1"
@@ -15,11 +16,12 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/client-go/rest"
-	logf "sigs.k8s.io/controller-runtime/pkg/runtime/log"
+	ctrl "sigs.k8s.io/controller-runtime"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 	"strings"
 )
 
-var log = logf.Log.WithName("platform")
+var log = ctrl.Log.WithName("platform")
 
 type OpenshiftService struct {
 	kubernetes.K8SService
@@ -31,9 +33,9 @@ type OpenshiftService struct {
 	routeClient    routeV1Client.RouteV1Client
 }
 
-func (service *OpenshiftService) Init(config *rest.Config, scheme *runtime.Scheme) error {
+func (service *OpenshiftService) Init(config *rest.Config, scheme *runtime.Scheme, client client.Client) error {
 
-	err := service.K8SService.Init(config, scheme)
+	err := service.K8SService.Init(config, scheme, client)
 	if err != nil {
 		return err
 	}
@@ -73,7 +75,7 @@ func (service *OpenshiftService) Init(config *rest.Config, scheme *runtime.Schem
 
 // GetExternalEndpoint returns scheme and host name from Openshift
 func (service OpenshiftService) GetExternalEndpoint(namespace string, name string) (*string, error) {
-	r, err := service.routeClient.Routes(namespace).Get(name, metav1.GetOptions{})
+	r, err := service.routeClient.Routes(namespace).Get(context.TODO(), name, metav1.GetOptions{})
 	if err != nil && k8serrors.IsNotFound(err) {
 		return nil, errors.New(fmt.Sprintf("Route %v in namespace %v not found", name, namespace))
 	} else if err != nil {
@@ -92,7 +94,7 @@ func (service OpenshiftService) GetExternalEndpoint(namespace string, name strin
 }
 
 func (service OpenshiftService) GetAvailiableDeploymentReplicas(instance v1alpha1.Sonar) (*int, error) {
-	c, err := service.appClient.DeploymentConfigs(instance.Namespace).Get(instance.Name, metav1.GetOptions{})
+	c, err := service.appClient.DeploymentConfigs(instance.Namespace).Get(context.TODO(), instance.Name, metav1.GetOptions{})
 	if err != nil {
 		return nil, err
 	}
