@@ -4,17 +4,17 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	sonarClientHelper "github.com/epmd-edp/sonar-operator/v2/pkg/client/helper"
+	sonarClientHelper "github.com/epam/edp-sonar-operator/v2/pkg/client/helper"
 	errorsf "github.com/pkg/errors"
 	"github.com/totherme/unstructured"
 	"gopkg.in/resty.v1"
 	"reflect"
-	logf "sigs.k8s.io/controller-runtime/pkg/runtime/log"
+	ctrl "sigs.k8s.io/controller-runtime"
 	"strings"
 	"time"
 )
 
-var log = logf.Log.WithName("sonar_client")
+var log = ctrl.Log.WithName("sonar_client")
 
 type SonarClient struct {
 	resty  resty.Client

@@ -1,7 +1,7 @@
 package helper
 
 import (
-	sonarSpec "github.com/epmd-edp/sonar-operator/v2/pkg/service/sonar/spec"
+	sonarSpec "github.com/epam/edp-sonar-operator/v2/pkg/service/sonar/spec"
 	coreV1Api "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
 )

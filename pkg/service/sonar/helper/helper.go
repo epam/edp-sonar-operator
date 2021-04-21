@@ -3,10 +3,9 @@ package helper
 import (
 	"bytes"
 	"fmt"
-	sonarClientHelper "github.com/epmd-edp/sonar-operator/v2/pkg/client/helper"
-	"github.com/epmd-edp/sonar-operator/v2/pkg/helper"
-	"github.com/epmd-edp/sonar-operator/v2/pkg/service/sonar/spec"
-	"github.com/operator-framework/operator-sdk/pkg/k8sutil"
+	sonarClientHelper "github.com/epam/edp-sonar-operator/v2/pkg/client/helper"
+	"github.com/epam/edp-sonar-operator/v2/pkg/helper"
+	"github.com/epam/edp-sonar-operator/v2/pkg/service/sonar/spec"
 	"github.com/pkg/errors"
 	"text/template"
 )
@@ -37,7 +36,7 @@ func InitNewJenkinsPluginInfo(defaultPort bool) JenkinsPluginData {
 func ParseDefaultTemplate(data JenkinsPluginData) (bytes.Buffer, error) {
 	executableFilePath := helper.GetExecutableFilePath()
 	templatesDirectoryPath := defaultTemplatesAbsolutePath
-	if _, err := k8sutil.GetOperatorNamespace(); err != nil && err == k8sutil.ErrNoNamespace {
+	if !helper.RunningInCluster() {
 		templatesDirectoryPath = fmt.Sprintf("%v/../%v/%v", executableFilePath, localConfigsRelativePath, defaultTemplatesDirectory)
 	}
 

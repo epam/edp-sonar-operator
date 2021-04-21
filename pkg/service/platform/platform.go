@@ -2,9 +2,9 @@ package platform
 
 import (
 	"fmt"
-	"github.com/epmd-edp/sonar-operator/v2/pkg/apis/edp/v1alpha1"
-	"github.com/epmd-edp/sonar-operator/v2/pkg/service/platform/kubernetes"
-	"github.com/epmd-edp/sonar-operator/v2/pkg/service/platform/openshift"
+	"github.com/epam/edp-sonar-operator/v2/pkg/apis/edp/v1alpha1"
+	"github.com/epam/edp-sonar-operator/v2/pkg/service/platform/kubernetes"
+	"github.com/epam/edp-sonar-operator/v2/pkg/service/platform/openshift"
 	"github.com/pkg/errors"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/client-go/tools/clientcmd"
