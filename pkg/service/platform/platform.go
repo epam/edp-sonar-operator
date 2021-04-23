@@ -28,7 +28,7 @@ type PlatformService interface {
 	CreateEDPComponentIfNotExist(sonar v1alpha1.Sonar, url string, icon string) error
 }
 
-func NewPlatformService(platformType string, scheme *runtime.Scheme, client *client.Client) (PlatformService, error) {
+func NewPlatformService(platformType string, scheme *runtime.Scheme, client client.Client) (PlatformService, error) {
 	config := clientcmd.NewNonInteractiveDeferredLoadingClientConfig(
 		clientcmd.NewDefaultClientConfigLoadingRules(),
 		&clientcmd.ConfigOverrides{},
@@ -42,14 +42,14 @@ func NewPlatformService(platformType string, scheme *runtime.Scheme, client *cli
 	switch strings.ToLower(platformType) {
 	case Kubernetes:
 		s := kubernetes.K8SService{}
-		err = s.Init(restConfig, scheme)
+		err = s.Init(restConfig, scheme, client)
 		if err != nil {
 			return nil, errors.Wrap(err, "Failed to initialize Kubernetes platform service!")
 		}
 		return s, nil
 	case Openshift:
 		s := openshift.OpenshiftService{}
-		err = s.Init(restConfig, scheme)
+		err = s.Init(restConfig, scheme, client)
 		if err != nil {
 			return nil, errors.Wrap(err, "Failed to initialize OpenShift platform service!")
 		}

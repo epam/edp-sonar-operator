@@ -33,7 +33,7 @@ const (
 )
 
 func NewReconcileSonar(client client.Client, scheme *runtime.Scheme, log logr.Logger) (*ReconcileSonar, error) {
-	ps, err := platform.NewPlatformService(helper.GetPlatformTypeEnv(), scheme, &client)
+	ps, err := platform.NewPlatformService(helper.GetPlatformTypeEnv(), scheme, client)
 	if err != nil {
 		return nil, errors.Wrap(err, "unable to create platform service")
 	}

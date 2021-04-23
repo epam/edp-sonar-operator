@@ -17,6 +17,7 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/client-go/rest"
 	ctrl "sigs.k8s.io/controller-runtime"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 	"strings"
 )
 
@@ -32,9 +33,9 @@ type OpenshiftService struct {
 	routeClient    routeV1Client.RouteV1Client
 }
 
-func (service *OpenshiftService) Init(config *rest.Config, scheme *runtime.Scheme) error {
+func (service *OpenshiftService) Init(config *rest.Config, scheme *runtime.Scheme, client client.Client) error {
 
-	err := service.K8SService.Init(config, scheme)
+	err := service.K8SService.Init(config, scheme, client)
 	if err != nil {
 		return err
 	}
