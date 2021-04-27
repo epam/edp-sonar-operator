@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"github.com/dchest/uniuri"
 	jenkinsApi "github.com/epam/edp-jenkins-operator/v2/pkg/apis/v2/v1alpha1"
-	jenkinsHelper "github.com/epam/edp-jenkins-operator/v2/pkg/controller/jenkinsscript/helper"
 	platformHelper "github.com/epam/edp-jenkins-operator/v2/pkg/service/platform/helper"
 	keycloakApi "github.com/epam/edp-keycloak-operator/pkg/apis/v1/v1alpha1"
 	"github.com/epam/edp-sonar-operator/v2/pkg/apis/edp/v1alpha1"
@@ -48,6 +47,8 @@ const (
 
 	imgFolder = "img"
 	sonarIcon = "sonar.svg"
+
+	jenkinsDefaultScriptConfigMapKey = "context"
 )
 
 type Client struct {
@@ -294,7 +295,7 @@ func (s SonarServiceImpl) ExposeConfiguration(instance v1alpha1.Sonar) (*v1alpha
 
 	configMapName := fmt.Sprintf("%s-%s", instance.Name, sonarSpec.JenkinsPluginConfigPostfix)
 	configMapData := map[string]string{
-		jenkinsHelper.JenkinsDefaultScriptConfigMapKey: jenkinsScriptContext.String(),
+		jenkinsDefaultScriptConfigMapKey: jenkinsScriptContext.String(),
 	}
 
 	err = s.platformService.CreateConfigMap(instance, configMapName, configMapData)
