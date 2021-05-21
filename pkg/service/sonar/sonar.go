@@ -229,6 +229,21 @@ func (s SonarServiceImpl) createKeycloakClient(instance v1alpha1.Sonar, baseUrl 
 					Composite: "developer",
 				},
 			},
+			ProtocolMappers: &[]keycloakApi.ProtocolMapper{
+				{
+					Name:           "realm roles",
+					Protocol:       "openid-connect",
+					ProtocolMapper: "oidc-usermodel-realm-role-mapper",
+					Config: map[string]string{
+						"access.token.claim":   "false",
+						"claim.name":           "roles",
+						"id.token.claim":       "true",
+						"jsonType.label":       "String",
+						"multivalued":          "true",
+						"userinfo.token.claim": "true",
+					},
+				},
+			},
 		},
 	}
 	return s.k8sClient.Create(context.TODO(), cl)
