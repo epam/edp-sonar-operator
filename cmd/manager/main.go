@@ -12,8 +12,8 @@ import (
 	// Import all Kubernetes client auth plugins (e.g. Azure, GCP, OIDC, etc.)
 	_ "k8s.io/client-go/plugin/pkg/client/auth"
 
+	keycloakApi "github.com/epam/edp-keycloak-operator/pkg/apis"
 	jenkinsApis "github.com/epmd-edp/jenkins-operator/v2/pkg/apis"
-	keycloakApi "github.com/epmd-edp/keycloak-operator/pkg/apis"
 	"github.com/epmd-edp/sonar-operator/v2/pkg/apis"
 	"github.com/epmd-edp/sonar-operator/v2/pkg/controller"
 

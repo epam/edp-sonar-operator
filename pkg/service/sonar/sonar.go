@@ -6,10 +6,10 @@ import (
 	"encoding/base64"
 	"fmt"
 	"github.com/dchest/uniuri"
+	keycloakApi "github.com/epam/edp-keycloak-operator/pkg/apis/v1/v1alpha1"
 	jenkinsApi "github.com/epmd-edp/jenkins-operator/v2/pkg/apis/v2/v1alpha1"
 	jenkinsHelper "github.com/epmd-edp/jenkins-operator/v2/pkg/controller/jenkinsscript/helper"
 	platformHelper "github.com/epmd-edp/jenkins-operator/v2/pkg/service/platform/helper"
-	keycloakApi "github.com/epmd-edp/keycloak-operator/pkg/apis/v1/v1alpha1"
 	"github.com/epmd-edp/sonar-operator/v2/pkg/apis/edp/v1alpha1"
 	"github.com/epmd-edp/sonar-operator/v2/pkg/client/sonar"
 	pkgHelper "github.com/epmd-edp/sonar-operator/v2/pkg/helper"
@@ -227,6 +227,21 @@ func (s SonarServiceImpl) createKeycloakClient(instance v1alpha1.Sonar, baseUrl 
 				{
 					Name:      "sonar-users",
 					Composite: "developer",
+				},
+			},
+			ProtocolMappers: &[]keycloakApi.ProtocolMapper{
+				{
+					Name:           "realm roles",
+					Protocol:       "openid-connect",
+					ProtocolMapper: "oidc-usermodel-realm-role-mapper",
+					Config: map[string]string{
+						"access.token.claim":   "false",
+						"claim.name":           "roles",
+						"id.token.claim":       "true",
+						"jsonType.label":       "String",
+						"multivalued":          "true",
+						"userinfo.token.claim": "true",
+					},
 				},
 			},
 		},
