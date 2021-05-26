@@ -16,6 +16,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/client-go/rest"
+	"os"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"strings"
@@ -32,6 +33,11 @@ type OpenshiftService struct {
 	appClient      appsV1client.AppsV1Client
 	routeClient    routeV1Client.RouteV1Client
 }
+
+const (
+	deploymentTypeEnvName           = "DEPLOYMENT_TYPE"
+	deploymentConfigsDeploymentType = "deploymentConfigs"
+)
 
 func (service *OpenshiftService) Init(config *rest.Config, scheme *runtime.Scheme, client client.Client) error {
 
@@ -94,12 +100,15 @@ func (service OpenshiftService) GetExternalEndpoint(namespace string, name strin
 }
 
 func (service OpenshiftService) GetAvailiableDeploymentReplicas(instance v1alpha1.Sonar) (*int, error) {
-	c, err := service.appClient.DeploymentConfigs(instance.Namespace).Get(context.TODO(), instance.Name, metav1.GetOptions{})
-	if err != nil {
-		return nil, err
+	if os.Getenv(deploymentTypeEnvName) == deploymentConfigsDeploymentType {
+		c, err := service.appClient.DeploymentConfigs(instance.Namespace).Get(context.TODO(), instance.Name, metav1.GetOptions{})
+		if err != nil {
+			return nil, err
+		}
+
+		r := int(c.Status.AvailableReplicas)
+
+		return &r, nil
 	}
-
-	r := int(c.Status.AvailableReplicas)
-
-	return &r, nil
+	return service.K8SService.GetAvailiableDeploymentReplicas(instance)
 }

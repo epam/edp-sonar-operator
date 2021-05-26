@@ -2,6 +2,8 @@ global:
   edpName: ""
   platform: "openshift"
   dnsWildCard: "delivery.aws.main.edp.projects.epam.com"
+  openshift:
+    deploymentType: "deploymentConfigs"
 
 name: sonar-operator
 annotations: {}
