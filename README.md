@@ -51,6 +51,7 @@ kubectl -n <global.edpName> create secret generic sonar-admin-password --from-li
     - global.edpName                         # a namespace or a project name (in case of OpenShift);
     - global.platform                        # a platform type that can be "kubernetes" or "openshift";
     - global.dnsWildCard                     # a cluster DNS wildcard name;
+    - global.openshift.deploymentType        # Wich type of kind will be deployed to Openshift (values: deployments/deploymentConfigs);
     - image.name                             # EDP sonar-oprator Docker image name. The released image can be found on https://hub.docker.com/r/epamedp/sonar-operator;
     - image.version                          # EDP sonar-oprator Docker image tag. The released image can be found on https://hub.docker.com/r/epamedp/sonar-operator/tags;
     - sonar.deploy                           # If true Sonarqube CR will be added and Sonarqube instance will be deployed
