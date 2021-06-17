@@ -69,41 +69,34 @@ func (service K8SService) GetSecretData(namespace string, name string) (map[stri
 	return sonarSecret.Data, nil
 }
 
-func (service K8SService) CreateSecret(sonar v1alpha1.Sonar, name string, data map[string][]byte) error {
-
-	labels := helper.GenerateLabels(sonar.Name)
+func (service K8SService) CreateSecret(sonarName, namespace, secretName string, data map[string][]byte) (*coreV1Api.Secret, error) {
+	labels := helper.GenerateLabels(sonarName)
 
 	sonarSecretObject := &coreV1Api.Secret{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      name,
-			Namespace: sonar.Namespace,
+			Name:      secretName,
+			Namespace: namespace,
 			Labels:    labels,
 		},
 		Data: data,
 		Type: "Opaque",
 	}
 
-	if err := controllerutil.SetControllerReference(&sonar, sonarSecretObject, service.Scheme); err != nil {
-		return err
-	}
-
 	sonarSecret, err := service.coreClient.Secrets(sonarSecretObject.Namespace).Get(context.TODO(), sonarSecretObject.Name, metav1.GetOptions{})
 
-	if err != nil && k8serr.IsNotFound(err) {
-		log.V(1).Info("Creating a new Secret for Sonar", "namespace", sonarSecretObject.Namespace, "secret name", sonarSecretObject.Name, "sonar name", sonar.Name)
-
-		sonarSecret, err = service.coreClient.Secrets(sonarSecretObject.Namespace).Create(context.TODO(), sonarSecretObject, metav1.CreateOptions{})
-
-		if err != nil {
-			return err
+	if err != nil {
+		if k8serr.IsNotFound(err) {
+			log.V(1).Info("Creating a new Secret for Sonar", "namespace", sonarSecretObject.Namespace, "secret name", sonarSecretObject.Name, "sonar name", sonarName)
+			if sonarSecret, err = service.coreClient.Secrets(sonarSecretObject.Namespace).Create(context.TODO(), sonarSecretObject, metav1.CreateOptions{}); err != nil {
+				return nil, err
+			}
+			log.Info("Secret has been created", "namespace", sonarSecret.Namespace, "secret name", sonarSecret.Name)
+			return sonarSecretObject, nil
 		}
-		log.Info("Secret has been created", "namespace", sonarSecret.Namespace, "secret name", sonarSecret.Name)
-
-	} else if err != nil {
-		return err
+		return nil, err
 	}
 
-	return nil
+	return sonarSecretObject, nil
 }
 
 func (service K8SService) GetExternalEndpoint(namespace string, name string) (*string, error) {
@@ -275,4 +268,11 @@ func (s K8SService) createEDPComponent(sonar v1alpha1.Sonar, url string, icon st
 		return err
 	}
 	return s.client.Create(context.TODO(), obj)
+}
+
+func (service K8SService) SetOwnerReference(sonar v1alpha1.Sonar, object client.Object) error {
+	if err := controllerutil.SetControllerReference(&sonar, object, service.Scheme); err != nil {
+		return err
+	}
+	return nil
 }

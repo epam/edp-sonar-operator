@@ -3,10 +3,12 @@ package sonar
 import (
 	"context"
 	"fmt"
+	"github.com/dchest/uniuri"
 	"github.com/epam/edp-sonar-operator/v2/pkg/helper"
 	"github.com/epam/edp-sonar-operator/v2/pkg/service/platform"
 	"github.com/epam/edp-sonar-operator/v2/pkg/service/sonar"
 	"github.com/go-logr/logr"
+	coreV1Api "k8s.io/api/core/v1"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"time"
 
@@ -43,6 +45,7 @@ func NewReconcileSonar(client client.Client, scheme *runtime.Scheme, log logr.Lo
 		scheme:  scheme,
 		service: sonar.NewSonarService(ps, client, scheme),
 		log:     log.WithName("sonar"),
+		platform: ps,
 	}, nil
 }
 
@@ -51,12 +54,27 @@ type ReconcileSonar struct {
 	scheme  *runtime.Scheme
 	service sonar.SonarService
 	log     logr.Logger
+	platform platform.PlatformService
 }
 
 func (r *ReconcileSonar) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&sonarApi.Sonar{}).
 		Complete(r)
+}
+
+func (r *ReconcileSonar) createDBSecret(sonarName, namespace string) (*coreV1Api.Secret, error) {
+	dbSecret := map[string][]byte{
+		"database-user":     []byte("admin"),
+		"database-password": []byte(uniuri.New()),
+	}
+
+	sonarDbName := fmt.Sprintf("%v-db", sonarName)
+	secret, err := r.platform.CreateSecret(sonarName, namespace, sonarDbName, dbSecret)
+	if err != nil {
+		return nil, errors.Wrapf(err, "Failed to create secret for %s", sonarDbName)
+	}
+	return secret, nil
 }
 
 func (r *ReconcileSonar) Reconcile(ctx context.Context, request reconcile.Request) (reconcile.Result, error) {
@@ -86,6 +104,14 @@ func (r *ReconcileSonar) Reconcile(ctx context.Context, request reconcile.Reques
 		if err := r.updateStatus(ctx, instance, StatusCreated); err != nil {
 			return reconcile.Result{RequeueAfter: DefaultRequeueTime * time.Second}, err
 		}
+	}
+
+	secret, err := r.createDBSecret(instance.Name, instance.Namespace)
+	if err != nil {
+		return reconcile.Result{RequeueAfter: DefaultRequeueTime * time.Second}, err
+	}
+	if err := r.platform.SetOwnerReference(*instance, secret); err != nil {
+		return reconcile.Result{RequeueAfter: DefaultRequeueTime * time.Second}, err
 	}
 
 	if dcIsReady, err := r.service.IsDeploymentReady(*instance); err != nil {

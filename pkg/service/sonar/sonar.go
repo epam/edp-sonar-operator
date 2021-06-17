@@ -284,9 +284,12 @@ func (s SonarServiceImpl) ExposeConfiguration(instance v1alpha1.Sonar) (*v1alpha
 			"secret":   []byte(*ciToken),
 		}
 
-		err = s.platformService.CreateSecret(instance, ciUserName, ciSecret)
+		secret, err := s.platformService.CreateSecret(instance.Name, instance.Namespace, ciUserName, ciSecret)
 		if err != nil {
 			return &instance, errors.Wrapf(err, "Failed to create secret for  %v user", ciUserName)
+		}
+		if err := s.platformService.SetOwnerReference(instance, secret); err != nil {
+			return &instance, errors.Wrapf(err, "Failed to set owner reference for secret %v", secret)
 		}
 	}
 
@@ -341,9 +344,12 @@ func (s SonarServiceImpl) ExposeConfiguration(instance v1alpha1.Sonar) (*v1alpha
 			"token":    []byte(*readToken),
 		}
 
-		err = s.platformService.CreateSecret(instance, readUserSecretName, readSecret)
+		secret, err := s.platformService.CreateSecret(instance.Name, instance.Namespace, readUserSecretName, readSecret)
 		if err != nil {
 			return &instance, errors.Wrapf(err, "Failed to create secret for  %v user", readUserSecretName)
+		}
+		if err := s.platformService.SetOwnerReference(instance, secret); err != nil {
+			return &instance, errors.Wrapf(err, "Failed to set owner reference for secret %v", secret)
 		}
 	}
 
@@ -359,9 +365,12 @@ func (s SonarServiceImpl) ExposeConfiguration(instance v1alpha1.Sonar) (*v1alpha
 		"client_secret": []byte(identityServiceClientSecret),
 	}
 
-	err = s.platformService.CreateSecret(instance, identityServerSecretName, identityServiceClientCredentials)
+	secret, err := s.platformService.CreateSecret(instance.Name, instance.Namespace, identityServerSecretName, identityServiceClientCredentials)
 	if err != nil {
 		return &instance, errors.Wrapf(err, "Failed to create secret for  %v Keycloak client!", readUserSecretName)
+	}
+	if err := s.platformService.SetOwnerReference(instance, secret); err != nil {
+		return &instance, errors.Wrapf(err, "Failed to set owner reference for secret %v", secret)
 	}
 
 	err = s.createEDPComponent(instance)
@@ -401,26 +410,18 @@ func getIcon() (*string, error) {
 }
 
 func (s SonarServiceImpl) Configure(instance v1alpha1.Sonar) (*v1alpha1.Sonar, error, bool) {
-	dbSecret := map[string][]byte{
-		"database-user":     []byte("admin"),
-		"database-password": []byte(uniuri.New()),
-	}
-
-	sonarDbName := fmt.Sprintf("%v-db", instance.Name)
-	err := s.platformService.CreateSecret(instance, sonarDbName, dbSecret)
-	if err != nil {
-		return &instance, errors.Wrapf(err, "Failed to create secret for %s", sonarDbName), false
-	}
-
 	adminSecret := map[string][]byte{
 		"user":     []byte("admin"),
 		"password": []byte(uniuri.New()),
 	}
 
 	adminSecretName := fmt.Sprintf("%v-admin-password", instance.Name)
-	err = s.platformService.CreateSecret(instance, adminSecretName, adminSecret)
+	secret, err := s.platformService.CreateSecret(instance.Name, instance.Namespace, adminSecretName, adminSecret)
 	if err != nil {
 		return &instance, errors.Wrapf(err, "Failed to create password for Admin in %s Sonar!", instance.Name), false
+	}
+	if err := s.platformService.SetOwnerReference(instance, secret); err != nil {
+		return &instance, errors.Wrapf(err, "Failed to set owner reference for secret %v", secret), false
 	}
 
 	sc, err := s.initSonarClient(&instance, true)

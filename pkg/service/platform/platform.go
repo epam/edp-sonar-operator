@@ -6,6 +6,7 @@ import (
 	"github.com/epam/edp-sonar-operator/v2/pkg/service/platform/kubernetes"
 	"github.com/epam/edp-sonar-operator/v2/pkg/service/platform/openshift"
 	"github.com/pkg/errors"
+	coreV1Api "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/client-go/tools/clientcmd"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -18,7 +19,7 @@ const (
 )
 
 type PlatformService interface {
-	CreateSecret(sonar v1alpha1.Sonar, name string, data map[string][]byte) error
+	CreateSecret(sonarName, namespace, secretName string, data map[string][]byte) (*coreV1Api.Secret, error)
 	GetExternalEndpoint(namespace string, name string) (*string, error)
 	CreateConfigMap(instance v1alpha1.Sonar, configMapName string, configMapData map[string]string) error
 	GetAvailiableDeploymentReplicas(instance v1alpha1.Sonar) (*int, error)
@@ -26,6 +27,7 @@ type PlatformService interface {
 	CreateJenkinsServiceAccount(namespace string, secretName string, serviceAccountType string) error
 	CreateJenkinsScript(namespace string, configMap string) error
 	CreateEDPComponentIfNotExist(sonar v1alpha1.Sonar, url string, icon string) error
+	SetOwnerReference(sonar v1alpha1.Sonar, object client.Object) error
 }
 
 func NewPlatformService(platformType string, scheme *runtime.Scheme, client client.Client) (PlatformService, error) {
