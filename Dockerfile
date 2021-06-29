@@ -5,8 +5,8 @@ ENV OPERATOR=/usr/local/bin/sonar-operator \
     USER_NAME=sonar-operator \
     HOME=/home/sonar-operator
 
-RUN apk add --no-cache ca-certificates==20191127-r2 \
-                       openssh-client==8.1_p1-r0
+RUN apk add --no-cache ca-certificates==20191127-r5 \
+                       openssh-client==8.4_p1-r3
 
 # install operator binary
 COPY sonar-operator ${OPERATOR}
