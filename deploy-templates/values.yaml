@@ -14,6 +14,7 @@ image:
   name: epamedp/sonar-operator
   # if not defined then .Chart.AppVersion is used
   version:
+imagePullPolicy: "IfNotPresent"
 
 resources:
   limits:
@@ -27,6 +28,7 @@ sonar:
   name: "sonar"
   image: "sonarqube"
   version: "7.9-community"
+  imagePullPolicy: "IfNotPresent"
   initImage: "busybox"
   basePath: ""
   imagePullSecrets:
@@ -53,6 +55,7 @@ sonar:
 
   db:
     image: "postgres:9.6"
+    imagePullPolicy: "IfNotPresent"
     resources:
       limits:
         memory: 512Mi

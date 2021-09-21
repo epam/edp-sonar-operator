@@ -50,7 +50,7 @@ spec:
                   key: database-password
                   name: sonar-db
           image: {{.Values.sonar.db.image}}
-          imagePullPolicy: IfNotPresent
+          imagePullPolicy: "{{ .Values.sonar.db.imagePullPolicy }}"
           livenessProbe:
             exec:
               command:

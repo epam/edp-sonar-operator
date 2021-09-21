@@ -53,7 +53,7 @@ spec:
             - name: sonar.web.context
               value: {{if .Values.sonar.basePath}}"/{{.Values.sonar.basePath}}"{{else}}/{{end}}
           image: "{{.Values.sonar.image}}:{{.Values.sonar.version}}"
-          imagePullPolicy: IfNotPresent
+          imagePullPolicy: "{{ .Values.sonar.imagePullPolicy }}"
           livenessProbe:
             failureThreshold: 5
             httpGet:
@@ -96,7 +96,7 @@ spec:
             - while ! nc -w 1 sonar-db 5432 </dev/null; do echo waiting for sonar-db;
               sleep 10; done;
           image: {{.Values.sonar.initImage}}
-          imagePullPolicy: Always
+          imagePullPolicy: "{{ .Values.sonar.imagePullPolicy }}"
           name: sonarinit
           resources: {}
           terminationMessagePath: /dev/termination-log
