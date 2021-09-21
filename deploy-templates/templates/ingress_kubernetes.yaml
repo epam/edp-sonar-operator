@@ -1,6 +1,10 @@
 {{ if eq .Values.global.platform "kubernetes" }}
+{{- $ingressApiIsStable := eq (include "sonar.ingress.isStable" .) "true" -}}
+{{- $ingressSupportsIngressClassName := eq (include "sonar.ingress.supportsIngressClassName" .) "true" -}}
+{{- $ingressSupportsPathType := eq (include "sonar.ingress.supportsPathType" .) "true" -}}
+{{- $ingressPathType := .Values.sonar.ingress.pathType -}}
 kind: Ingress
-apiVersion: extensions/v1beta1
+apiVersion: {{ include "sonar.ingress.apiVersion" . }}
 metadata:
   name: sonar
   labels:
@@ -11,12 +15,25 @@ metadata:
     {{- toYaml . | nindent 4 }}
   {{- end }}
 spec:
+  {{- if and $ingressSupportsIngressClassName .Values.sonar.ingress.ingressClassName }}
+  ingressClassName: {{ .Values.sonar.ingress.ingressClassName }}
+  {{- end }}
   rules:
     - host: {{if .Values.sonar.basePath}}{{ .Values.global.dnsWildCard }}{{else}}sonar-{{ .Values.global.edpName }}.{{ .Values.global.dnsWildCard }}{{end}}
       http:
         paths:
           - path: {{if .Values.sonar.basePath}}/{{.Values.sonar.basePath}}(/|$)(.*){{else}}/{{end}}
+            {{- if $ingressSupportsPathType }}
+            pathType: {{ $ingressPathType }}
+            {{- end }}
             backend:
+              {{- if $ingressApiIsStable }}
+              service:
+                name: sonar
+                port: 
+                  number: 9000
+              {{- else }}
               serviceName: sonar
               servicePort: 9000
+              {{- end }}
 {{ end }}
