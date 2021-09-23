@@ -24,6 +24,14 @@ resources:
     memory: 64Mi
 
 sonar:
+  initContainers:
+    # image: busybox:1.32
+    # We allow the init containers to have a separate security context declaration because
+    # the initContainer may not require the same as SonarQube.
+    # securityContext: {}
+    # We allow the init containers to have a separate resources declaration because
+    # the initContainer does not take as much resources.
+    resources: {}
   deploy: true
   name: "sonar"
   image: "sonarqube"
@@ -50,6 +58,12 @@ sonar:
     # For Kubernetes >= 1.18 you should specify the ingress-controller via the field ingressClassName
     # See https://kubernetes.io/blog/2020/04/02/improvements-to-the-ingress-api-in-kubernetes-1.18/#specifying-the-class-of-an-ingress
     # ingressClassName: nginx
+  sonarqubeFolder: /opt/sonarqube
+  # List of plugins to install.
+  # For example:
+  plugins:
+    install:
+      - "https://github.com/vaulttec/sonar-auth-oidc/releases/download/v2.0.0/sonar-auth-oidc-plugin-2.0.0.jar"
 
   resources:
     limits:

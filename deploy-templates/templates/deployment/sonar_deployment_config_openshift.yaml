@@ -88,10 +88,26 @@ spec:
           terminationMessagePath: /dev/termination-log
           terminationMessagePolicy: File
           volumeMounts:
-            - mountPath: /opt/sonarqube/extensions/plugins
+            - mountPath: {{ .Values.sonar.sonarqubeFolder }}/extensions/plugins
               name: data
       dnsPolicy: ClusterFirst
       initContainers:
+      {{- if .Values.sonar.plugins.install }}
+        - name: install-plugins
+          image: {{ default "rjkernick/alpine-wget:latest" .Values.sonar.plugins.image }}
+          imagePullPolicy: {{ .Values.sonar.imagePullPolicy }}
+          command: ["sh",
+            "-e",
+            "/tmp/scripts/install_plugins.sh"]
+          volumeMounts:
+            - mountPath: {{ .Values.sonar.sonarqubeFolder }}/extensions/downloads
+              name: data
+            - mountPath: {{ .Values.sonar.sonarqubeFolder }}/lib/common
+              name: data
+              subPath: lib/common
+            - name: install-plugins
+              mountPath: /tmp/scripts/
+      {{- end }}
         - command:
             - sh
             - -c
@@ -111,6 +127,12 @@ spec:
       serviceAccountName: sonar
       terminationGracePeriodSeconds: 30
       volumes:
+        - name: install-plugins
+          configMap:
+            name: {{ .Values.sonar.name }}-install-plugins
+            items:
+              - key: install_plugins.sh
+                path: install_plugins.sh
         - name: data
           persistentVolumeClaim:
             claimName: sonar-data
