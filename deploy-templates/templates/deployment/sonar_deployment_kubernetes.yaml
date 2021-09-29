@@ -19,10 +19,7 @@ spec:
     matchLabels:
       app: sonar
   strategy:
-    rollingUpdate:
-      maxSurge: 25%
-      maxUnavailable: 25%
-    type: RollingUpdate
+    type: Recreate
   template:
     metadata:
       labels:
