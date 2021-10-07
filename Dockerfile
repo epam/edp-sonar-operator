@@ -6,7 +6,7 @@ ENV OPERATOR=/usr/local/bin/sonar-operator \
     HOME=/home/sonar-operator
 
 RUN apk add --no-cache ca-certificates==20191127-r5 \
-                       openssh-client==8.4_p1-r3
+                       openssh-client==8.4_p1-r4
 
 # install operator binary
 COPY go-binary ${OPERATOR}
