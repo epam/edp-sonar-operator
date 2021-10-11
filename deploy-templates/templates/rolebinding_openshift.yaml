@@ -1,12 +1,13 @@
 {{- if eq .Values.global.platform "openshift" -}}
 apiVersion: authorization.openshift.io/v1
-kind: ClusterRoleBinding
+kind: RoleBinding
 metadata:
+  namespace: {{ .Values.global.edpName }}
   labels:
     {{- include "sonar-operator.labels" . | nindent 4 }}
-  name: edp-{{ .Values.name }}-{{ .Values.global.edpName }}
+  name: edp-{{ .Values.name }}
 roleRef:
-  name: edp-{{ .Values.name }}-{{ .Values.global.edpName }}
+  name: edp-{{ .Values.name }}
 subjects:
   - kind: ServiceAccount
     name: edp-{{ .Values.name }}
