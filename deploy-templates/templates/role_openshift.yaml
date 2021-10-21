@@ -51,6 +51,7 @@ rules:
     - keycloakrealms
     - keycloakrealms/finalizers
     - keycloakrealms/status
+    - events
   verbs:
     - '*'
 - apiGroups:
