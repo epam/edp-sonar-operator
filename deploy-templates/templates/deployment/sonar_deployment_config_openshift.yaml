@@ -31,7 +31,7 @@ spec:
       {{end}}
       containers:
         - args:
-            - -Dsonar.search.javaAdditionalOpts=-Dnode.store.allow_mmapfs=false
+            - -Dsonar.search.javaAdditionalOpts=-Dnode.store.allow_mmap=false
           env:
             - name: SONARQUBE_JDBC_USERNAME
               valueFrom:
