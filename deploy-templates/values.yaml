@@ -64,12 +64,12 @@ sonar:
   plugins:
     install:
       - "https://github.com/vaulttec/sonar-auth-oidc/releases/download/v2.0.0/sonar-auth-oidc-plugin-2.0.0.jar"
-      - "https://github.com/checkstyle/checkstyle/releases#:~:text=checkstyle-9.0.1-all.jar"
-      - "https://github.com/spotbugs/sonar-findbugs/releases#:~:text=sonar-findbugs-plugin-4.0.4.jar"
-      - "https://github.com/jensgerdes/sonar-pmd/releases#:~:text=sonar-pmd-plugin-3.3.1.jar"
-      - "https://github.com/sbaudoin/sonar-ansible/releases#:~:text=sonar-ansible-plugin-2.4.0.jar"
-      - "https://github.com/sbaudoin/sonar-yaml/releases#:~:text=sonar-yaml-plugin-1.6.0.jar"
-      - "https://github.com/Inform-Software/sonar-groovy/releases#:~:text=sonar-groovy-plugin-1.8.jar"
+      - "https://github.com/checkstyle/sonar-checkstyle/releases/download/9.0.1/checkstyle-sonar-plugin-9.0.1.jar"
+      - "https://github.com/spotbugs/sonar-findbugs/releases/download/4.0.4/sonar-findbugs-plugin-4.0.4.jar"
+      - "hhttps://github.com/jensgerdes/sonar-pmd/releases/download/3.3.1/sonar-pmd-plugin-3.3.1.jar"
+      - "https://github.com/sbaudoin/sonar-ansible/releases/download/v2.4.0/sonar-ansible-plugin-2.4.0.jar"
+      - "https://github.com/sbaudoin/sonar-yaml/releases/download/v1.6.0/sonar-yaml-plugin-1.6.0.jar"
+      - "https://github.com/Inform-Software/sonar-groovy/releases/download/1.8/sonar-groovy-plugin-1.8.jar"
 
   resources:
     limits:
