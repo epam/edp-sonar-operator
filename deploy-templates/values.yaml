@@ -35,7 +35,7 @@ sonar:
   deploy: true
   name: "sonar"
   image: "sonarqube"
-  version: "8.9.2-community"
+  version: "8.9.3-community"
   imagePullPolicy: "IfNotPresent"
   initImage: "busybox"
   basePath: ""
@@ -64,7 +64,6 @@ sonar:
   plugins:
     install:
       - "https://github.com/vaulttec/sonar-auth-oidc/releases/download/v2.0.0/sonar-auth-oidc-plugin-2.0.0.jar"
-      - "https://github.com/checkstyle/sonar-checkstyle/releases#:~:text=checkstyle-sonar-plugin-8.45.1.jar"
 
   resources:
     limits:
