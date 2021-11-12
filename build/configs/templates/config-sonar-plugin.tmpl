@@ -43,7 +43,7 @@ sonarConf.save()
 
 def sonarDescriptor = Jenkins.instance.getDescriptor("hudson.plugins.sonar.SonarRunnerInstallation")
 
-def sonarRunnerInstaller = new SonarRunnerInstaller("3.1.0.1141")
+def sonarRunnerInstaller = new SonarRunnerInstaller("4.6.2.2472")
 def installSourceProperty = new InstallSourceProperty([sonarRunnerInstaller])
 def sonarRunnerInstance = new SonarRunnerInstallation("SonarQube Scanner", "", [installSourceProperty])
 
