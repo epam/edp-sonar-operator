@@ -1,3 +1,5 @@
+[![codecov](https://codecov.io/gh/epam/edp-sonar-operator/branch/master/graph/badge.svg?token=ILSDY1GF7W)](https://codecov.io/gh/epam/edp-sonar-operator)
+
 # Sonar Operator
 
 | :heavy_exclamation_mark: Please refer to [EDP documentation](https://epam.github.io/edp-install/) to get the notion of the main concepts and guidelines. |
