@@ -4,6 +4,8 @@ import (
 	"flag"
 	"os"
 
+	"github.com/epam/edp-sonar-operator/v2/pkg/controller/group"
+
 	buildInfo "github.com/epam/edp-common/pkg/config"
 	edpCompApi "github.com/epam/edp-component-operator/pkg/apis/v1/v1alpha1"
 	jenkinsApi "github.com/epam/edp-jenkins-operator/v2/pkg/apis/v2/v1alpha1"
@@ -111,7 +113,9 @@ func main() {
 		os.Exit(1)
 	}
 
-	sonarCtrl, err := sonar.NewReconcileSonar(mgr.GetClient(), mgr.GetScheme(), ctrl.Log.WithName("controllers"))
+	ctrlLog := ctrl.Log.WithName("controllers")
+
+	sonarCtrl, err := sonar.NewReconcileSonar(mgr.GetClient(), mgr.GetScheme(), ctrlLog)
 	if err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "sonar")
 		os.Exit(1)
@@ -119,6 +123,17 @@ func main() {
 
 	if err := sonarCtrl.SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "sonar")
+		os.Exit(1)
+	}
+
+	groupCtrl, err := group.NewReconcile(mgr.GetClient(), mgr.GetScheme(), ctrlLog, helper.GetPlatformTypeEnv())
+	if err != nil {
+		setupLog.Error(err, "unable to create controller", "controller", "sonar-group")
+		os.Exit(1)
+	}
+
+	if err := groupCtrl.SetupWithManager(mgr); err != nil {
+		setupLog.Error(err, "unable to create controller", "controller", "sonar-group")
 		os.Exit(1)
 	}
 

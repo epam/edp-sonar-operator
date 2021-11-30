@@ -1,9 +1,10 @@
 package v1alpha1
 
 import (
+	"time"
+
 	coreV1Api "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"time"
 )
 
 // EDIT THIS FILE!  THIS IS SCAFFOLDING FOR YOU TO OWN!
@@ -70,5 +71,5 @@ type SonarList struct {
 }
 
 func init() {
-	SchemeBuilder.Register(&Sonar{}, &SonarList{})
+	SchemeBuilder.Register(&Sonar{}, &SonarList{}, &SonarGroup{}, &SonarGroupList{})
 }

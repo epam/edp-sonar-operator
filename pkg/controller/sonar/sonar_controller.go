@@ -3,6 +3,8 @@ package sonar
 import (
 	"context"
 	"fmt"
+	"time"
+
 	"github.com/dchest/uniuri"
 	"github.com/epam/edp-sonar-operator/v2/pkg/helper"
 	"github.com/epam/edp-sonar-operator/v2/pkg/service/platform"
@@ -10,7 +12,6 @@ import (
 	"github.com/go-logr/logr"
 	coreV1Api "k8s.io/api/core/v1"
 	ctrl "sigs.k8s.io/controller-runtime"
-	"time"
 
 	sonarApi "github.com/epam/edp-sonar-operator/v2/pkg/apis/edp/v1alpha1"
 	"github.com/pkg/errors"
@@ -129,7 +130,7 @@ func (r *ReconcileSonar) Reconcile(ctx context.Context, request reconcile.Reques
 		}
 	}
 
-	instance, err, isFinished := r.service.Configure(*instance)
+	instance, err, isFinished := r.service.Configure(ctx, *instance)
 	if err != nil {
 		log.Error(err, "Configuration has failed")
 		return reconcile.Result{RequeueAfter: DefaultRequeueTime * time.Second}, errors.Wrapf(err, "Configuration failed")

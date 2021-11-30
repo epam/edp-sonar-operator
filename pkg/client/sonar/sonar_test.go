@@ -1,6 +1,7 @@
 package sonar
 
 import (
+	"context"
 	logger "log"
 	"testing"
 )
@@ -15,9 +16,9 @@ const (
 	token               = ""
 	webhookName         = "jenkins"
 	defaultProfileName  = "Sonar way"
-	ProfilePath         = "../configs/quality-profile.xml"
 )
 
+//TODO: refactor all tests, replace logger with t.Fatal
 func TestExampleConfiguration_checkProfileExist(t *testing.T) {
 	cs := SonarClient{}
 	err := cs.InitNewRestClient(url, username, token)
@@ -40,7 +41,7 @@ func TestExampleConfiguration_CreateGroup(t *testing.T) {
 		logger.Print(err)
 	}
 
-	err = cs.CreateGroup(groupName)
+	err = cs.CreateGroup(context.Background(), &Group{Name: groupName})
 	if err != nil {
 		logger.Print(err)
 	}

@@ -1,0 +1,10 @@
+apiVersion: v2.edp.epam.com/v1alpha1
+kind: SonarGroup
+metadata:
+  name: test-sonar-group
+spec:
+  sonarOwner: sonar
+  name: testgroup1
+  description: "group description"
+
+

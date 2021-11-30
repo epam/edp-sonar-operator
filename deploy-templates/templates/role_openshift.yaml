@@ -52,6 +52,9 @@ rules:
     - keycloakrealms/finalizers
     - keycloakrealms/status
     - events
+    - sonargroups
+    - sonargroups/finalizers
+    - sonargroups/status
   verbs:
     - '*'
 - apiGroups:

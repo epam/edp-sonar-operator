@@ -1,16 +1,18 @@
 package sonar
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
+	"reflect"
+	"strings"
+	"time"
+
 	sonarClientHelper "github.com/epam/edp-sonar-operator/v2/pkg/client/helper"
 	"github.com/pkg/errors"
 	"github.com/totherme/unstructured"
 	"gopkg.in/resty.v1"
-	"reflect"
 	ctrl "sigs.k8s.io/controller-runtime"
-	"strings"
-	"time"
 )
 
 var log = ctrl.Log.WithName("sonar_client")
@@ -20,9 +22,33 @@ type SonarClient struct {
 	ApiUrl string
 }
 
+//TODO: remove init from SonarClient structure and make separate package function
 func (sc *SonarClient) InitNewRestClient(url string, user string, password string) error {
 	sc.resty = *resty.SetHostURL(url).SetBasicAuth(user, password)
 	sc.ApiUrl = url
+	return nil
+}
+
+func (sc *SonarClient) startRequest(ctx context.Context) *resty.Request {
+	return sc.resty.R().SetHeaders(map[string]string{
+		"Content-Type": "application/x-www-form-urlencoded",
+		"Accept":       "application/json",
+	}).SetContext(ctx)
+}
+
+func (sc *SonarClient) checkError(response *resty.Response, err error) error {
+	if err != nil {
+		return errors.Wrap(err, "response error")
+	}
+
+	if response == nil {
+		return errors.New("empty response")
+	}
+
+	if response.IsError() {
+		return errors.Errorf("status: %s, body: %s", response.Status(), response.String())
+	}
+
 	return nil
 }
 
@@ -416,67 +442,6 @@ func (sc *SonarClient) CreateUser(login string, name string, password string) er
 
 	log.Info(fmt.Sprintf("User %s has been created", login))
 	return nil
-}
-
-func (sc SonarClient) CreateGroup(groupName string) error {
-	groupExist, err := sc.checkGroupExist(groupName)
-	if err != nil {
-		return nil
-	}
-
-	if groupExist {
-		return nil
-	}
-
-	log.Info(fmt.Sprintf("Start creating group %v in Sonar", groupName))
-	resp, err := sc.resty.R().
-		SetHeader("Content-Type", "application/json").
-		SetQueryParams(map[string]string{
-			"name": groupName}).
-		Post("/user_groups/create")
-	if err != nil {
-		return errors.Wrap(err, "Failed to send group creation request!")
-	}
-	if resp.IsError() {
-		errMsg := fmt.Sprintf("Creating group %s failed. Err - %v. Response - %s", groupName, err, resp.Status())
-		return errors.New(errMsg)
-	}
-	log.Info(fmt.Sprintf("Group %v in Sonar has been created", groupName))
-
-	return nil
-}
-
-func (sc SonarClient) checkGroupExist(groupName string) (bool, error) {
-	resp, err := sc.resty.R().
-		Get(fmt.Sprintf("/user_groups/search?q=%v&f=name", groupName))
-	if err != nil {
-		return false, errors.Wrap(err, "Failed to send request to check group existence!")
-	}
-	if resp.IsError() {
-		errMsg := fmt.Sprintf("Checking group existence failed! Response - %v", resp.StatusCode())
-		return false, errors.New(errMsg)
-	}
-
-	responseJson, err := unstructured.ParseJSON(string(resp.Body()))
-	if err != nil {
-		return false, err
-	}
-
-	if ok := responseJson.HasKey("groups"); ok {
-		groups, _ := responseJson.GetByPointer("/groups")
-		groupsList, err := groups.ListValue()
-		if err != nil || len(groupsList) == 0 {
-			return false, err
-		}
-
-		for _, group := range groupsList {
-			currentGroupName, _ := group.F("name").StringValue()
-			if currentGroupName == groupName {
-				return true, nil
-			}
-		}
-	}
-	return false, nil
 }
 
 func (sc SonarClient) AddUserToGroup(groupName string, user string) error {

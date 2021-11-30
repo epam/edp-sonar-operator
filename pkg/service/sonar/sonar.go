@@ -5,6 +5,10 @@ import (
 	"context"
 	"encoding/base64"
 	"fmt"
+	"io/ioutil"
+	"log"
+	"os"
+
 	"github.com/dchest/uniuri"
 	jenkinsApi "github.com/epam/edp-jenkins-operator/v2/pkg/apis/v2/v1alpha1"
 	platformHelper "github.com/epam/edp-jenkins-operator/v2/pkg/service/platform/helper"
@@ -16,14 +20,11 @@ import (
 	sonarHelper "github.com/epam/edp-sonar-operator/v2/pkg/service/sonar/helper"
 	sonarSpec "github.com/epam/edp-sonar-operator/v2/pkg/service/sonar/spec"
 	"github.com/pkg/errors"
-	"io/ioutil"
 	k8sErr "k8s.io/apimachinery/pkg/api/errors"
-	"k8s.io/apimachinery/pkg/apis/meta/v1"
+	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/util/json"
-	"log"
-	"os"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
@@ -54,10 +55,11 @@ type Client struct {
 }
 
 type SonarService interface {
-	Configure(instance v1alpha1.Sonar) (*v1alpha1.Sonar, error, bool)
+	Configure(ctx context.Context, instance v1alpha1.Sonar) (*v1alpha1.Sonar, error, bool)
 	ExposeConfiguration(instance v1alpha1.Sonar) (*v1alpha1.Sonar, error)
 	Integration(instance v1alpha1.Sonar) (*v1alpha1.Sonar, error)
 	IsDeploymentReady(instance v1alpha1.Sonar) (bool, error)
+	InitSonarClient(instance *v1alpha1.Sonar, defaultPassword bool) (ClientInterface, error)
 }
 
 func NewSonarService(platformService platform.PlatformService, k8sClient client.Client, k8sScheme *runtime.Scheme) SonarService {
@@ -71,7 +73,7 @@ type SonarServiceImpl struct {
 	k8sScheme       *runtime.Scheme
 }
 
-func (s SonarServiceImpl) initSonarClient(instance *v1alpha1.Sonar, defaultPassword bool) (*sonar.SonarClient, error) {
+func (s SonarServiceImpl) InitSonarClient(instance *v1alpha1.Sonar, defaultPassword bool) (ClientInterface, error) {
 	sc := &sonar.SonarClient{}
 
 	password := DefaultPassword
@@ -98,7 +100,7 @@ func (s SonarServiceImpl) initSonarClient(instance *v1alpha1.Sonar, defaultPassw
 }
 
 func (s SonarServiceImpl) Integration(instance v1alpha1.Sonar) (*v1alpha1.Sonar, error) {
-	sc, err := s.initSonarClient(&instance, false)
+	sc, err := s.InitSonarClient(&instance, false)
 	if err != nil {
 		return &instance, errors.Wrap(err, "Failed to initialize Sonar Client!")
 	}
@@ -249,7 +251,7 @@ func (s SonarServiceImpl) createKeycloakClient(instance v1alpha1.Sonar, baseUrl 
 
 func (s SonarServiceImpl) ExposeConfiguration(instance v1alpha1.Sonar) (*v1alpha1.Sonar, error) {
 
-	sc, err := s.initSonarClient(&instance, false)
+	sc, err := s.InitSonarClient(&instance, false)
 	if err != nil {
 		return &instance, errors.Wrap(err, "Failed to initialize Sonar Client!")
 	}
@@ -407,7 +409,7 @@ func getIcon() (*string, error) {
 	return &encoded, nil
 }
 
-func (s SonarServiceImpl) Configure(instance v1alpha1.Sonar) (*v1alpha1.Sonar, error, bool) {
+func (s SonarServiceImpl) Configure(ctx context.Context, instance v1alpha1.Sonar) (*v1alpha1.Sonar, error, bool) {
 	adminSecret := map[string][]byte{
 		"user":     []byte("admin"),
 		"password": []byte(uniuri.New()),
@@ -422,7 +424,7 @@ func (s SonarServiceImpl) Configure(instance v1alpha1.Sonar) (*v1alpha1.Sonar, e
 		return &instance, errors.Wrapf(err, "Failed to set owner reference for secret %v", secret), false
 	}
 
-	sc, err := s.initSonarClient(&instance, true)
+	sc, err := s.InitSonarClient(&instance, true)
 	if err != nil {
 		return &instance, errors.Wrap(err, "Failed to initialize Sonar Client!"), false
 	}
@@ -442,7 +444,7 @@ func (s SonarServiceImpl) Configure(instance v1alpha1.Sonar) (*v1alpha1.Sonar, e
 		return &instance, errors.Wrap(err, "Failed to change password!"), false
 	}
 
-	sc, err = s.initSonarClient(&instance, false)
+	sc, err = s.InitSonarClient(&instance, false)
 	if err != nil {
 		return &instance, errors.Wrap(err, "Failed to initialize Sonar Client!"), false
 	}
@@ -477,9 +479,13 @@ func (s SonarServiceImpl) Configure(instance v1alpha1.Sonar) (*v1alpha1.Sonar, e
 		return &instance, errors.Wrap(err, "Failed to configure EDP way quality gate!"), false
 	}
 
-	err = sc.CreateGroup(NonInteractiveGroupName)
-	if err != nil {
-		return &instance, errors.Wrapf(err, "Failed to create %v group!", NonInteractiveGroupName), false
+	_, err = sc.GetGroup(ctx, NonInteractiveGroupName)
+	if sonar.IsErrNotFound(err) {
+		if err := sc.CreateGroup(ctx, &sonar.Group{Name: NonInteractiveGroupName}); err != nil {
+			return &instance, errors.Wrapf(err, "Failed to create %v group!", NonInteractiveGroupName), false
+		}
+	} else if err != nil {
+		return &instance, errors.Wrap(err, "unexpected error during group check"), false
 	}
 
 	err = sc.AddPermissionsToGroup(NonInteractiveGroupName, "scan")
