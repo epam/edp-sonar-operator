@@ -41,19 +41,19 @@ func NewReconcileSonar(client client.Client, scheme *runtime.Scheme, log logr.Lo
 	}
 
 	return &ReconcileSonar{
-		client:  client,
-		scheme:  scheme,
-		service: sonar.NewSonarService(ps, client, scheme),
-		log:     log.WithName("sonar"),
+		client:   client,
+		scheme:   scheme,
+		service:  sonar.NewSonarService(ps, client, scheme),
+		log:      log.WithName("sonar"),
 		platform: ps,
 	}, nil
 }
 
 type ReconcileSonar struct {
-	client  client.Client
-	scheme  *runtime.Scheme
-	service sonar.SonarService
-	log     logr.Logger
+	client   client.Client
+	scheme   *runtime.Scheme
+	service  sonar.SonarService
+	log      logr.Logger
 	platform platform.PlatformService
 }
 
