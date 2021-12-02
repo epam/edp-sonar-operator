@@ -14,9 +14,7 @@ const (
 	groupName           = "non-interactive-users"
 	token               = ""
 	webhookName         = "jenkins"
-	webhookUrl          = "http://jenkins:8080/sonarqube-webhook/"
 	defaultProfileName  = "Sonar way"
-	profileName         = "EDP way"
 	ProfilePath         = "../configs/quality-profile.xml"
 )
 

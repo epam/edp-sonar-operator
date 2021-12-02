@@ -2,7 +2,6 @@ package openshift
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"github.com/epam/edp-sonar-operator/v2/pkg/apis/edp/v1alpha1"
 	platformHelper "github.com/epam/edp-sonar-operator/v2/pkg/service/platform/helper"
@@ -12,17 +11,15 @@ import (
 	routeV1Client "github.com/openshift/client-go/route/clientset/versioned/typed/route/v1"
 	securityV1Client "github.com/openshift/client-go/security/clientset/versioned/typed/security/v1"
 	templateV1Client "github.com/openshift/client-go/template/clientset/versioned/typed/template/v1"
+	"github.com/pkg/errors"
 	k8serrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/client-go/rest"
 	"os"
-	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"strings"
 )
-
-var log = ctrl.Log.WithName("platform")
 
 type OpenshiftService struct {
 	kubernetes.K8SService
@@ -83,7 +80,7 @@ func (service *OpenshiftService) Init(config *rest.Config, scheme *runtime.Schem
 func (service OpenshiftService) GetExternalEndpoint(namespace string, name string) (*string, error) {
 	r, err := service.routeClient.Routes(namespace).Get(context.TODO(), name, metav1.GetOptions{})
 	if err != nil && k8serrors.IsNotFound(err) {
-		return nil, errors.New(fmt.Sprintf("Route %v in namespace %v not found", name, namespace))
+		return nil, errors.Wrapf(err, "Route %v in namespace %v not found", name, namespace)
 	} else if err != nil {
 		return nil, err
 	}

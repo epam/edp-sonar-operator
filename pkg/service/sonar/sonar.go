@@ -16,7 +16,6 @@ import (
 	sonarHelper "github.com/epam/edp-sonar-operator/v2/pkg/service/sonar/helper"
 	sonarSpec "github.com/epam/edp-sonar-operator/v2/pkg/service/sonar/spec"
 	"github.com/pkg/errors"
-	"gopkg.in/resty.v1"
 	"io/ioutil"
 	k8sErr "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -52,7 +51,6 @@ const (
 )
 
 type Client struct {
-	client resty.Client
 }
 
 type SonarService interface {
@@ -429,14 +427,20 @@ func (s SonarServiceImpl) Configure(instance v1alpha1.Sonar) (*v1alpha1.Sonar, e
 		return &instance, errors.Wrap(err, "Failed to initialize Sonar Client!"), false
 	}
 
-	sc.WaitForStatusIsUp(60, 10)
+	err = sc.WaitForStatusIsUp(60, 10)
+	if err != nil {
+		return &instance, errors.Wrap(err, "Failed to wait for status is up!"), false
+	}
 
 	credentials, err := s.platformService.GetSecretData(instance.Namespace, adminSecretName)
 	if err != nil {
 		return &instance, errors.Wrapf(err, "Failed to get secret data from %v!", adminSecretName), false
 	}
 	password := string(credentials["password"])
-	sc.ChangePassword("admin", DefaultPassword, password)
+	err = sc.ChangePassword("admin", DefaultPassword, password)
+	if err != nil {
+		return &instance, errors.Wrap(err, "Failed to change password!"), false
+	}
 
 	sc, err = s.initSonarClient(&instance, false)
 	if err != nil {

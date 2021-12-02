@@ -2,10 +2,9 @@ package sonar
 
 import (
 	"encoding/json"
-	"errors"
 	"fmt"
 	sonarClientHelper "github.com/epam/edp-sonar-operator/v2/pkg/client/helper"
-	errorsf "github.com/pkg/errors"
+	"github.com/pkg/errors"
 	"github.com/totherme/unstructured"
 	"gopkg.in/resty.v1"
 	"reflect"
@@ -39,7 +38,7 @@ func (sc *SonarClient) ChangePassword(user string, oldPassword string, newPasswo
 		Post("/users/change_password")
 
 	if err != nil {
-		return errorsf.Wrap(err, "Failed to send request for password change in Sonar!")
+		return errors.Wrap(err, "Failed to send request for password change in Sonar!")
 	}
 	if resp.IsError() {
 		errMsg := fmt.Sprintf("Password changing for user %s unsuccessful. Response - %s", user, resp.Status())
@@ -56,7 +55,7 @@ func (sc SonarClient) Reboot() error {
 		Post("/system/restart")
 
 	if err != nil {
-		return errorsf.Wrap(err, "Failed to send reboot request to Sonar!")
+		return errors.Wrap(err, "Failed to send reboot request to Sonar!")
 	}
 	if resp.IsError() {
 		return errors.New(fmt.Sprintf("Sonar rebooting failed. Response - %s", resp.Status()))
@@ -89,10 +88,10 @@ func (sc SonarClient) WaitForStatusIsUp(retryCount int, timeout time.Duration) e
 		R().
 		Get("/system/status")
 	if err != nil {
-		return errorsf.Wrap(err, "Failed to send request for current Sonar status!")
+		return errors.Wrap(err, "Failed to send request for current Sonar status!")
 	}
 	if resp.IsError() {
-		return errors.New(fmt.Sprintf("Checking Sonar status failed. Response - %s", resp.Status()))
+		return errors.New(fmt.Sprintf("checking Sonar status failed. Response - %s", resp.Status()))
 	}
 
 	return nil
@@ -114,7 +113,7 @@ func (sc SonarClient) InstallPlugins(plugins []string) error {
 				Post("/plugins/install")
 
 			if err != nil {
-				return errorsf.Wrapf(err, "Failed to send plugin installation request for %s", plugin)
+				return errors.Wrapf(err, "Failed to send plugin installation request for %s", plugin)
 			}
 			if resp.IsError() {
 				errMsg := fmt.Sprintf("Installation of plugin %s failed. Response - %s", plugin, resp.Status())
@@ -124,8 +123,13 @@ func (sc SonarClient) InstallPlugins(plugins []string) error {
 		}
 	}
 	if needReboot {
-		sc.Reboot()
-		sc.WaitForStatusIsUp(60, 10)
+
+		if err = sc.Reboot(); err != nil {
+			return err
+		}
+		if err = sc.WaitForStatusIsUp(60, 10); err != nil {
+			return err
+		}
 	}
 	return nil
 }
@@ -138,6 +142,9 @@ func (sc SonarClient) GetInstalledPlugins() ([]string, error) {
 
 	var raw map[string][]map[string]interface{}
 	err = json.Unmarshal(resp.Body(), &raw)
+	if err != nil {
+		return nil, errors.Wrapf(err, "cant unmarshal %s", resp.Body())
+	}
 
 	var installedPlugins []string
 	for _, v := range raw["plugins"] {
@@ -172,7 +179,7 @@ func (sc SonarClient) CreateQualityGate(qgName string, conditions []map[string]s
 		SetQueryParams(map[string]string{"name": qgName}).
 		Post("/qualitygates/create")
 	if err != nil {
-		return &emptyString, errorsf.Wrap(err, "Failed to send request to create quality gates!")
+		return &emptyString, errors.Wrap(err, "Failed to send request to create quality gates!")
 	}
 	if resp.IsError() {
 		errMsg := fmt.Sprintf("Creating quality gate %s failed. Response - %s", qgName, resp.Status())
@@ -181,11 +188,14 @@ func (sc SonarClient) CreateQualityGate(qgName string, conditions []map[string]s
 
 	var raw map[string]interface{}
 	err = json.Unmarshal(resp.Body(), &raw)
+	if err != nil {
+		return nil, errors.Wrapf(err, "cant unmarshal %s", resp.Body())
+	}
 	qgId = fmt.Sprintf("%v", raw["id"])
 
 	for _, item := range conditions {
 		item["gateId"] = qgId
-		sc.createCondition(item)
+		err = sc.createCondition(item)
 		if err != nil {
 			return nil, err
 		}
@@ -206,7 +216,7 @@ func (sc SonarClient) createCondition(conditionMap map[string]string) error {
 		SetQueryParams(conditionMap).
 		Post("/qualitygates/create_condition")
 	if err != nil {
-		return errorsf.Wrap(err, "Failed to send request to create condition in Sonar!")
+		return errors.Wrap(err, "Failed to send request to create condition in Sonar!")
 	}
 	if resp.IsError() {
 		errMsg := fmt.Sprintf("Creating condition %s failed. Response - %s", conditionMap["metric"], resp.Status())
@@ -219,11 +229,11 @@ func (sc SonarClient) checkQualityGateExist(qgName string) (exist bool, qgId str
 	resp, err := sc.resty.R().
 		Get("/qualitygates/list")
 	if err != nil {
-		return false, "", false, errorsf.Wrap(err, "Requesting quality gates list failed!")
+		return false, "", false, errors.Wrap(err, "Requesting quality gates list failed!")
 	}
 	if resp.IsError() {
 		errMsg := fmt.Sprintf("Listing quality gates in Sonar failed. Response code -%v", resp.StatusCode())
-		return false, "", false, errorsf.Wrap(err, errMsg)
+		return false, "", false, errors.Wrap(err, errMsg)
 	}
 
 	responseJson, err := unstructured.ParseJSON(string(resp.Body()))
@@ -258,7 +268,7 @@ func (sc SonarClient) setDefaultQualityGate(qgId string) error {
 		SetQueryParams(map[string]string{"id": qgId}).
 		Post("/qualitygates/set_as_default")
 	if err != nil {
-		return errorsf.Wrap(err, "Failed to send request to set default quality gates!")
+		return errors.Wrap(err, "Failed to send request to set default quality gates!")
 	}
 	if resp.IsError() {
 		errMsg := fmt.Sprintf("Setting default quality gate %s failed. Response - %s", qgId, resp.Status())
@@ -287,7 +297,7 @@ func (sc SonarClient) UploadProfile(profileName string, profilePath string) (*st
 	}
 
 	if !sonarClientHelper.FileExists(profilePath) {
-		return &emptyString, errors.New(fmt.Sprintf("File %s does not exist in path provided: %s !", profileName, profilePath))
+		return &emptyString, fmt.Errorf("File %s does not exist in path provided: %s !", profileName, profilePath)
 	}
 
 	log.Info(fmt.Sprintf("Uploading profile %s from path %s", profileName, profilePath))
@@ -296,14 +306,14 @@ func (sc SonarClient) UploadProfile(profileName string, profilePath string) (*st
 		SetFile("backup", profilePath).
 		Post("/qualityprofiles/restore")
 	if err != nil {
-		return &emptyString, errorsf.Wrap(err, "Failed to send upload profile request!")
+		return &emptyString, errors.Wrap(err, "Failed to send upload profile request!")
 	}
 	if resp.IsError() {
 		errMsg := fmt.Sprintf("Uploading profile %s failed. Response - %s", profileName, resp.Status())
 		return &emptyString, errors.New(errMsg)
 	}
 
-	_, profileId, isDefault, err = sc.checkProfileExist(profileName)
+	_, profileId, _, err = sc.checkProfileExist(profileName)
 	if err != nil {
 		return nil, err
 	}
@@ -321,11 +331,11 @@ func (sc SonarClient) checkProfileExist(requiredProfileName string) (exits bool,
 	resp, err := sc.resty.R().
 		Get(fmt.Sprintf("/qualityprofiles/search?qualityProfile=%v", strings.Replace(requiredProfileName, " ", "+", -1)))
 	if err != nil {
-		return false, "", false, errorsf.Wrap(err, "Failed to get default quality profile!")
+		return false, "", false, errors.Wrap(err, "Failed to get default quality profile!")
 	}
 	if resp.IsError() {
 		errMsg := fmt.Sprintf("Request for quality profile failed! Response - %v", resp.StatusCode())
-		return false, "", false, errorsf.New(errMsg)
+		return false, "", false, errors.New(errMsg)
 	}
 
 	responseJson, err := unstructured.ParseJSON(string(resp.Body()))
@@ -362,7 +372,7 @@ func (sc SonarClient) setDefaultProfile(language string, profileName string) err
 			"language":       language}).
 		Post("/qualityprofiles/set_default")
 	if err != nil {
-		return errorsf.New("Failed to send request to set default quality profile!")
+		return errors.New("Failed to send request to set default quality profile!")
 	}
 	if resp.IsError() {
 		errMsg := fmt.Sprintf("Setting profile %s as default failed. Response - %s", profileName, resp.Status())
@@ -381,6 +391,9 @@ func (sc *SonarClient) CreateUser(login string, name string, password string) er
 
 	var raw map[string][]map[string]interface{}
 	err = json.Unmarshal(resp.Body(), &raw)
+	if err != nil {
+		return errors.Wrapf(err, "cant unmarshal %s", resp.Body())
+	}
 
 	for _, v := range raw["users"] {
 		if v["login"] == login {
@@ -394,7 +407,7 @@ func (sc *SonarClient) CreateUser(login string, name string, password string) er
 		Post("/users/create")
 
 	if err != nil {
-		return errorsf.Wrap(err, "Failed to send user creation request to Sonar!")
+		return errors.Wrap(err, "Failed to send user creation request to Sonar!")
 	}
 	if resp.IsError() {
 		errMsg := fmt.Sprintf("Failed to create user %s. Response code: %v", login, resp.StatusCode())
@@ -422,7 +435,7 @@ func (sc SonarClient) CreateGroup(groupName string) error {
 			"name": groupName}).
 		Post("/user_groups/create")
 	if err != nil {
-		return errorsf.Wrap(err, "Failed to send group creation request!")
+		return errors.Wrap(err, "Failed to send group creation request!")
 	}
 	if resp.IsError() {
 		errMsg := fmt.Sprintf("Creating group %s failed. Err - %v. Response - %s", groupName, err, resp.Status())
@@ -437,11 +450,11 @@ func (sc SonarClient) checkGroupExist(groupName string) (bool, error) {
 	resp, err := sc.resty.R().
 		Get(fmt.Sprintf("/user_groups/search?q=%v&f=name", groupName))
 	if err != nil {
-		return false, errorsf.Wrap(err, "Failed to send request to check group existence!")
+		return false, errors.Wrap(err, "Failed to send request to check group existence!")
 	}
 	if resp.IsError() {
 		errMsg := fmt.Sprintf("Checking group existence failed! Response - %v", resp.StatusCode())
-		return false, errorsf.New(errMsg)
+		return false, errors.New(errMsg)
 	}
 
 	responseJson, err := unstructured.ParseJSON(string(resp.Body()))
@@ -455,15 +468,14 @@ func (sc SonarClient) checkGroupExist(groupName string) (bool, error) {
 		if err != nil || len(groupsList) == 0 {
 			return false, err
 		}
+
 		for _, group := range groupsList {
 			currentGroupName, _ := group.F("name").StringValue()
 			if currentGroupName == groupName {
 				return true, nil
 			}
-			return false, nil
 		}
 	}
-
 	return false, nil
 }
 
@@ -477,7 +489,7 @@ func (sc SonarClient) AddUserToGroup(groupName string, user string) error {
 		Post("/user_groups/add_user")
 
 	if err != nil {
-		return errorsf.Wrap(err, "Failed to send requst to add user in group! ")
+		return errors.Wrap(err, "Failed to send requst to add user in group! ")
 	}
 	if resp.IsError() {
 		errMsg := fmt.Sprintf("Adding user %s to group %s failed. Response - %s", user, groupName, resp.Status())
@@ -498,7 +510,7 @@ func (sc SonarClient) AddPermissionsToUser(user string, permissions string) erro
 			"permission": permissions}).
 		Post("/permissions/add_user")
 	if err != nil {
-		return errorsf.Wrap(err, "Failed to send request to add permission to user!")
+		return errors.Wrap(err, "Failed to send request to add permission to user!")
 	}
 	if resp.IsError() {
 		errMsg := fmt.Sprintf("Adding permission %s to user %s failed. Response - %s", permissions, user, resp.Status())
@@ -519,7 +531,7 @@ func (sc SonarClient) AddPermissionsToGroup(groupName string, permissions string
 			"permission": permissions}).
 		Post("/permissions/add_group")
 	if err != nil {
-		return errorsf.Wrap(err, "Failed to send request to add permissions to group!")
+		return errors.Wrap(err, "Failed to send request to add permissions to group!")
 	}
 	if resp.IsError() {
 		errMsg := fmt.Sprintf("Adding permission %s to group %s failed. Response - %s", permissions, groupName, resp.Status())
@@ -550,7 +562,7 @@ func (sc SonarClient) GenerateUserToken(userName string) (*string, error) {
 		Post("/user_tokens/generate")
 
 	if err != nil {
-		return &emptyString, errorsf.Wrap(err, "Failed to send request for user token generation!")
+		return &emptyString, errors.Wrap(err, "Failed to send request for user token generation!")
 	}
 	if resp.IsError() {
 		errMsg := fmt.Sprintf("Generation token for user %s failed. Response - %s", userName, resp.Status())
@@ -560,6 +572,9 @@ func (sc SonarClient) GenerateUserToken(userName string) (*string, error) {
 
 	var rawResponse map[string]string
 	err = json.Unmarshal(resp.Body(), &rawResponse)
+	if err != nil {
+		return nil, errors.Wrapf(err, "cant unmarshal %s", resp.Body())
+	}
 	token := rawResponse["token"]
 
 	return &token, nil
@@ -569,16 +584,19 @@ func (sc SonarClient) checkUserTokenExist(userName string) (bool, error) {
 	resp, err := sc.resty.R().
 		Get(fmt.Sprintf("/user_tokens/search?login=%v", userName))
 	if err != nil {
-		return false, errorsf.Wrap(err, "Failed to send request to check user token existence!")
+		return false, errors.Wrap(err, "Failed to send request to check user token existence!")
 	}
 
 	if resp.IsError() {
 		errMsg := fmt.Sprintf("Failed to check user token existence for %s! Response code - %v", userName, resp.StatusCode())
-		return false, errorsf.Wrap(err, errMsg)
+		return false, errors.Wrap(err, errMsg)
 	}
 
 	var raw map[string][]map[string]interface{}
 	err = json.Unmarshal(resp.Body(), &raw)
+	if err != nil {
+		return false, errors.Wrapf(err, "cant unmarshal %s", resp.Body())
+	}
 
 	if len(raw["userTokens"]) == 0 {
 		return false, nil
@@ -605,7 +623,7 @@ func (sc SonarClient) AddWebhook(webhookName string, webhookUrl string) error {
 			"url":  webhookUrl}).
 		Post("/webhooks/create")
 	if err != nil {
-		return errorsf.Wrap(err, "Failed to send request to add webhook!")
+		return errors.Wrap(err, "Failed to send request to add webhook!")
 	}
 	if resp.IsError() {
 		errMsg := fmt.Sprintf("Adding webhook %s failed. Response - %s", webhookName, resp.Status())
@@ -620,15 +638,18 @@ func (sc SonarClient) checkWebhookExist(webhookName string) (bool, error) {
 	resp, err := sc.resty.R().
 		Get("/webhooks/list")
 	if err != nil {
-		return false, errorsf.Wrap(err, "Failed to send request to list all webhooks!")
+		return false, errors.Wrap(err, "Failed to send request to list all webhooks!")
 	}
 	if resp.IsError() {
 		errMsg := fmt.Sprintf("Failed to list webhooks on server! Response code - %v", resp.StatusCode())
-		return false, errorsf.New(errMsg)
+		return false, errors.New(errMsg)
 	}
 
 	var raw map[string][]map[string]interface{}
 	err = json.Unmarshal(resp.Body(), &raw)
+	if err != nil {
+		return false, errors.Wrapf(err, "cant unmarshal %s", resp.Body())
+	}
 
 	for _, v := range raw["webhooks"] {
 		if v["name"] == webhookName {
@@ -659,11 +680,11 @@ func (sc SonarClient) ConfigureGeneralSettings(valueType string, key string, val
 		Post("/settings/set")
 	if err != nil {
 		//errMsg := fmt.Sprintf("Failed to configure %s")
-		return errorsf.Wrap(err, "Failed to send request to configure general settings!")
+		return errors.Wrap(err, "Failed to send request to configure general settings!")
 	}
 	if resp.IsError() {
 		errMsg := fmt.Sprintf("Failed to configure %s! Response code - %v", key, resp.StatusCode())
-		return errorsf.New(errMsg)
+		return errors.New(errMsg)
 	}
 	log.Info(fmt.Sprintf("Setting %v has been set to %v", key, value))
 
@@ -680,7 +701,7 @@ func (sc SonarClient) checkGeneralSetting(key string, valueToCheck string) (bool
 	var raw map[string][]map[string]interface{}
 	err = json.Unmarshal(resp.Body(), &raw)
 	if err != nil {
-		return false, errorsf.Wrap(err, "Failed to unmarshal response body!")
+		return false, errors.Wrap(err, "Failed to unmarshal response body!")
 	}
 
 	for _, v := range raw["settings"] {

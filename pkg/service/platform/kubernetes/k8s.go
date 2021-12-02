@@ -34,7 +34,7 @@ type K8SService struct {
 	ExtensionsV1Client extensionsV1Client.ExtensionsV1beta1Client
 }
 
-func (service *K8SService) Init(config *rest.Config, scheme *runtime.Scheme, client client.Client) error {
+func (s *K8SService) Init(config *rest.Config, scheme *runtime.Scheme, client client.Client) error {
 	coreClient, err := coreV1Client.NewForConfig(config)
 	if err != nil {
 		return err
@@ -50,16 +50,16 @@ func (service *K8SService) Init(config *rest.Config, scheme *runtime.Scheme, cli
 		return errors.New("extensionsV1 client initialization failed!")
 	}
 
-	service.client = client
-	service.coreClient = *coreClient
-	service.ExtensionsV1Client = *ecl
-	service.AppsClient = *acl
-	service.Scheme = scheme
+	s.client = client
+	s.coreClient = *coreClient
+	s.ExtensionsV1Client = *ecl
+	s.AppsClient = *acl
+	s.Scheme = scheme
 	return nil
 }
 
-func (service K8SService) GetSecretData(namespace string, name string) (map[string][]byte, error) {
-	sonarSecret, err := service.coreClient.Secrets(namespace).Get(context.TODO(), name, metav1.GetOptions{})
+func (s K8SService) GetSecretData(namespace string, name string) (map[string][]byte, error) {
+	sonarSecret, err := s.coreClient.Secrets(namespace).Get(context.TODO(), name, metav1.GetOptions{})
 	if err != nil && k8serr.IsNotFound(err) {
 		log.Info("Secret in namespace not found", "secret name", name, "namespace", namespace)
 		return nil, nil
@@ -69,7 +69,7 @@ func (service K8SService) GetSecretData(namespace string, name string) (map[stri
 	return sonarSecret.Data, nil
 }
 
-func (service K8SService) CreateSecret(sonarName, namespace, secretName string, data map[string][]byte) (*coreV1Api.Secret, error) {
+func (s K8SService) CreateSecret(sonarName, namespace, secretName string, data map[string][]byte) (*coreV1Api.Secret, error) {
 	labels := helper.GenerateLabels(sonarName)
 
 	sonarSecretObject := &coreV1Api.Secret{
@@ -82,12 +82,13 @@ func (service K8SService) CreateSecret(sonarName, namespace, secretName string, 
 		Type: "Opaque",
 	}
 
-	sonarSecret, err := service.coreClient.Secrets(sonarSecretObject.Namespace).Get(context.TODO(), sonarSecretObject.Name, metav1.GetOptions{})
+	_, err := s.coreClient.Secrets(sonarSecretObject.Namespace).Get(context.TODO(), sonarSecretObject.Name, metav1.GetOptions{})
 
 	if err != nil {
 		if k8serr.IsNotFound(err) {
 			log.V(1).Info("Creating a new Secret for Sonar", "namespace", sonarSecretObject.Namespace, "secret name", sonarSecretObject.Name, "sonar name", sonarName)
-			if sonarSecret, err = service.coreClient.Secrets(sonarSecretObject.Namespace).Create(context.TODO(), sonarSecretObject, metav1.CreateOptions{}); err != nil {
+			sonarSecret, err := s.coreClient.Secrets(sonarSecretObject.Namespace).Create(context.TODO(), sonarSecretObject, metav1.CreateOptions{})
+			if err != nil {
 				return nil, err
 			}
 			log.Info("Secret has been created", "namespace", sonarSecret.Namespace, "secret name", sonarSecret.Name)
@@ -99,8 +100,8 @@ func (service K8SService) CreateSecret(sonarName, namespace, secretName string, 
 	return sonarSecretObject, nil
 }
 
-func (service K8SService) GetExternalEndpoint(namespace string, name string) (*string, error) {
-	r, err := service.ExtensionsV1Client.Ingresses(namespace).Get(context.TODO(), name, metav1.GetOptions{})
+func (s K8SService) GetExternalEndpoint(namespace string, name string) (*string, error) {
+	r, err := s.ExtensionsV1Client.Ingresses(namespace).Get(context.TODO(), name, metav1.GetOptions{})
 	if err != nil {
 		return nil, err
 	}
@@ -112,7 +113,7 @@ func (service K8SService) GetExternalEndpoint(namespace string, name string) (*s
 	return &u, nil
 }
 
-func (service K8SService) CreateConfigMap(instance v1alpha1.Sonar, configMapName string, configMapData map[string]string) error {
+func (s K8SService) CreateConfigMap(instance v1alpha1.Sonar, configMapName string, configMapData map[string]string) error {
 	labels := platformHelper.GenerateLabels(instance.Name)
 	configMapObject := &coreV1Api.ConfigMap{
 		ObjectMeta: metav1.ObjectMeta{
@@ -123,14 +124,13 @@ func (service K8SService) CreateConfigMap(instance v1alpha1.Sonar, configMapName
 		Data: configMapData,
 	}
 
-	if err := controllerutil.SetControllerReference(&instance, configMapObject, service.Scheme); err != nil {
+	if err := controllerutil.SetControllerReference(&instance, configMapObject, s.Scheme); err != nil {
 		return errors.Wrapf(err, "Couldn't set reference for Config Map %v object", configMapObject.Name)
 	}
-
-	cm, err := service.coreClient.ConfigMaps(instance.Namespace).Get(context.TODO(), configMapObject.Name, metav1.GetOptions{})
+	_, err := s.coreClient.ConfigMaps(instance.Namespace).Get(context.TODO(), configMapObject.Name, metav1.GetOptions{})
 	if err != nil {
 		if k8serr.IsNotFound(err) {
-			cm, err = service.coreClient.ConfigMaps(configMapObject.Namespace).Create(context.TODO(), configMapObject, metav1.CreateOptions{})
+			cm, err := s.coreClient.ConfigMaps(configMapObject.Namespace).Create(context.TODO(), configMapObject, metav1.CreateOptions{})
 			if err != nil {
 				return errors.Wrapf(err, "Couldn't create Config Map %v object", configMapObject.Name)
 			}
@@ -217,8 +217,8 @@ func (s K8SService) getJenkinsServiceAccount(name, namespace string) (*jenkinsV1
 	return jsa, nil
 }
 
-func (service K8SService) GetAvailiableDeploymentReplicas(instance v1alpha1.Sonar) (*int, error) {
-	c, err := service.AppsClient.Deployments(instance.Namespace).Get(context.TODO(), instance.Name, metav1.GetOptions{})
+func (s K8SService) GetAvailiableDeploymentReplicas(instance v1alpha1.Sonar) (*int, error) {
+	c, err := s.AppsClient.Deployments(instance.Namespace).Get(context.TODO(), instance.Name, metav1.GetOptions{})
 	if err != nil {
 		return nil, err
 	}
@@ -270,8 +270,8 @@ func (s K8SService) createEDPComponent(sonar v1alpha1.Sonar, url string, icon st
 	return s.client.Create(context.TODO(), obj)
 }
 
-func (service K8SService) SetOwnerReference(sonar v1alpha1.Sonar, object client.Object) error {
-	if err := controllerutil.SetControllerReference(&sonar, object, service.Scheme); err != nil {
+func (s K8SService) SetOwnerReference(sonar v1alpha1.Sonar, object client.Object) error {
+	if err := controllerutil.SetControllerReference(&sonar, object, s.Scheme); err != nil {
 		return err
 	}
 	return nil
