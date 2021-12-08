@@ -55,6 +55,9 @@ rules:
     - sonargroups
     - sonargroups/finalizers
     - sonargroups/status
+    - sonarpermissiontemplates
+    - sonarpermissiontemplates/finalizers
+    - sonarpermissiontemplates/status
   verbs:
     - '*'
 - apiGroups:

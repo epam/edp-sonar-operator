@@ -8,10 +8,7 @@ import (
 )
 
 func TestSonarClient_CreateGroup(t *testing.T) {
-	cs := SonarClient{}
-	if err := cs.InitNewRestClient("", "", ""); err != nil {
-		t.Fatal(err)
-	}
+	cs := InitNewRestClient("", "", "")
 	httpmock.ActivateNonDefault(cs.resty.GetClient())
 	cs.resty.SetDisableWarn(true)
 
@@ -40,10 +37,7 @@ func TestSonarClient_CreateGroup(t *testing.T) {
 }
 
 func TestSonarClient_UpdateGroup(t *testing.T) {
-	cs := SonarClient{}
-	if err := cs.InitNewRestClient("", "", ""); err != nil {
-		t.Fatal(err)
-	}
+	cs := InitNewRestClient("", "", "")
 	httpmock.ActivateNonDefault(cs.resty.GetClient())
 	cs.resty.SetDisableWarn(true)
 	httpmock.RegisterResponder("POST", "/user_groups/update",
@@ -70,10 +64,7 @@ func TestSonarClient_UpdateGroup(t *testing.T) {
 }
 
 func TestSonarClient_DeleteGroup(t *testing.T) {
-	cs := SonarClient{}
-	if err := cs.InitNewRestClient("", "", ""); err != nil {
-		t.Fatal(err)
-	}
+	cs := InitNewRestClient("", "", "")
 	httpmock.ActivateNonDefault(cs.resty.GetClient())
 	cs.resty.SetDisableWarn(true)
 
@@ -98,10 +89,7 @@ func TestSonarClient_DeleteGroup(t *testing.T) {
 }
 
 func TestSonarClient_SearchGroups(t *testing.T) {
-	cs := SonarClient{}
-	if err := cs.InitNewRestClient("", "", ""); err != nil {
-		t.Fatal(err)
-	}
+	cs := InitNewRestClient("", "", "")
 	httpmock.ActivateNonDefault(cs.resty.GetClient())
 	cs.resty.SetDisableWarn(true)
 	httpmock.RegisterResponder("GET", "/user_groups/search?q=name&f=name",
@@ -125,10 +113,8 @@ func TestSonarClient_SearchGroups(t *testing.T) {
 }
 
 func TestSonarClient_GetGroup(t *testing.T) {
-	cs := SonarClient{}
-	if err := cs.InitNewRestClient("", "", ""); err != nil {
-		t.Fatal(err)
-	}
+	cs := InitNewRestClient("", "", "")
+
 	httpmock.ActivateNonDefault(cs.resty.GetClient())
 	cs.resty.SetDisableWarn(true)
 	httpmock.RegisterResponder("GET", "/user_groups/search?q=groupName&f=name",

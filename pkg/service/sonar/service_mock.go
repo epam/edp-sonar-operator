@@ -35,3 +35,27 @@ func (s *ServiceMock) InitSonarClient(instance *v1alpha1.Sonar, defaultPassword 
 
 	return called.Get(0).(ClientInterface), nil
 }
+
+func (s *ServiceMock) ClientForChild(ctx context.Context, instance ChildInstance) (ClientInterface, error) {
+	called := s.Called()
+	if err := called.Error(1); err != nil {
+		return nil, err
+	}
+
+	return called.Get(0).(ClientInterface), nil
+}
+
+func (s *ServiceMock) DeleteResource(ctx context.Context, instance Deletable, finalizer string,
+	deleteFunc func() error) (bool, error) {
+	called := s.Called()
+
+	if err := called.Error(1); err != nil {
+		return false, err
+	}
+
+	if err := deleteFunc(); err != nil {
+		return false, err
+	}
+
+	return called.Bool(0), nil
+}

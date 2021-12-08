@@ -71,5 +71,6 @@ type SonarList struct {
 }
 
 func init() {
-	SchemeBuilder.Register(&Sonar{}, &SonarList{}, &SonarGroup{}, &SonarGroupList{})
+	SchemeBuilder.Register(&Sonar{}, &SonarList{}, &SonarGroup{}, &SonarGroupList{}, &SonarPermissionTemplate{},
+		&SonarPermissionTemplateList{})
 }

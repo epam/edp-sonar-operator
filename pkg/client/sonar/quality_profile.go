@@ -18,7 +18,7 @@ type qProfileSearchResponse struct {
 	Profiles []QualityProfile `json:"profiles"`
 }
 
-func (sc SonarClient) GetQualityProfile(ctx context.Context, name string) (*QualityProfile, error) {
+func (sc Client) GetQualityProfile(ctx context.Context, name string) (*QualityProfile, error) {
 	var searchRsp qProfileSearchResponse
 	rsp, err := sc.startRequest(ctx).SetResult(&searchRsp).
 		Get(fmt.Sprintf("/qualityprofiles/search?qualityProfile=%s",

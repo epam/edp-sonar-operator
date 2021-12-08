@@ -17,26 +17,24 @@ import (
 
 var log = ctrl.Log.WithName("sonar_client")
 
-type SonarClient struct {
-	resty  resty.Client
-	ApiUrl string
+type Client struct {
+	resty *resty.Client
 }
 
-//TODO: remove init from SonarClient structure and make separate package function
-func (sc *SonarClient) InitNewRestClient(url string, user string, password string) error {
-	sc.resty = *resty.SetHostURL(url).SetBasicAuth(user, password)
-	sc.ApiUrl = url
-	return nil
+func InitNewRestClient(url string, user string, password string) *Client {
+	return &Client{
+		resty: resty.SetHostURL(url).SetBasicAuth(user, password),
+	}
 }
 
-func (sc *SonarClient) startRequest(ctx context.Context) *resty.Request {
+func (sc *Client) startRequest(ctx context.Context) *resty.Request {
 	return sc.resty.R().SetHeaders(map[string]string{
 		"Content-Type": "application/x-www-form-urlencoded",
 		"Accept":       "application/json",
 	}).SetContext(ctx)
 }
 
-func (sc *SonarClient) checkError(response *resty.Response, err error) error {
+func (sc *Client) checkError(response *resty.Response, err error) error {
 	if err != nil {
 		return errors.Wrap(err, "response error")
 	}
@@ -52,7 +50,7 @@ func (sc *SonarClient) checkError(response *resty.Response, err error) error {
 	return nil
 }
 
-func (sc *SonarClient) ChangePassword(user string, oldPassword string, newPassword string) error {
+func (sc *Client) ChangePassword(user string, oldPassword string, newPassword string) error {
 	resp, err := sc.resty.R().Get("/system/health")
 	if err == nil && resp.IsError() {
 		return nil
@@ -76,7 +74,7 @@ func (sc *SonarClient) ChangePassword(user string, oldPassword string, newPasswo
 	return nil
 }
 
-func (sc SonarClient) Reboot() error {
+func (sc Client) Reboot() error {
 	resp, err := sc.resty.R().
 		Post("/system/restart")
 
@@ -90,7 +88,7 @@ func (sc SonarClient) Reboot() error {
 	return nil
 }
 
-func (sc SonarClient) WaitForStatusIsUp(retryCount int, timeout time.Duration) error {
+func (sc Client) WaitForStatusIsUp(retryCount int, timeout time.Duration) error {
 	var raw map[string]interface{}
 	resp, err := sc.resty.
 		SetRetryCount(retryCount).
@@ -123,7 +121,7 @@ func (sc SonarClient) WaitForStatusIsUp(retryCount int, timeout time.Duration) e
 	return nil
 }
 
-func (sc SonarClient) InstallPlugins(plugins []string) error {
+func (sc Client) InstallPlugins(plugins []string) error {
 	installedPlugins, err := sc.GetInstalledPlugins()
 	if err != nil {
 		return err
@@ -160,7 +158,7 @@ func (sc SonarClient) InstallPlugins(plugins []string) error {
 	return nil
 }
 
-func (sc SonarClient) GetInstalledPlugins() ([]string, error) {
+func (sc Client) GetInstalledPlugins() ([]string, error) {
 	resp, err := sc.resty.R().Get("/plugins/installed")
 	if err != nil || resp.IsError() {
 		return nil, err
@@ -180,7 +178,7 @@ func (sc SonarClient) GetInstalledPlugins() ([]string, error) {
 	return installedPlugins, nil
 }
 
-func (sc SonarClient) CreateQualityGate(qgName string, conditions []map[string]string) (*string, error) {
+func (sc Client) CreateQualityGate(qgName string, conditions []map[string]string) (*string, error) {
 	emptyString := ""
 	qgExist, qgId, isDefault, err := sc.checkQualityGateExist(qgName)
 	if err != nil {
@@ -236,7 +234,7 @@ func (sc SonarClient) CreateQualityGate(qgName string, conditions []map[string]s
 	return &qgId, nil
 }
 
-func (sc SonarClient) createCondition(conditionMap map[string]string) error {
+func (sc Client) createCondition(conditionMap map[string]string) error {
 	resp, err := sc.resty.R().
 		SetHeader("Content-Type", "application/json").
 		SetQueryParams(conditionMap).
@@ -251,7 +249,7 @@ func (sc SonarClient) createCondition(conditionMap map[string]string) error {
 	return nil
 }
 
-func (sc SonarClient) checkQualityGateExist(qgName string) (exist bool, qgId string, isDefault bool, error error) {
+func (sc Client) checkQualityGateExist(qgName string) (exist bool, qgId string, isDefault bool, error error) {
 	resp, err := sc.resty.R().
 		Get("/qualitygates/list")
 	if err != nil {
@@ -288,7 +286,7 @@ func (sc SonarClient) checkQualityGateExist(qgName string) (exist bool, qgId str
 	return false, "", false, nil
 }
 
-func (sc SonarClient) setDefaultQualityGate(qgId string) error {
+func (sc Client) setDefaultQualityGate(qgId string) error {
 	resp, err := sc.resty.R().
 		SetHeader("Content-Type", "application/json").
 		SetQueryParams(map[string]string{"id": qgId}).
@@ -303,7 +301,7 @@ func (sc SonarClient) setDefaultQualityGate(qgId string) error {
 	return nil
 }
 
-func (sc SonarClient) UploadProfile(profileName string, profilePath string) (*string, error) {
+func (sc Client) UploadProfile(profileName string, profilePath string) (*string, error) {
 	emptyString := ""
 	profileExist, profileId, isDefault, err := sc.checkProfileExist(profileName)
 	if err != nil {
@@ -353,7 +351,7 @@ func (sc SonarClient) UploadProfile(profileName string, profilePath string) (*st
 	return &profileId, nil
 }
 
-func (sc SonarClient) checkProfileExist(requiredProfileName string) (exits bool, profileId string, isDefault bool, error error) {
+func (sc Client) checkProfileExist(requiredProfileName string) (exits bool, profileId string, isDefault bool, error error) {
 	resp, err := sc.resty.R().
 		Get(fmt.Sprintf("/qualityprofiles/search?qualityProfile=%v", strings.Replace(requiredProfileName, " ", "+", -1)))
 	if err != nil {
@@ -390,7 +388,7 @@ func (sc SonarClient) checkProfileExist(requiredProfileName string) (exits bool,
 	return false, "", false, nil
 }
 
-func (sc SonarClient) setDefaultProfile(language string, profileName string) error {
+func (sc Client) setDefaultProfile(language string, profileName string) error {
 	resp, err := sc.resty.R().
 		SetHeader("Content-Type", "application/json").
 		SetQueryParams(map[string]string{
@@ -407,7 +405,7 @@ func (sc SonarClient) setDefaultProfile(language string, profileName string) err
 	return nil
 }
 
-func (sc *SonarClient) CreateUser(login string, name string, password string) error {
+func (sc *Client) CreateUser(login string, name string, password string) error {
 	resp, err := sc.resty.R().
 		Get("/users/search?q=" + login)
 
@@ -444,7 +442,7 @@ func (sc *SonarClient) CreateUser(login string, name string, password string) er
 	return nil
 }
 
-func (sc SonarClient) AddUserToGroup(groupName string, user string) error {
+func (sc Client) AddUserToGroup(groupName string, user string) error {
 	log.Info(fmt.Sprintf("Start adding user %v to group %v in Sonar", user, groupName))
 	resp, err := sc.resty.R().
 		SetHeader("Content-Type", "application/json").
@@ -466,7 +464,7 @@ func (sc SonarClient) AddUserToGroup(groupName string, user string) error {
 	return nil
 }
 
-func (sc SonarClient) AddPermissionsToUser(user string, permissions string) error {
+func (sc Client) AddPermissionsToUser(user string, permissions string) error {
 	log.Info(fmt.Sprintf("Start adding permissions %v to user %v", permissions, user))
 	resp, err := sc.resty.R().
 		SetHeader("Content-Type", "application/json").
@@ -487,7 +485,7 @@ func (sc SonarClient) AddPermissionsToUser(user string, permissions string) erro
 	return nil
 }
 
-func (sc SonarClient) AddPermissionsToGroup(groupName string, permissions string) error {
+func (sc Client) AddPermissionsToGroup(groupName string, permissions string) error {
 	log.Info(fmt.Sprintf("Start adding permissions %v to group %v", permissions, groupName))
 	resp, err := sc.resty.R().
 		SetHeader("Content-Type", "application/json").
@@ -507,7 +505,7 @@ func (sc SonarClient) AddPermissionsToGroup(groupName string, permissions string
 	return nil
 }
 
-func (sc SonarClient) GenerateUserToken(userName string) (*string, error) {
+func (sc Client) GenerateUserToken(userName string) (*string, error) {
 	emptyString := ""
 	tokenExist, err := sc.checkUserTokenExist(userName)
 	if err != nil {
@@ -545,7 +543,7 @@ func (sc SonarClient) GenerateUserToken(userName string) (*string, error) {
 	return &token, nil
 }
 
-func (sc SonarClient) checkUserTokenExist(userName string) (bool, error) {
+func (sc Client) checkUserTokenExist(userName string) (bool, error) {
 	resp, err := sc.resty.R().
 		Get(fmt.Sprintf("/user_tokens/search?login=%v", userName))
 	if err != nil {
@@ -570,7 +568,7 @@ func (sc SonarClient) checkUserTokenExist(userName string) (bool, error) {
 	return true, nil
 }
 
-func (sc SonarClient) AddWebhook(webhookName string, webhookUrl string) error {
+func (sc Client) AddWebhook(webhookName string, webhookUrl string) error {
 	webHookExist, err := sc.checkWebhookExist(webhookName)
 	if err != nil {
 		return err
@@ -599,7 +597,7 @@ func (sc SonarClient) AddWebhook(webhookName string, webhookUrl string) error {
 	return nil
 }
 
-func (sc SonarClient) checkWebhookExist(webhookName string) (bool, error) {
+func (sc Client) checkWebhookExist(webhookName string) (bool, error) {
 	resp, err := sc.resty.R().
 		Get("/webhooks/list")
 	if err != nil {
@@ -626,7 +624,7 @@ func (sc SonarClient) checkWebhookExist(webhookName string) (bool, error) {
 }
 
 //TODO(Serhii Shydlovskyi): Current implementation works ONLY for single value setting. Requires effort to generalize it and use for several values simultaneously.
-func (sc SonarClient) ConfigureGeneralSettings(valueType string, key string, value string) error {
+func (sc Client) ConfigureGeneralSettings(valueType string, key string, value string) error {
 	generalSettingsExist, err := sc.checkGeneralSetting(key, value)
 	if err != nil {
 		return err
@@ -656,7 +654,7 @@ func (sc SonarClient) ConfigureGeneralSettings(valueType string, key string, val
 	return nil
 }
 
-func (sc SonarClient) checkGeneralSetting(key string, valueToCheck string) (bool, error) {
+func (sc Client) checkGeneralSetting(key string, valueToCheck string) (bool, error) {
 	resp, err := sc.resty.R().
 		Get("/settings/values")
 	if err != nil || resp.IsError() {
@@ -703,7 +701,7 @@ func checkValue(value interface{}, valueToCheck string) bool {
 	return false
 }
 
-func (sc SonarClient) SetProjectsDefaultVisibility(visibility string) error {
+func (sc Client) SetProjectsDefaultVisibility(visibility string) error {
 	resp, err := sc.resty.R().
 		SetBody(fmt.Sprintf("organization=default-organization&projectVisibility=%v", visibility)).
 		SetHeader("Content-Type", "application/x-www-form-urlencoded").

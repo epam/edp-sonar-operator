@@ -44,3 +44,7 @@ func (in SonarGroup) GetStatus() string {
 func (in *SonarGroup) SetStatus(value string) {
 	in.Status.Value = value
 }
+
+func (in *SonarGroup) SonarOwner() string {
+	return in.Spec.SonarOwner
+}

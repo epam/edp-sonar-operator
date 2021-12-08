@@ -2,12 +2,12 @@ package group
 
 import (
 	"context"
+	"github.com/epam/edp-common/pkg/mock"
 	"testing"
 	"time"
 
 	"github.com/epam/edp-sonar-operator/v2/pkg/apis/edp/v1alpha1"
 	sonarClient "github.com/epam/edp-sonar-operator/v2/pkg/client/sonar"
-	"github.com/epam/edp-sonar-operator/v2/pkg/helper"
 	"github.com/epam/edp-sonar-operator/v2/pkg/service/sonar"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -17,6 +17,8 @@ import (
 )
 
 func TestNewReconcile(t *testing.T) {
+	tm := metav1.Time{Time: time.Now()}
+
 	sg := v1alpha1.SonarGroup{
 		Spec: v1alpha1.SonarGroupSpec{
 			SonarOwner:  "sonar",
@@ -25,10 +27,11 @@ func TestNewReconcile(t *testing.T) {
 		},
 		Status: v1alpha1.SonarGroupStatus{ID: "id1"},
 		TypeMeta: metav1.TypeMeta{
-			Kind: "SonarGroup",
+			Kind:       "SonarGroup",
+			APIVersion: "v2.edp.epam.com/v1alpha1",
 		},
 		ObjectMeta: metav1.ObjectMeta{Name: "sg1", Namespace: "ns1",
-			DeletionTimestamp: &metav1.Time{Time: time.Now()}},
+			DeletionTimestamp: &tm},
 	}
 
 	sn := v1alpha1.Sonar{
@@ -42,7 +45,7 @@ func TestNewReconcile(t *testing.T) {
 	}
 	rq := reconcile.Request{NamespacedName: types.NamespacedName{Namespace: sg.Namespace, Name: sg.Name}}
 	fakeCl := fake.NewClientBuilder().WithScheme(scheme).WithRuntimeObjects(&sg, &sn).Build()
-	l := helper.Logger{}
+	l := mock.Logger{}
 	rec, err := NewReconcile(fakeCl, scheme, &l, "kubernetes")
 	if err != nil {
 		t.Fatal(err)
@@ -52,7 +55,8 @@ func TestNewReconcile(t *testing.T) {
 	rec.service = &serviceMock
 	clientMock := sonar.ClientMock{}
 
-	serviceMock.On("InitSonarClient", &sn, false).Return(&clientMock, nil)
+	serviceMock.On("ClientForChild").Return(&clientMock, nil)
+	serviceMock.On("DeleteResource").Return(true, nil)
 	clientMock.On("GetGroup", sg.Spec.Name).Return(&sonarClient.Group{}, nil).Once()
 	clientMock.On("UpdateGroup", sg.Spec.Name,
 		&sonarClient.Group{Name: sg.Spec.Name, Description: sg.Spec.Description}).Return(nil).Once()

@@ -17,7 +17,7 @@ type groupSearchResponse struct {
 	Groups []Group `json:"groups"`
 }
 
-func (sc *SonarClient) SearchGroups(ctx context.Context, groupName string) ([]Group, error) {
+func (sc *Client) SearchGroups(ctx context.Context, groupName string) ([]Group, error) {
 	var groupResponse groupSearchResponse
 	rsp, err := sc.startRequest(ctx).SetResult(&groupResponse).
 		Get(fmt.Sprintf("/user_groups/search?q=%s&f=name", groupName))
@@ -29,7 +29,7 @@ func (sc *SonarClient) SearchGroups(ctx context.Context, groupName string) ([]Gr
 	return groupResponse.Groups, nil
 }
 
-func (sc SonarClient) GetGroup(ctx context.Context, groupName string) (*Group, error) {
+func (sc Client) GetGroup(ctx context.Context, groupName string) (*Group, error) {
 	groups, err := sc.SearchGroups(ctx, groupName)
 	if err != nil {
 		return nil, errors.Wrap(err, "unable to search for groups")
@@ -48,7 +48,7 @@ type createGroupResponse struct {
 	Group Group `json:"group"`
 }
 
-func (sc *SonarClient) CreateGroup(ctx context.Context, gr *Group) error {
+func (sc *Client) CreateGroup(ctx context.Context, gr *Group) error {
 	var createGroupRsp createGroupResponse
 
 	rsp, err := sc.startRequest(ctx).SetResult(&createGroupRsp).SetFormData(map[string]string{
@@ -63,7 +63,7 @@ func (sc *SonarClient) CreateGroup(ctx context.Context, gr *Group) error {
 	return nil
 }
 
-func (sc *SonarClient) UpdateGroup(ctx context.Context, currentName string, group *Group) error {
+func (sc *Client) UpdateGroup(ctx context.Context, currentName string, group *Group) error {
 	rqParams := map[string]string{
 		"currentName": currentName,
 		"description": group.Description,
@@ -81,7 +81,7 @@ func (sc *SonarClient) UpdateGroup(ctx context.Context, currentName string, grou
 	return nil
 }
 
-func (sc *SonarClient) DeleteGroup(ctx context.Context, groupName string) error {
+func (sc *Client) DeleteGroup(ctx context.Context, groupName string) error {
 	rsp, err := sc.startRequest(ctx).SetFormData(map[string]string{
 		"name": groupName,
 	}).Post("/user_groups/delete")

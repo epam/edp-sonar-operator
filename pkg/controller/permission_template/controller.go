@@ -1,4 +1,4 @@
-package group
+package permission_template
 
 import (
 	"context"
@@ -21,7 +21,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 )
 
-const finalizer = "sonar.group.operator"
+const finalizer = "sonar.permission_template.operator"
 
 type Reconcile struct {
 	service sonar.SonarService
@@ -38,21 +38,21 @@ func NewReconcile(client client.Client, scheme *runtime.Scheme, log logr.Logger,
 	return &Reconcile{
 		service: sonar.NewSonarService(ps, client, scheme),
 		client:  client,
-		log:     log.WithName("sonar-group"),
+		log:     log.WithName("permission-template"),
 	}, nil
 }
 
 func (r *Reconcile) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).
-		For(&sonarApi.SonarGroup{}, builder.WithPredicates(predicate.Funcs{
+		For(&sonarApi.SonarPermissionTemplate{}, builder.WithPredicates(predicate.Funcs{
 			UpdateFunc: isSpecUpdated,
 		})).
 		Complete(r)
 }
 
 func isSpecUpdated(e event.UpdateEvent) bool {
-	oo := e.ObjectOld.(*sonarApi.SonarGroup)
-	no := e.ObjectNew.(*sonarApi.SonarGroup)
+	oo := e.ObjectOld.(*sonarApi.SonarPermissionTemplate)
+	no := e.ObjectNew.(*sonarApi.SonarPermissionTemplate)
 
 	return !reflect.DeepEqual(oo.Spec, no.Spec) ||
 		(oo.GetDeletionTimestamp().IsZero() && !no.GetDeletionTimestamp().IsZero())
@@ -60,23 +60,23 @@ func isSpecUpdated(e event.UpdateEvent) bool {
 
 func (r *Reconcile) Reconcile(ctx context.Context, request reconcile.Request) (result reconcile.Result, resultErr error) {
 	log := r.log.WithValues("Request.Namespace", request.Namespace, "Request.Name", request.Name)
-	log.Info("Reconciling SonarGroup")
+	log.Info("Reconciling SonarPermissionTemplate")
 
-	var instance sonarApi.SonarGroup
+	var instance sonarApi.SonarPermissionTemplate
 	if err := r.client.Get(ctx, request.NamespacedName, &instance); err != nil {
 		if k8sErrors.IsNotFound(err) {
 			log.Info("instance not found")
 			return
 		}
 
-		resultErr = errors.Wrap(err, "unable to get sonar group from k8s")
+		resultErr = errors.Wrap(err, "unable to get sonar permission tpl from k8s")
 		return
 	}
 
 	if err := r.tryReconcile(ctx, &instance); err != nil {
 		instance.Status.Value = err.Error()
 		result.RequeueAfter = helper.SetFailureCount(&instance)
-		log.Error(err, "an error has occurred while handling sonar group", "name",
+		log.Error(err, "an error has occurred while handling keycloak realm idp", "name",
 			request.Name)
 	} else {
 		helper.SetSuccessStatus(&instance)
@@ -90,40 +90,78 @@ func (r *Reconcile) Reconcile(ctx context.Context, request reconcile.Request) (r
 	return
 }
 
-func (r *Reconcile) tryReconcile(ctx context.Context, instance *sonarApi.SonarGroup) error {
+func (r *Reconcile) tryReconcile(ctx context.Context, instance *sonarApi.SonarPermissionTemplate) error {
 	sClient, err := r.service.ClientForChild(ctx, instance)
 	if err != nil {
 		return errors.Wrap(err, "unable to init sonar rest client")
 	}
 
-	_, err = sClient.GetGroup(ctx, instance.Spec.Name)
+	_, err = sClient.GetPermissionTemplate(ctx, instance.Spec.Name)
 	if sonarClient.IsErrNotFound(err) {
-		sonarGroup := sonarClient.Group{Name: instance.Spec.Name, Description: instance.Spec.Description}
-		if err := sClient.CreateGroup(ctx, &sonarGroup); err != nil {
-			return errors.Wrap(err, "unable to create sonar group")
+		sonarPermTpl := specToClientTemplate(&instance.Spec)
+
+		if err := sClient.CreatePermissionTemplate(ctx, sonarPermTpl); err != nil {
+			return errors.Wrap(err, "unable to create sonar permission template")
 		}
-		instance.Status.ID = sonarGroup.ID
+		instance.Status.ID = sonarPermTpl.ID
 	} else if err != nil {
-		return errors.Wrap(err, "unexpected error during get group")
+		return errors.Wrap(err, "unexpected error during get sonar permission template")
 	} else {
 		if instance.Status.ID == "" {
-			return errors.New("group already exists in sonar")
+			return errors.New("permission template already exists in sonar")
 		}
 
-		if err := sClient.UpdateGroup(ctx, instance.Spec.Name, &sonarClient.Group{Name: instance.Spec.Name,
-			Description: instance.Spec.Description}); err != nil {
+		tpl := specToClientTemplate(&instance.Spec)
+		tpl.ID = instance.Status.ID
+
+		if err := sClient.UpdatePermissionTemplate(ctx, tpl); err != nil {
 			return errors.Wrap(err, "unable to update group")
 		}
 	}
 
+	if err := syncPermissionTemplateGroups(ctx, instance, sClient); err != nil {
+		return errors.Wrap(err, "unable to sync permission template groups")
+	}
+
 	if _, err := r.service.DeleteResource(ctx, instance, finalizer, func() error {
-		if err := sClient.DeleteGroup(ctx, instance.Spec.Name); err != nil {
-			return errors.Wrap(err, "unable to delete group")
+		if err := sClient.DeletePermissionTemplate(ctx, instance.Status.ID); err != nil {
+			return errors.Wrap(err, "unable to delete permission template")
 		}
 
 		return nil
 	}); err != nil {
 		return errors.Wrap(err, "unable to delete resource")
+	}
+
+	return nil
+}
+
+func specToClientTemplate(spec *sonarApi.SonarPermissionTemplateSpec) *sonarClient.PermissionTemplate {
+	return &sonarClient.PermissionTemplate{Name: spec.Name, Description: spec.Description,
+		ProjectKeyPattern: spec.ProjectKeyPattern}
+}
+
+func syncPermissionTemplateGroups(ctx context.Context, instance *sonarApi.SonarPermissionTemplate,
+	sClient sonar.ClientInterface) error {
+	groups, err := sClient.GetPermissionTemplateGroups(ctx, instance.Status.ID)
+	if err != nil {
+		return errors.Wrap(err, "unable to get permission template groups")
+	}
+
+	for _, g := range groups {
+		if err := sClient.RemoveGroupFromPermissionTemplate(ctx, &g); err != nil {
+			return errors.Wrap(err, "unable to remote group from permission template")
+		}
+	}
+
+	for _, g := range instance.Spec.GroupPermissions {
+		if err := sClient.AddGroupToPermissionTemplate(ctx, &sonarClient.PermissionTemplateGroup{
+			GroupName:   g.GroupName,
+			TemplateID:  instance.Status.ID,
+			Permissions: g.Permissions,
+		}); err != nil {
+			return errors.Wrap(err, "unable to add group to permission template")
+		}
 	}
 
 	return nil

@@ -4,13 +4,13 @@ import (
 	"flag"
 	"os"
 
-	"github.com/epam/edp-sonar-operator/v2/pkg/controller/group"
-
 	buildInfo "github.com/epam/edp-common/pkg/config"
 	edpCompApi "github.com/epam/edp-component-operator/pkg/apis/v1/v1alpha1"
 	jenkinsApi "github.com/epam/edp-jenkins-operator/v2/pkg/apis/v2/v1alpha1"
 	keycloakApi "github.com/epam/edp-keycloak-operator/pkg/apis/v1/v1alpha1"
 	sonarApi "github.com/epam/edp-sonar-operator/v2/pkg/apis/edp/v1alpha1"
+	"github.com/epam/edp-sonar-operator/v2/pkg/controller/group"
+	"github.com/epam/edp-sonar-operator/v2/pkg/controller/permission_template"
 	"github.com/epam/edp-sonar-operator/v2/pkg/controller/sonar"
 	"github.com/epam/edp-sonar-operator/v2/pkg/helper"
 	"k8s.io/apimachinery/pkg/api/meta"
@@ -123,6 +123,18 @@ func main() {
 
 	if err := sonarCtrl.SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "sonar")
+		os.Exit(1)
+	}
+
+	permTplCtrl, err := permission_template.NewReconcile(mgr.GetClient(), mgr.GetScheme(), ctrlLog,
+		helper.GetPlatformTypeEnv())
+	if err != nil {
+		setupLog.Error(err, "unable to create controller", "controller", "permission-template")
+		os.Exit(1)
+	}
+
+	if err := permTplCtrl.SetupWithManager(mgr); err != nil {
+		setupLog.Error(err, "unable to create controller", "controller", "permission-template")
 		os.Exit(1)
 	}
 

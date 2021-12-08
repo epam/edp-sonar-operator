@@ -84,3 +84,45 @@ func (c *ClientMock) UpdateGroup(ctx context.Context, currentName string, group 
 func (c *ClientMock) DeleteGroup(ctx context.Context, groupName string) error {
 	return c.Called(groupName).Error(0)
 }
+
+func (c *ClientMock) AddGroupToPermissionTemplate(ctx context.Context, permGroup *sonar.PermissionTemplateGroup) error {
+	return c.Called(permGroup).Error(0)
+}
+
+func (c *ClientMock) CreatePermissionTemplate(ctx context.Context, tpl *sonar.PermissionTemplate) error {
+	return c.Called(tpl).Error(0)
+}
+
+func (c *ClientMock) UpdatePermissionTemplate(ctx context.Context, tpl *sonar.PermissionTemplate) error {
+	return c.Called(tpl).Error(0)
+}
+
+func (c *ClientMock) DeletePermissionTemplate(ctx context.Context, id string) error {
+	return c.Called(id).Error(0)
+}
+
+func (c *ClientMock) SearchPermissionTemplates(ctx context.Context, name string) ([]sonar.PermissionTemplate, error) {
+	panic("not implemented")
+}
+
+func (c *ClientMock) GetPermissionTemplate(ctx context.Context, name string) (*sonar.PermissionTemplate, error) {
+	called := c.Called(name)
+	if err := called.Error(1); err != nil {
+		return nil, err
+	}
+
+	return called.Get(0).(*sonar.PermissionTemplate), nil
+}
+
+func (c *ClientMock) GetPermissionTemplateGroups(ctx context.Context, templateID string) ([]sonar.PermissionTemplateGroup, error) {
+	called := c.Called(templateID)
+	if err := called.Error(1); err != nil {
+		return nil, err
+	}
+
+	return called.Get(0).([]sonar.PermissionTemplateGroup), nil
+}
+
+func (c *ClientMock) RemoveGroupFromPermissionTemplate(ctx context.Context, permGroup *sonar.PermissionTemplateGroup) error {
+	return c.Called(permGroup).Error(0)
+}

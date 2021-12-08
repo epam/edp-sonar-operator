@@ -9,6 +9,8 @@ import (
 	"log"
 	"os"
 
+	"github.com/epam/edp-keycloak-operator/pkg/controller/helper"
+
 	"github.com/dchest/uniuri"
 	jenkinsApi "github.com/epam/edp-jenkins-operator/v2/pkg/apis/v2/v1alpha1"
 	platformHelper "github.com/epam/edp-jenkins-operator/v2/pkg/service/platform/helper"
@@ -51,15 +53,25 @@ const (
 	jenkinsDefaultScriptConfigMapKey = "context"
 )
 
-type Client struct {
-}
-
 type SonarService interface {
 	Configure(ctx context.Context, instance v1alpha1.Sonar) (*v1alpha1.Sonar, error, bool)
 	ExposeConfiguration(instance v1alpha1.Sonar) (*v1alpha1.Sonar, error)
 	Integration(instance v1alpha1.Sonar) (*v1alpha1.Sonar, error)
 	IsDeploymentReady(instance v1alpha1.Sonar) (bool, error)
 	InitSonarClient(instance *v1alpha1.Sonar, defaultPassword bool) (ClientInterface, error)
+	ClientForChild(ctx context.Context, instance ChildInstance) (ClientInterface, error)
+	DeleteResource(ctx context.Context, instance Deletable, finalizer string,
+		deleteFunc func() error) (bool, error)
+}
+
+type ChildInstance interface {
+	SonarOwner() string
+	GetNamespace() string
+}
+
+type Deletable interface {
+	v1.Object
+	runtime.Object
 }
 
 func NewSonarService(platformService platform.PlatformService, k8sClient client.Client, k8sScheme *runtime.Scheme) SonarService {
@@ -73,9 +85,55 @@ type SonarServiceImpl struct {
 	k8sScheme       *runtime.Scheme
 }
 
-func (s SonarServiceImpl) InitSonarClient(instance *v1alpha1.Sonar, defaultPassword bool) (ClientInterface, error) {
-	sc := &sonar.SonarClient{}
+func (s SonarServiceImpl) ClientForChild(ctx context.Context, instance ChildInstance) (ClientInterface, error) {
+	var rootSonar v1alpha1.Sonar
+	if err := s.k8sClient.Get(ctx, types.NamespacedName{Namespace: instance.GetNamespace(), Name: instance.SonarOwner()},
+		&rootSonar); err != nil {
+		return nil, errors.Wrap(err, "unable to get root sonar instance")
+	}
 
+	sClient, err := s.InitSonarClient(&rootSonar, false)
+	if err != nil {
+		return nil, errors.Wrap(err, "unable to init sonar rest client")
+	}
+
+	return sClient, nil
+}
+
+func (s SonarServiceImpl) DeleteResource(ctx context.Context, instance Deletable, finalizer string,
+	deleteFunc func() error) (bool, error) {
+	finalizers := instance.GetFinalizers()
+
+	if instance.GetDeletionTimestamp().IsZero() {
+		if !helper.ContainsString(finalizers, finalizer) {
+			finalizers = append(finalizers, finalizer)
+			instance.SetFinalizers(finalizers)
+
+			if err := s.k8sClient.Update(ctx, instance); err != nil {
+				return false, errors.Wrap(err, "unable to update deletable object")
+			}
+		}
+
+		return false, nil
+	}
+
+	if err := deleteFunc(); err != nil {
+		return false, errors.Wrap(err, "unable to delete resource")
+	}
+
+	if helper.ContainsString(finalizers, finalizer) {
+		finalizers = helper.RemoveString(finalizers, finalizer)
+		instance.SetFinalizers(finalizers)
+
+		if err := s.k8sClient.Update(ctx, instance); err != nil {
+			return false, errors.Wrap(err, "unable to update realm role cr")
+		}
+	}
+
+	return true, nil
+}
+
+func (s SonarServiceImpl) InitSonarClient(instance *v1alpha1.Sonar, defaultPassword bool) (ClientInterface, error) {
 	password := DefaultPassword
 	if !defaultPassword {
 		adminSecretName := fmt.Sprintf("%v-admin-password", instance.Name)
@@ -91,12 +149,7 @@ func (s SonarServiceImpl) InitSonarClient(instance *v1alpha1.Sonar, defaultPassw
 		return nil, errors.Wrapf(err, "Unable to get route for %v", instance.Name)
 	}
 
-	err = sc.InitNewRestClient(fmt.Sprintf("%v/api", *u), "admin", password)
-	if err != nil {
-		return nil, errors.Wrap(err, "Failed to init new Sonar client!")
-	}
-
-	return sc, nil
+	return sonar.InitNewRestClient(fmt.Sprintf("%v/api", *u), "admin", password), nil
 }
 
 func (s SonarServiceImpl) Integration(instance v1alpha1.Sonar) (*v1alpha1.Sonar, error) {

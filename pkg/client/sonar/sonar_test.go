@@ -7,24 +7,17 @@ import (
 )
 
 const (
-	url                 = "https://sonar-mr-1944-1-edp-cicd.delivery.aws.main.edp.projects.epam.com/api"
-	username            = "admin"
 	jenkinsUsername     = "kostenko"
 	jenkinsUserLogin    = "jenkins"
 	jenkinsUserpassword = "password"
 	groupName           = "non-interactive-users"
-	token               = ""
 	webhookName         = "jenkins"
 	defaultProfileName  = "Sonar way"
 )
 
 //TODO: refactor all tests, replace logger with t.Fatal
 func TestExampleConfiguration_checkProfileExist(t *testing.T) {
-	cs := SonarClient{}
-	err := cs.InitNewRestClient(url, username, token)
-	if err != nil {
-		logger.Print(err)
-	}
+	cs := InitNewRestClient("", "", "")
 
 	exist, result, _, err := cs.checkProfileExist(defaultProfileName)
 	if err != nil {
@@ -35,76 +28,52 @@ func TestExampleConfiguration_checkProfileExist(t *testing.T) {
 }
 
 func TestExampleConfiguration_CreateGroup(t *testing.T) {
-	cs := SonarClient{}
-	err := cs.InitNewRestClient(url, username, token)
-	if err != nil {
-		logger.Print(err)
-	}
+	cs := InitNewRestClient("", "", "")
 
-	err = cs.CreateGroup(context.Background(), &Group{Name: groupName})
+	err := cs.CreateGroup(context.Background(), &Group{Name: groupName})
 	if err != nil {
 		logger.Print(err)
 	}
 }
 
 func TestExampleConfiguration_AddUserToGroup(t *testing.T) {
-	cs := SonarClient{}
-	err := cs.InitNewRestClient(url, username, token)
-	if err != nil {
-		logger.Print(err)
-	}
+	cs := InitNewRestClient("", "", "")
 
-	err = cs.AddUserToGroup(groupName, "jenkins")
+	err := cs.AddUserToGroup(groupName, "jenkins")
 	if err != nil {
 		logger.Print(err)
 	}
 }
 
 func TestExampleConfiguration_AddPermissionsToUser(t *testing.T) {
-	cs := SonarClient{}
-	err := cs.InitNewRestClient(url, username, token)
-	if err != nil {
-		logger.Print(err)
-	}
+	cs := InitNewRestClient("", "", "")
 
-	err = cs.AddPermissionsToUser(jenkinsUsername, "admin")
+	err := cs.AddPermissionsToUser(jenkinsUsername, "admin")
 	if err != nil {
 		logger.Print(err)
 	}
 }
 
 func TestExampleConfiguration_AddPermissionsToGroup(t *testing.T) {
-	cs := SonarClient{}
-	err := cs.InitNewRestClient(url, username, token)
-	if err != nil {
-		logger.Print(err)
-	}
+	cs := InitNewRestClient("", "", "")
 
-	err = cs.AddPermissionsToGroup(groupName, "scan")
+	err := cs.AddPermissionsToGroup(groupName, "scan")
 	if err != nil {
 		logger.Print(err)
 	}
 }
 
 func TestExampleConfiguration_CreateUser(t *testing.T) {
-	cs := SonarClient{}
-	err := cs.InitNewRestClient(url, username, "password")
-	if err != nil {
-		logger.Print(err)
-	}
+	cs := InitNewRestClient("", "", "")
 
-	err = cs.CreateUser(jenkinsUserLogin, jenkinsUsername, jenkinsUserpassword)
+	err := cs.CreateUser(jenkinsUserLogin, jenkinsUsername, jenkinsUserpassword)
 	if err != nil {
 		logger.Print(err)
 	}
 }
 
 func TestExampleConfiguration_CheckUserToken(t *testing.T) {
-	sc := SonarClient{}
-	err := sc.InitNewRestClient(url, username, token)
-	if err != nil {
-		logger.Print(err)
-	}
+	sc := InitNewRestClient("", "", "")
 
 	exist, err := sc.checkUserTokenExist(jenkinsUsername)
 	if err != nil {
@@ -115,11 +84,7 @@ func TestExampleConfiguration_CheckUserToken(t *testing.T) {
 }
 
 func TestExampleConfiguration_checkWebhook(t *testing.T) {
-	sc := SonarClient{}
-	err := sc.InitNewRestClient(url, username, token)
-	if err != nil {
-		logger.Print(err)
-	}
+	sc := InitNewRestClient("", "", "")
 
 	exist, err := sc.checkWebhookExist(webhookName)
 	if err != nil {
