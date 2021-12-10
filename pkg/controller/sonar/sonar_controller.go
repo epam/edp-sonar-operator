@@ -154,7 +154,7 @@ func (r *ReconcileSonar) Reconcile(ctx context.Context, request reconcile.Reques
 		}
 	}
 
-	instance, err = r.service.ExposeConfiguration(*instance)
+	instance, err = r.service.ExposeConfiguration(ctx, *instance)
 	if err != nil {
 		return reconcile.Result{RequeueAfter: 10 * time.Second}, errors.Wrapf(err, "Exposing configuration failed")
 	}

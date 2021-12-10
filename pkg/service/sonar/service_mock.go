@@ -15,7 +15,7 @@ func (s *ServiceMock) Configure(ctx context.Context, instance v1alpha1.Sonar) (*
 	panic("not implemented")
 }
 
-func (s *ServiceMock) ExposeConfiguration(instance v1alpha1.Sonar) (*v1alpha1.Sonar, error) {
+func (s *ServiceMock) ExposeConfiguration(ctx context.Context, instance v1alpha1.Sonar) (*v1alpha1.Sonar, error) {
 	panic("not implemented")
 }
 

@@ -24,8 +24,26 @@ func (c *ClientMock) GenerateUserToken(userName string) (*string, error) {
 	panic("not implemented")
 }
 
-func (c *ClientMock) CreateUser(login string, name string, password string) error {
-	panic("not implemented")
+func (c *ClientMock) CreateUser(ctx context.Context, u *sonar.User) error {
+	return c.Called(u).Error(0)
+}
+
+func (c *ClientMock) GetUser(ctx context.Context, userName string) (*sonar.User, error) {
+	called := c.Called(userName)
+	if err := called.Error(1); err != nil {
+		return nil, err
+	}
+
+	return called.Get(0).(*sonar.User), nil
+}
+
+func (c *ClientMock) GetUserToken(ctx context.Context, userLogin, tokenName string) (*sonar.UserToken, error) {
+	called := c.Called(userLogin, tokenName)
+	if err := called.Error(1); err != nil {
+		return nil, err
+	}
+
+	return called.Get(0).(*sonar.UserToken), nil
 }
 
 func (c *ClientMock) CreateQualityGate(qgName string, conditions []map[string]string) (*string, error) {

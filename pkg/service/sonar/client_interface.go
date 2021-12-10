@@ -8,21 +8,27 @@ import (
 )
 
 type ClientInterface interface {
+	AddWebhook(webhookName string, webhookUrl string) error
 	ConfigureGeneralSettings(valueType string, key string, value string) error
-	AddUserToGroup(groupName string, user string) error
-	GenerateUserToken(userName string) (*string, error)
-	CreateUser(login string, name string, password string) error
 	CreateQualityGate(qgName string, conditions []map[string]string) (*string, error)
 	InstallPlugins(plugins []string) error
-	AddWebhook(webhookName string, webhookUrl string) error
 	SetProjectsDefaultVisibility(visibility string) error
-	AddPermissionsToUser(user string, permissions string) error
-	WaitForStatusIsUp(retryCount int, timeout time.Duration) error
-	ChangePassword(user string, oldPassword string, newPassword string) error
 	UploadProfile(profileName string, profilePath string) (*string, error)
+	WaitForStatusIsUp(retryCount int, timeout time.Duration) error
 
+	User
 	Group
 	PermissionTemplate
+}
+
+type User interface {
+	AddPermissionsToUser(user string, permissions string) error
+	AddUserToGroup(groupName string, user string) error
+	ChangePassword(user string, oldPassword string, newPassword string) error
+	CreateUser(ctx context.Context, u *sonar.User) error
+	GenerateUserToken(userName string) (*string, error)
+	GetUser(ctx context.Context, userName string) (*sonar.User, error)
+	GetUserToken(ctx context.Context, userLogin, tokenName string) (*sonar.UserToken, error)
 }
 
 type Group interface {

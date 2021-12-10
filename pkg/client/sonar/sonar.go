@@ -405,43 +405,6 @@ func (sc Client) setDefaultProfile(language string, profileName string) error {
 	return nil
 }
 
-func (sc *Client) CreateUser(login string, name string, password string) error {
-	resp, err := sc.resty.R().
-		Get("/users/search?q=" + login)
-
-	if err != nil {
-		return err
-	}
-
-	var raw map[string][]map[string]interface{}
-	err = json.Unmarshal(resp.Body(), &raw)
-	if err != nil {
-		return errors.Wrapf(err, "cant unmarshal %s", resp.Body())
-	}
-
-	for _, v := range raw["users"] {
-		if v["login"] == login {
-			return nil
-		}
-	}
-
-	resp, err = sc.resty.R().
-		SetBody("login="+login+"&name="+name+"&password="+password).
-		SetHeader("Content-Type", "application/x-www-form-urlencoded").
-		Post("/users/create")
-
-	if err != nil {
-		return errors.Wrap(err, "Failed to send user creation request to Sonar!")
-	}
-	if resp.IsError() {
-		errMsg := fmt.Sprintf("Failed to create user %s. Response code: %v", login, resp.StatusCode())
-		return errors.New(errMsg)
-	}
-
-	log.Info(fmt.Sprintf("User %s has been created", login))
-	return nil
-}
-
 func (sc Client) AddUserToGroup(groupName string, user string) error {
 	log.Info(fmt.Sprintf("Start adding user %v to group %v in Sonar", user, groupName))
 	resp, err := sc.resty.R().
@@ -507,14 +470,6 @@ func (sc Client) AddPermissionsToGroup(groupName string, permissions string) err
 
 func (sc Client) GenerateUserToken(userName string) (*string, error) {
 	emptyString := ""
-	tokenExist, err := sc.checkUserTokenExist(userName)
-	if err != nil {
-		return nil, err
-	}
-
-	if tokenExist {
-		return nil, nil
-	}
 
 	log.Info(fmt.Sprintf("Start generating token for user %v in Sonar", userName))
 	resp, err := sc.resty.R().
@@ -541,31 +496,6 @@ func (sc Client) GenerateUserToken(userName string) (*string, error) {
 	token := rawResponse["token"]
 
 	return &token, nil
-}
-
-func (sc Client) checkUserTokenExist(userName string) (bool, error) {
-	resp, err := sc.resty.R().
-		Get(fmt.Sprintf("/user_tokens/search?login=%v", userName))
-	if err != nil {
-		return false, errors.Wrap(err, "Failed to send request to check user token existence!")
-	}
-
-	if resp.IsError() {
-		errMsg := fmt.Sprintf("Failed to check user token existence for %s! Response code - %v", userName, resp.StatusCode())
-		return false, errors.Wrap(err, errMsg)
-	}
-
-	var raw map[string][]map[string]interface{}
-	err = json.Unmarshal(resp.Body(), &raw)
-	if err != nil {
-		return false, errors.Wrapf(err, "cant unmarshal %s", resp.Body())
-	}
-
-	if len(raw["userTokens"]) == 0 {
-		return false, nil
-	}
-
-	return true, nil
 }
 
 func (sc Client) AddWebhook(webhookName string, webhookUrl string) error {

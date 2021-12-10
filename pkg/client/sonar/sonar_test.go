@@ -7,12 +7,10 @@ import (
 )
 
 const (
-	jenkinsUsername     = "kostenko"
-	jenkinsUserLogin    = "jenkins"
-	jenkinsUserpassword = "password"
-	groupName           = "non-interactive-users"
-	webhookName         = "jenkins"
-	defaultProfileName  = "Sonar way"
+	jenkinsUsername    = "kostenko"
+	groupName          = "non-interactive-users"
+	webhookName        = "jenkins"
+	defaultProfileName = "Sonar way"
 )
 
 //TODO: refactor all tests, replace logger with t.Fatal
@@ -61,26 +59,6 @@ func TestExampleConfiguration_AddPermissionsToGroup(t *testing.T) {
 	if err != nil {
 		logger.Print(err)
 	}
-}
-
-func TestExampleConfiguration_CreateUser(t *testing.T) {
-	cs := InitNewRestClient("", "", "")
-
-	err := cs.CreateUser(jenkinsUserLogin, jenkinsUsername, jenkinsUserpassword)
-	if err != nil {
-		logger.Print(err)
-	}
-}
-
-func TestExampleConfiguration_CheckUserToken(t *testing.T) {
-	sc := InitNewRestClient("", "", "")
-
-	exist, err := sc.checkUserTokenExist(jenkinsUsername)
-	if err != nil {
-		logger.Print(err)
-	}
-
-	logger.Println(exist)
 }
 
 func TestExampleConfiguration_checkWebhook(t *testing.T) {
