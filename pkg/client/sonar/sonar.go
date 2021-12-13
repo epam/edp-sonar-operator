@@ -90,8 +90,8 @@ func (sc Client) Reboot() error {
 
 func (sc Client) WaitForStatusIsUp(retryCount int, timeout time.Duration) error {
 	var raw map[string]interface{}
-	resp, err := sc.resty.
-		SetRetryCount(retryCount).
+
+	sc.resty.SetRetryCount(retryCount).
 		SetRetryWaitTime(timeout * time.Second).
 		AddRetryCondition(
 			func(response *resty.Response) (bool, error) {
@@ -108,8 +108,10 @@ func (sc Client) WaitForStatusIsUp(retryCount int, timeout time.Duration) error 
 				}
 				return true, nil
 			},
-		).
-		R().
+		)
+	defer sc.resty.SetRetryCount(0)
+
+	resp, err := sc.resty.R().
 		Get("/system/status")
 	if err != nil {
 		return errors.Wrap(err, "Failed to send request for current Sonar status!")

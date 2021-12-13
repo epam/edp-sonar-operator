@@ -53,7 +53,7 @@ func (sc *Client) UpdatePermissionTemplate(ctx context.Context, tpl *PermissionT
 		"name":              tpl.Name,
 		"description":       tpl.Description,
 		"projectKeyPattern": tpl.ProjectKeyPattern,
-	}).Post("permissions/update_template")
+	}).Post("/permissions/update_template")
 
 	if err := sc.checkError(rsp, err); err != nil {
 		return errors.Wrap(err, "unable to update permission template")

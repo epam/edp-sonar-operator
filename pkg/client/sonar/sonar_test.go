@@ -4,6 +4,7 @@ import (
 	"context"
 	logger "log"
 	"testing"
+	"time"
 )
 
 const (
@@ -70,4 +71,17 @@ func TestExampleConfiguration_checkWebhook(t *testing.T) {
 	}
 
 	logger.Println(exist)
+}
+
+func TestClient_WaitForStatusIsUp(t *testing.T) {
+	sc := InitNewRestClient("", "", "")
+
+	err := sc.WaitForStatusIsUp(1, time.Nanosecond)
+	if err == nil {
+		t.Fatal("no error returned")
+	}
+
+	if sc.resty.RetryCount > 0 {
+		t.Fatal("retry count is changed")
+	}
 }
