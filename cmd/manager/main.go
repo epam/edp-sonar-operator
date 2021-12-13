@@ -115,7 +115,8 @@ func main() {
 
 	ctrlLog := ctrl.Log.WithName("controllers")
 
-	sonarCtrl, err := sonar.NewReconcileSonar(mgr.GetClient(), mgr.GetScheme(), ctrlLog)
+	sonarCtrl, err := sonar.NewReconcileSonar(mgr.GetClient(), mgr.GetScheme(), ctrlLog,
+		helper.GetPlatformTypeEnv())
 	if err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "sonar")
 		os.Exit(1)

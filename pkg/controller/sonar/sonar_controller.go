@@ -6,7 +6,6 @@ import (
 	"time"
 
 	"github.com/dchest/uniuri"
-	"github.com/epam/edp-sonar-operator/v2/pkg/helper"
 	"github.com/epam/edp-sonar-operator/v2/pkg/service/platform"
 	"github.com/epam/edp-sonar-operator/v2/pkg/service/sonar"
 	"github.com/go-logr/logr"
@@ -23,9 +22,6 @@ import (
 )
 
 const (
-	StatusInstall          = "installing"
-	StatusFailed           = "failed"
-	StatusCreated          = "created"
 	StatusConfiguring      = "configuring"
 	StatusConfigured       = "configured"
 	StatusExposeStart      = "exposing configs"
@@ -35,8 +31,8 @@ const (
 	DefaultRequeueTime     = 30
 )
 
-func NewReconcileSonar(client client.Client, scheme *runtime.Scheme, log logr.Logger) (*ReconcileSonar, error) {
-	ps, err := platform.NewService(helper.GetPlatformTypeEnv(), scheme, client)
+func NewReconcileSonar(client client.Client, scheme *runtime.Scheme, log logr.Logger, platformType string) (*ReconcileSonar, error) {
+	ps, err := platform.NewService(platformType, scheme, client)
 	if err != nil {
 		return nil, errors.Wrap(err, "unable to create platform service")
 	}
@@ -93,20 +89,6 @@ func (r *ReconcileSonar) Reconcile(ctx context.Context, request reconcile.Reques
 		return reconcile.Result{}, err
 	}
 
-	if instance.Status.Status == "" || instance.Status.Status == StatusFailed {
-		log.Info("Installation has been started")
-		if err := r.updateStatus(ctx, instance, StatusInstall); err != nil {
-			return reconcile.Result{RequeueAfter: DefaultRequeueTime * time.Second}, err
-		}
-	}
-
-	if instance.Status.Status == StatusInstall {
-		log.Info("Installation has finished")
-		if err := r.updateStatus(ctx, instance, StatusCreated); err != nil {
-			return reconcile.Result{RequeueAfter: DefaultRequeueTime * time.Second}, err
-		}
-	}
-
 	secret, err := r.createDBSecret(instance.Name, instance.Namespace)
 	if err != nil {
 		return reconcile.Result{RequeueAfter: DefaultRequeueTime * time.Second}, err
@@ -122,7 +104,7 @@ func (r *ReconcileSonar) Reconcile(ctx context.Context, request reconcile.Reques
 		return reconcile.Result{RequeueAfter: DefaultRequeueTime * time.Second}, nil
 	}
 
-	if instance.Status.Status == StatusCreated || instance.Status.Status == "" {
+	if instance.Status.Status == "" {
 		log.Info("Configuration has started")
 		err := r.updateStatus(ctx, instance, StatusConfiguring)
 		if err != nil {
