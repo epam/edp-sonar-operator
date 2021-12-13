@@ -23,14 +23,15 @@ type SonarSpec struct {
 	// INSERT ADDITIONAL SPEC FIELDS - desired state of cluster
 	// Important: Run "operator-sdk generate k8s" to regenerate code after modifying this file
 	// Add custom validation using kubebuilder tags: https://book.kubebuilder.io/beyond_basics/generating_crd.html
-	Version          string                           `json:"version"`
-	Image            string                           `json:"image"`
-	InitImage        string                           `json:"initImage"`
-	DBImage          string                           `json:"dbImage"`
-	BasePath         string                           `json:"basePath,omitempty"`
-	Volumes          []SonarVolumes                   `json:"volumes,omitempty"`
-	EdpSpec          EdpSpec                          `json:"edpSpec,omitempty"`
-	ImagePullSecrets []coreV1Api.LocalObjectReference `json:"imagePullSecrets,omitempty"`
+	Version                   string                           `json:"version"`
+	Image                     string                           `json:"image"`
+	InitImage                 string                           `json:"initImage"`
+	DBImage                   string                           `json:"dbImage"`
+	BasePath                  string                           `json:"basePath,omitempty"`
+	Volumes                   []SonarVolumes                   `json:"volumes,omitempty"`
+	EdpSpec                   EdpSpec                          `json:"edpSpec,omitempty"`
+	ImagePullSecrets          []coreV1Api.LocalObjectReference `json:"imagePullSecrets,omitempty"`
+	DefaultPermissionTemplate string                           `json:"defaultPermissionTemplate"`
 }
 
 type EdpSpec struct {

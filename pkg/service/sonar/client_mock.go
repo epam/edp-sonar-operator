@@ -13,7 +13,7 @@ type ClientMock struct {
 }
 
 func (c *ClientMock) ConfigureGeneralSettings(valueType string, key string, value string) error {
-	panic("not implemented")
+	return c.Called(valueType, key, value).Error(0)
 }
 
 func (c *ClientMock) AddUserToGroup(groupName string, user string) error {
@@ -46,12 +46,13 @@ func (c *ClientMock) GetUserToken(ctx context.Context, userLogin, tokenName stri
 	return called.Get(0).(*sonar.UserToken), nil
 }
 
-func (c *ClientMock) CreateQualityGate(qgName string, conditions []map[string]string) (*string, error) {
-	panic("not implemented")
+func (c *ClientMock) CreateQualityGate(qgName string, conditions []map[string]string) (string, error) {
+	called := c.Called(qgName)
+	return called.String(0), called.Error(1)
 }
 
 func (c *ClientMock) InstallPlugins(plugins []string) error {
-	panic("not implemented")
+	return c.Called(plugins).Error(0)
 }
 
 func (c *ClientMock) GetGroup(ctx context.Context, groupName string) (*sonar.Group, error) {
@@ -64,11 +65,11 @@ func (c *ClientMock) GetGroup(ctx context.Context, groupName string) (*sonar.Gro
 }
 
 func (c *ClientMock) AddWebhook(webhookName string, webhookUrl string) error {
-	panic("not implemented")
+	return c.Called(webhookName, webhookUrl).Error(0)
 }
 
 func (c *ClientMock) AddPermissionsToGroup(groupName string, permissions string) error {
-	panic("not implemented")
+	return c.Called(groupName, permissions).Error(0)
 }
 
 func (c *ClientMock) CreateGroup(ctx context.Context, gr *sonar.Group) error {
@@ -87,12 +88,13 @@ func (c *ClientMock) WaitForStatusIsUp(retryCount int, timeout time.Duration) er
 	panic("not implemented")
 }
 
-func (c *ClientMock) ChangePassword(user string, oldPassword string, newPassword string) error {
-	panic("not implemented")
+func (c *ClientMock) ChangePassword(ctx context.Context, user string, oldPassword string, newPassword string) error {
+	return c.Called(user, oldPassword, newPassword).Error(0)
 }
 
-func (c *ClientMock) UploadProfile(profileName string, profilePath string) (*string, error) {
-	panic("not implemented")
+func (c *ClientMock) UploadProfile(profileName string, profilePath string) (string, error) {
+	called := c.Called(profileName)
+	return called.String(0), called.Error(1)
 }
 
 func (c *ClientMock) UpdateGroup(ctx context.Context, currentName string, group *sonar.Group) error {
@@ -143,4 +145,8 @@ func (c *ClientMock) GetPermissionTemplateGroups(ctx context.Context, templateID
 
 func (c *ClientMock) RemoveGroupFromPermissionTemplate(ctx context.Context, permGroup *sonar.PermissionTemplateGroup) error {
 	return c.Called(permGroup).Error(0)
+}
+
+func (c *ClientMock) SetDefaultPermissionTemplate(ctx context.Context, name string) error {
+	return c.Called(name).Error(0)
 }

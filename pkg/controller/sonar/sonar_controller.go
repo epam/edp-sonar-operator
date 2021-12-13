@@ -36,7 +36,7 @@ const (
 )
 
 func NewReconcileSonar(client client.Client, scheme *runtime.Scheme, log logr.Logger) (*ReconcileSonar, error) {
-	ps, err := platform.NewPlatformService(helper.GetPlatformTypeEnv(), scheme, client)
+	ps, err := platform.NewService(helper.GetPlatformTypeEnv(), scheme, client)
 	if err != nil {
 		return nil, errors.Wrap(err, "unable to create platform service")
 	}
@@ -44,7 +44,7 @@ func NewReconcileSonar(client client.Client, scheme *runtime.Scheme, log logr.Lo
 	return &ReconcileSonar{
 		client:   client,
 		scheme:   scheme,
-		service:  sonar.NewSonarService(ps, client, scheme),
+		service:  sonar.NewService(ps, client, scheme),
 		log:      log.WithName("sonar"),
 		platform: ps,
 	}, nil
@@ -53,9 +53,9 @@ func NewReconcileSonar(client client.Client, scheme *runtime.Scheme, log logr.Lo
 type ReconcileSonar struct {
 	client   client.Client
 	scheme   *runtime.Scheme
-	service  sonar.SonarService
+	service  sonar.ServiceInterface
 	log      logr.Logger
-	platform platform.PlatformService
+	platform platform.Service
 }
 
 func (r *ReconcileSonar) SetupWithManager(mgr ctrl.Manager) error {
@@ -111,11 +111,11 @@ func (r *ReconcileSonar) Reconcile(ctx context.Context, request reconcile.Reques
 	if err != nil {
 		return reconcile.Result{RequeueAfter: DefaultRequeueTime * time.Second}, err
 	}
-	if err := r.platform.SetOwnerReference(*instance, secret); err != nil {
+	if err := r.platform.SetOwnerReference(instance, secret); err != nil {
 		return reconcile.Result{RequeueAfter: DefaultRequeueTime * time.Second}, err
 	}
 
-	if dcIsReady, err := r.service.IsDeploymentReady(*instance); err != nil {
+	if dcIsReady, err := r.service.IsDeploymentReady(instance); err != nil {
 		return reconcile.Result{RequeueAfter: DefaultRequeueTime * time.Second}, errors.Wrapf(err, "Checking if Deployment configs is ready has been failed")
 	} else if !dcIsReady {
 		log.Info("Deployment config is not ready for configuration yet")
@@ -130,12 +130,10 @@ func (r *ReconcileSonar) Reconcile(ctx context.Context, request reconcile.Reques
 		}
 	}
 
-	instance, err, isFinished := r.service.Configure(ctx, *instance)
-	if err != nil {
+	if err := r.service.Configure(ctx, instance); err != nil {
 		log.Error(err, "Configuration has failed")
-		return reconcile.Result{RequeueAfter: DefaultRequeueTime * time.Second}, errors.Wrapf(err, "Configuration failed")
-	} else if !isFinished {
-		return reconcile.Result{RequeueAfter: DefaultRequeueTime * time.Second}, nil
+		return reconcile.Result{RequeueAfter: DefaultRequeueTime * time.Second},
+			errors.Wrapf(err, "Configuration failed")
 	}
 
 	if instance.Status.Status == StatusConfiguring {
@@ -154,7 +152,7 @@ func (r *ReconcileSonar) Reconcile(ctx context.Context, request reconcile.Reques
 		}
 	}
 
-	instance, err = r.service.ExposeConfiguration(ctx, *instance)
+	err = r.service.ExposeConfiguration(ctx, instance)
 	if err != nil {
 		return reconcile.Result{RequeueAfter: 10 * time.Second}, errors.Wrapf(err, "Exposing configuration failed")
 	}
@@ -175,7 +173,7 @@ func (r *ReconcileSonar) Reconcile(ctx context.Context, request reconcile.Reques
 		}
 	}
 
-	instance, err = r.service.Integration(*instance)
+	instance, err = r.service.Integration(ctx, *instance)
 	if err != nil {
 		return reconcile.Result{RequeueAfter: 10 * time.Second}, errors.Wrapf(err, "Integration failed")
 	}

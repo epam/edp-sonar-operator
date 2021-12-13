@@ -44,32 +44,31 @@ func (sc *Client) checkError(response *resty.Response, err error) error {
 	}
 
 	if response.IsError() {
-		return errors.Errorf("status: %s, body: %s", response.Status(), response.String())
+		return HTTPError{message: response.String(), code: response.StatusCode()}
 	}
 
 	return nil
 }
 
-func (sc *Client) ChangePassword(user string, oldPassword string, newPassword string) error {
-	resp, err := sc.resty.R().Get("/system/health")
-	if err == nil && resp.IsError() {
-		return nil
-	}
-
-	resp, err = sc.resty.R().
-		SetBody(fmt.Sprintf("login=%v&password=%v&previousPassword=%v", user, newPassword, oldPassword)).
-		SetHeader("Content-Type", "application/x-www-form-urlencoded").
-		Post("/users/change_password")
-
+func (sc *Client) ChangePassword(ctx context.Context, user string, oldPassword string, newPassword string) error {
+	resp, err := sc.startRequest(ctx).Get("/system/health")
 	if err != nil {
-		return errors.Wrap(err, "Failed to send request for password change in Sonar!")
-	}
-	if resp.IsError() {
-		errMsg := fmt.Sprintf("Password changing for user %s unsuccessful. Response - %s", user, resp.Status())
-		return errors.New(errMsg)
+		return errors.Wrap(err, "unable check sonar health")
 	}
 
-	log.Info(fmt.Sprintf("Password for user %v changed successfully", user))
+	if err := sc.checkError(resp, err); err != nil {
+		return errors.Wrap(err, "unable to check sonar health")
+	}
+
+	resp, err = sc.startRequest(ctx).SetFormData(map[string]string{
+		"login":            user,
+		"password":         newPassword,
+		"previousPassword": oldPassword,
+	}).Post("/users/change_password")
+
+	if err := sc.checkError(resp, err); err != nil {
+		return errors.Wrap(err, "unable to change password")
+	}
 
 	return nil
 }
@@ -180,23 +179,22 @@ func (sc Client) GetInstalledPlugins() ([]string, error) {
 	return installedPlugins, nil
 }
 
-func (sc Client) CreateQualityGate(qgName string, conditions []map[string]string) (*string, error) {
-	emptyString := ""
+func (sc Client) CreateQualityGate(qgName string, conditions []map[string]string) (string, error) {
 	qgExist, qgId, isDefault, err := sc.checkQualityGateExist(qgName)
 	if err != nil {
-		return nil, err
+		return "", err
 	}
 
 	if qgExist && isDefault {
-		return &qgId, nil
+		return qgId, nil
 	}
 
 	if qgExist && !isDefault {
 		err = sc.setDefaultQualityGate(qgId)
 		if err != nil {
-			return nil, err
+			return "", err
 		}
-		return &qgId, nil
+		return qgId, nil
 	}
 
 	log.Info(fmt.Sprintf("Creating quality gate %s", qgName))
@@ -205,17 +203,17 @@ func (sc Client) CreateQualityGate(qgName string, conditions []map[string]string
 		SetQueryParams(map[string]string{"name": qgName}).
 		Post("/qualitygates/create")
 	if err != nil {
-		return &emptyString, errors.Wrap(err, "Failed to send request to create quality gates!")
+		return "", errors.Wrap(err, "Failed to send request to create quality gates!")
 	}
 	if resp.IsError() {
 		errMsg := fmt.Sprintf("Creating quality gate %s failed. Response - %s", qgName, resp.Status())
-		return nil, errors.New(errMsg)
+		return "", errors.New(errMsg)
 	}
 
 	var raw map[string]interface{}
 	err = json.Unmarshal(resp.Body(), &raw)
 	if err != nil {
-		return nil, errors.Wrapf(err, "cant unmarshal %s", resp.Body())
+		return "", errors.Wrapf(err, "cant unmarshal %s", resp.Body())
 	}
 	qgId = fmt.Sprintf("%v", raw["id"])
 
@@ -223,17 +221,17 @@ func (sc Client) CreateQualityGate(qgName string, conditions []map[string]string
 		item["gateId"] = qgId
 		err = sc.createCondition(item)
 		if err != nil {
-			return nil, err
+			return "", err
 		}
 	}
 
 	err = sc.setDefaultQualityGate(qgId)
 	if err != nil {
-		return nil, err
+		return "", err
 	}
 
 	log.Info(fmt.Sprintf("Quality gate %s has been created and is set as default", qgName))
-	return &qgId, nil
+	return qgId, nil
 }
 
 func (sc Client) createCondition(conditionMap map[string]string) error {
@@ -303,27 +301,26 @@ func (sc Client) setDefaultQualityGate(qgId string) error {
 	return nil
 }
 
-func (sc Client) UploadProfile(profileName string, profilePath string) (*string, error) {
-	emptyString := ""
+func (sc Client) UploadProfile(profileName string, profilePath string) (string, error) {
 	profileExist, profileId, isDefault, err := sc.checkProfileExist(profileName)
 	if err != nil {
-		return nil, err
+		return "", err
 	}
 
 	if profileExist && isDefault {
-		return &profileId, nil
+		return profileId, nil
 	}
 
 	if profileExist && !isDefault {
 		err = sc.setDefaultProfile("java", profileName)
 		if err != nil {
-			return nil, err
+			return "", err
 		}
-		return &profileId, nil
+		return profileId, nil
 	}
 
 	if !sonarClientHelper.FileExists(profilePath) {
-		return &emptyString, fmt.Errorf("File %s does not exist in path provided: %s !", profileName, profilePath)
+		return "", fmt.Errorf("File %s does not exist in path provided: %s !", profileName, profilePath)
 	}
 
 	log.Info(fmt.Sprintf("Uploading profile %s from path %s", profileName, profilePath))
@@ -332,25 +329,25 @@ func (sc Client) UploadProfile(profileName string, profilePath string) (*string,
 		SetFile("backup", profilePath).
 		Post("/qualityprofiles/restore")
 	if err != nil {
-		return &emptyString, errors.Wrap(err, "Failed to send upload profile request!")
+		return "", errors.Wrap(err, "Failed to send upload profile request!")
 	}
 	if resp.IsError() {
 		errMsg := fmt.Sprintf("Uploading profile %s failed. Response - %s", profileName, resp.Status())
-		return &emptyString, errors.New(errMsg)
+		return "", errors.New(errMsg)
 	}
 
 	_, profileId, _, err = sc.checkProfileExist(profileName)
 	if err != nil {
-		return nil, err
+		return "", err
 	}
 
 	err = sc.setDefaultProfile("java", profileName)
 	if err != nil {
-		return nil, err
+		return "", err
 	}
 
 	log.Info(fmt.Sprintf("Profile %s in Sonar from path %v has been uploaded and is set as default", profileName, profilePath))
-	return &profileId, nil
+	return profileId, nil
 }
 
 func (sc Client) checkProfileExist(requiredProfileName string) (exits bool, profileId string, isDefault bool, error error) {
@@ -574,7 +571,6 @@ func (sc Client) ConfigureGeneralSettings(valueType string, key string, value st
 				valueType: value}).
 		Post("/settings/set")
 	if err != nil {
-		//errMsg := fmt.Sprintf("Failed to configure %s")
 		return errors.Wrap(err, "Failed to send request to configure general settings!")
 	}
 	if resp.IsError() {

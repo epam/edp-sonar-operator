@@ -24,19 +24,19 @@ import (
 const finalizer = "sonar.group.operator"
 
 type Reconcile struct {
-	service sonar.SonarService
+	service sonar.ServiceInterface
 	client  client.Client
 	log     logr.Logger
 }
 
 func NewReconcile(client client.Client, scheme *runtime.Scheme, log logr.Logger, platformType string) (*Reconcile, error) {
-	ps, err := platform.NewPlatformService(platformType, scheme, client)
+	ps, err := platform.NewService(platformType, scheme, client)
 	if err != nil {
 		return nil, errors.Wrap(err, "unable to create platform service")
 	}
 
 	return &Reconcile{
-		service: sonar.NewSonarService(ps, client, scheme),
+		service: sonar.NewService(ps, client, scheme),
 		client:  client,
 		log:     log.WithName("sonar-group"),
 	}, nil

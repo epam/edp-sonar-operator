@@ -11,19 +11,19 @@ type ServiceMock struct {
 	mock.Mock
 }
 
-func (s *ServiceMock) Configure(ctx context.Context, instance v1alpha1.Sonar) (*v1alpha1.Sonar, error, bool) {
+func (s *ServiceMock) Configure(ctx context.Context, instance *v1alpha1.Sonar) error {
 	panic("not implemented")
 }
 
-func (s *ServiceMock) ExposeConfiguration(ctx context.Context, instance v1alpha1.Sonar) (*v1alpha1.Sonar, error) {
+func (s *ServiceMock) ExposeConfiguration(ctx context.Context, instance *v1alpha1.Sonar) error {
 	panic("not implemented")
 }
 
-func (s *ServiceMock) Integration(instance v1alpha1.Sonar) (*v1alpha1.Sonar, error) {
+func (s *ServiceMock) Integration(ctx context.Context, instance v1alpha1.Sonar) (*v1alpha1.Sonar, error) {
 	panic("not implemented")
 }
 
-func (s *ServiceMock) IsDeploymentReady(instance v1alpha1.Sonar) (bool, error) {
+func (s *ServiceMock) IsDeploymentReady(instance *v1alpha1.Sonar) (bool, error) {
 	panic("not implemented")
 }
 

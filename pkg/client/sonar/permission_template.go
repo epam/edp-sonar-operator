@@ -142,3 +142,15 @@ func (sc *Client) RemoveGroupFromPermissionTemplate(ctx context.Context, permGro
 
 	return nil
 }
+
+func (sc *Client) SetDefaultPermissionTemplate(ctx context.Context, name string) error {
+	rsp, err := sc.startRequest(ctx).SetFormData(map[string]string{
+		"templateName": name,
+	}).Post("/permissions/set_default_template")
+
+	if err := sc.checkError(rsp, err); err != nil {
+		return errors.Wrap(err, "unable to set default permission template")
+	}
+
+	return nil
+}

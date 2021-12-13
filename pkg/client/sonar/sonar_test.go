@@ -3,8 +3,11 @@ package sonar
 import (
 	"context"
 	logger "log"
+	"net/http"
 	"testing"
 	"time"
+
+	"github.com/jarcoal/httpmock"
 )
 
 const (
@@ -83,5 +86,32 @@ func TestClient_WaitForStatusIsUp(t *testing.T) {
 
 	if sc.resty.RetryCount > 0 {
 		t.Fatal("retry count is changed")
+	}
+}
+
+func TestClient_ChangePassword(t *testing.T) {
+	sc := initClient()
+
+	httpmock.RegisterResponder("GET", "/system/health", httpmock.NewStringResponder(200, ""))
+	httpmock.RegisterResponder("POST", "/users/change_password", httpmock.NewStringResponder(200, ""))
+
+	if err := sc.ChangePassword(context.Background(), "foo", "bar", "baz"); err != nil {
+		t.Fatal(err)
+	}
+
+	httpmock.RegisterResponder("GET", "/system/health",
+		httpmock.NewStringResponder(http.StatusUnauthorized, ""))
+
+	if err := sc.ChangePassword(context.Background(),
+		"foo", "bar", "baz"); !IsHTTPErrorCode(err, http.StatusUnauthorized) {
+		t.Fatal("no error or wrong type")
+	}
+
+	httpmock.RegisterResponder("GET", "/system/health", httpmock.NewStringResponder(200, ""))
+	httpmock.RegisterResponder("POST", "/users/change_password", httpmock.NewStringResponder(500, ""))
+
+	if err := sc.ChangePassword(context.Background(),
+		"foo", "bar", "baz"); !IsHTTPErrorCode(err, http.StatusInternalServerError) {
+		t.Fatal("no error or wrong type")
 	}
 }

@@ -3,6 +3,9 @@ package openshift
 import (
 	"context"
 	"fmt"
+	"os"
+	"strings"
+
 	"github.com/epam/edp-sonar-operator/v2/pkg/apis/edp/v1alpha1"
 	platformHelper "github.com/epam/edp-sonar-operator/v2/pkg/service/platform/helper"
 	"github.com/epam/edp-sonar-operator/v2/pkg/service/platform/kubernetes"
@@ -16,9 +19,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/client-go/rest"
-	"os"
 	"sigs.k8s.io/controller-runtime/pkg/client"
-	"strings"
 )
 
 type OpenshiftService struct {
@@ -77,26 +78,23 @@ func (service *OpenshiftService) Init(config *rest.Config, scheme *runtime.Schem
 }
 
 // GetExternalEndpoint returns scheme and host name from Openshift
-func (service OpenshiftService) GetExternalEndpoint(namespace string, name string) (*string, error) {
-	r, err := service.routeClient.Routes(namespace).Get(context.TODO(), name, metav1.GetOptions{})
+func (service OpenshiftService) GetExternalEndpoint(ctx context.Context, namespace string, name string) (string, error) {
+	r, err := service.routeClient.Routes(namespace).Get(ctx, name, metav1.GetOptions{})
 	if err != nil && k8serrors.IsNotFound(err) {
-		return nil, errors.Wrapf(err, "Route %v in namespace %v not found", name, namespace)
+		return "", errors.Wrapf(err, "Route %v in namespace %v not found", name, namespace)
 	} else if err != nil {
-		return nil, err
+		return "", err
 	}
 
 	var routeScheme = "http"
 	if r.Spec.TLS.Termination != "" {
 		routeScheme = "https"
 	}
-	p := strings.TrimRight(r.Spec.Path, platformHelper.UrlCutset)
-
-	u := fmt.Sprintf("%v://%v%v", routeScheme, r.Spec.Host, p)
-
-	return &u, nil
+	return fmt.Sprintf("%s://%s%s",
+		routeScheme, r.Spec.Host, strings.TrimRight(r.Spec.Path, platformHelper.UrlCutset)), nil
 }
 
-func (service OpenshiftService) GetAvailiableDeploymentReplicas(instance v1alpha1.Sonar) (*int, error) {
+func (service OpenshiftService) GetAvailableDeploymentReplicas(instance *v1alpha1.Sonar) (*int, error) {
 	if os.Getenv(deploymentTypeEnvName) == deploymentConfigsDeploymentType {
 		c, err := service.appClient.DeploymentConfigs(instance.Namespace).Get(context.TODO(), instance.Name, metav1.GetOptions{})
 		if err != nil {
@@ -107,5 +105,5 @@ func (service OpenshiftService) GetAvailiableDeploymentReplicas(instance v1alpha
 
 		return &r, nil
 	}
-	return service.K8SService.GetAvailiableDeploymentReplicas(instance)
+	return service.K8SService.GetAvailableDeploymentReplicas(instance)
 }

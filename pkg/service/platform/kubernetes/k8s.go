@@ -3,6 +3,8 @@ package kubernetes
 import (
 	"context"
 	"fmt"
+	"strings"
+
 	edpCompApi "github.com/epam/edp-component-operator/pkg/apis/v1/v1alpha1"
 	jenkinsV1Api "github.com/epam/edp-jenkins-operator/v2/pkg/apis/v2/v1alpha1"
 	"github.com/epam/edp-sonar-operator/v2/pkg/apis/edp/v1alpha1"
@@ -21,7 +23,6 @@ import (
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
-	"strings"
 )
 
 var log = ctrl.Log.WithName("platform")
@@ -100,20 +101,17 @@ func (s K8SService) CreateSecret(sonarName, namespace, secretName string, data m
 	return sonarSecretObject, nil
 }
 
-func (s K8SService) GetExternalEndpoint(namespace string, name string) (*string, error) {
-	r, err := s.ExtensionsV1Client.Ingresses(namespace).Get(context.TODO(), name, metav1.GetOptions{})
+func (s K8SService) GetExternalEndpoint(ctx context.Context, namespace string, name string) (string, error) {
+	r, err := s.ExtensionsV1Client.Ingresses(namespace).Get(ctx, name, metav1.GetOptions{})
 	if err != nil {
-		return nil, err
+		return "", err
 	}
 
-	rs := "https"
-	u := fmt.Sprintf("%v://%v%v", rs, r.Spec.Rules[0].Host,
-		strings.TrimRight(r.Spec.Rules[0].HTTP.Paths[0].Path, platformHelper.UrlCutset))
-
-	return &u, nil
+	return fmt.Sprintf("https://%s%s", r.Spec.Rules[0].Host,
+		strings.TrimRight(r.Spec.Rules[0].HTTP.Paths[0].Path, platformHelper.UrlCutset)), nil
 }
 
-func (s K8SService) CreateConfigMap(instance v1alpha1.Sonar, configMapName string, configMapData map[string]string) error {
+func (s K8SService) CreateConfigMap(instance *v1alpha1.Sonar, configMapName string, configMapData map[string]string) error {
 	labels := platformHelper.GenerateLabels(instance.Name)
 	configMapObject := &coreV1Api.ConfigMap{
 		ObjectMeta: metav1.ObjectMeta{
@@ -124,7 +122,7 @@ func (s K8SService) CreateConfigMap(instance v1alpha1.Sonar, configMapName strin
 		Data: configMapData,
 	}
 
-	if err := controllerutil.SetControllerReference(&instance, configMapObject, s.Scheme); err != nil {
+	if err := controllerutil.SetControllerReference(instance, configMapObject, s.Scheme); err != nil {
 		return errors.Wrapf(err, "Couldn't set reference for Config Map %v object", configMapObject.Name)
 	}
 	_, err := s.coreClient.ConfigMaps(instance.Namespace).Get(context.TODO(), configMapObject.Name, metav1.GetOptions{})
@@ -217,7 +215,7 @@ func (s K8SService) getJenkinsServiceAccount(name, namespace string) (*jenkinsV1
 	return jsa, nil
 }
 
-func (s K8SService) GetAvailiableDeploymentReplicas(instance v1alpha1.Sonar) (*int, error) {
+func (s K8SService) GetAvailableDeploymentReplicas(instance *v1alpha1.Sonar) (*int, error) {
 	c, err := s.AppsClient.Deployments(instance.Namespace).Get(context.TODO(), instance.Name, metav1.GetOptions{})
 	if err != nil {
 		return nil, err
@@ -228,7 +226,7 @@ func (s K8SService) GetAvailiableDeploymentReplicas(instance v1alpha1.Sonar) (*i
 	return &r, nil
 }
 
-func (s K8SService) CreateEDPComponentIfNotExist(sonar v1alpha1.Sonar, url string, icon string) error {
+func (s K8SService) CreateEDPComponentIfNotExist(sonar *v1alpha1.Sonar, url string, icon string) error {
 	_, err := s.getEDPComponent(sonar.Name, sonar.Namespace)
 	if err != nil {
 		if k8serr.IsNotFound(err) {
@@ -251,7 +249,7 @@ func (s K8SService) getEDPComponent(name, namespace string) (*edpCompApi.EDPComp
 	return c, nil
 }
 
-func (s K8SService) createEDPComponent(sonar v1alpha1.Sonar, url string, icon string) error {
+func (s K8SService) createEDPComponent(sonar *v1alpha1.Sonar, url string, icon string) error {
 	obj := &edpCompApi.EDPComponent{
 		ObjectMeta: metav1.ObjectMeta{
 			Namespace: sonar.Namespace,
@@ -264,14 +262,14 @@ func (s K8SService) createEDPComponent(sonar v1alpha1.Sonar, url string, icon st
 			Visible: true,
 		},
 	}
-	if err := controllerutil.SetControllerReference(&sonar, obj, s.Scheme); err != nil {
+	if err := controllerutil.SetControllerReference(sonar, obj, s.Scheme); err != nil {
 		return err
 	}
 	return s.client.Create(context.TODO(), obj)
 }
 
-func (s K8SService) SetOwnerReference(sonar v1alpha1.Sonar, object client.Object) error {
-	if err := controllerutil.SetControllerReference(&sonar, object, s.Scheme); err != nil {
+func (s K8SService) SetOwnerReference(sonar *v1alpha1.Sonar, object client.Object) error {
+	if err := controllerutil.SetControllerReference(sonar, object, s.Scheme); err != nil {
 		return err
 	}
 	return nil

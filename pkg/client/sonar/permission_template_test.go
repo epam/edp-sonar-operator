@@ -222,3 +222,24 @@ func TestClient_RemoveGroupFromPermissionTemplate(t *testing.T) {
 		t.Fatalf("wrong error returned: %s", err.Error())
 	}
 }
+
+func TestClient_SetDefaultPermissionTemplate(t *testing.T) {
+	sc := initClient()
+	httpmock.RegisterResponder("POST", "/permissions/set_default_template",
+		httpmock.NewStringResponder(200, ""))
+	if err := sc.SetDefaultPermissionTemplate(context.Background(), "test1"); err != nil {
+		t.Fatal(err)
+	}
+
+	httpmock.RegisterResponder("POST", "/permissions/set_default_template",
+		httpmock.NewStringResponder(500, "set default fatal"))
+
+	err := sc.SetDefaultPermissionTemplate(context.Background(), "test1")
+	if err == nil {
+		t.Fatal("no error returned")
+	}
+
+	if err.Error() != "unable to set default permission template: status: 500, body: set default fatal" {
+		t.Fatalf("wrong err returned: %s", err.Error())
+	}
+}

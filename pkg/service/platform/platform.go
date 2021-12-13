@@ -1,7 +1,10 @@
 package platform
 
 import (
+	"context"
 	"fmt"
+	"strings"
+
 	"github.com/epam/edp-sonar-operator/v2/pkg/apis/edp/v1alpha1"
 	"github.com/epam/edp-sonar-operator/v2/pkg/service/platform/kubernetes"
 	"github.com/epam/edp-sonar-operator/v2/pkg/service/platform/openshift"
@@ -10,7 +13,6 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/client-go/tools/clientcmd"
 	"sigs.k8s.io/controller-runtime/pkg/client"
-	"strings"
 )
 
 const (
@@ -18,19 +20,19 @@ const (
 	Kubernetes string = "kubernetes"
 )
 
-type PlatformService interface {
+type Service interface {
 	CreateSecret(sonarName, namespace, secretName string, data map[string][]byte) (*coreV1Api.Secret, error)
-	GetExternalEndpoint(namespace string, name string) (*string, error)
-	CreateConfigMap(instance v1alpha1.Sonar, configMapName string, configMapData map[string]string) error
-	GetAvailiableDeploymentReplicas(instance v1alpha1.Sonar) (*int, error)
+	GetExternalEndpoint(ctx context.Context, namespace string, name string) (string, error)
+	CreateConfigMap(instance *v1alpha1.Sonar, configMapName string, configMapData map[string]string) error
+	GetAvailableDeploymentReplicas(instance *v1alpha1.Sonar) (*int, error)
 	GetSecretData(namespace string, name string) (map[string][]byte, error)
 	CreateJenkinsServiceAccount(namespace string, secretName string, serviceAccountType string) error
 	CreateJenkinsScript(namespace string, configMap string) error
-	CreateEDPComponentIfNotExist(sonar v1alpha1.Sonar, url string, icon string) error
-	SetOwnerReference(sonar v1alpha1.Sonar, object client.Object) error
+	CreateEDPComponentIfNotExist(sonar *v1alpha1.Sonar, url string, icon string) error
+	SetOwnerReference(sonar *v1alpha1.Sonar, object client.Object) error
 }
 
-func NewPlatformService(platformType string, scheme *runtime.Scheme, client client.Client) (PlatformService, error) {
+func NewService(platformType string, scheme *runtime.Scheme, client client.Client) (Service, error) {
 	config := clientcmd.NewNonInteractiveDeferredLoadingClientConfig(
 		clientcmd.NewDefaultClientConfigLoadingRules(),
 		&clientcmd.ConfigOverrides{},
