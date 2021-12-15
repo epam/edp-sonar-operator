@@ -550,7 +550,8 @@ func (s *Service) configurePassword(ctx context.Context, instance *v1alpha1.Sona
 	}
 
 	err = sc.ChangePassword(ctx, "admin", defaultPassword, string(credentials["password"]))
-	if sonarClient.IsHTTPErrorCode(err, http.StatusUnauthorized) {
+	if sonarClient.IsHTTPErrorCode(err, http.StatusUnauthorized) ||
+		sonarClient.IsHTTPErrorCode(err, http.StatusForbidden) {
 		return nil
 	} else if err != nil {
 		return errors.Wrap(err, "Failed to change password!")

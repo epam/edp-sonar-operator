@@ -83,7 +83,8 @@ func (s K8SService) CreateSecret(sonarName, namespace, secretName string, data m
 		Type: "Opaque",
 	}
 
-	_, err := s.coreClient.Secrets(sonarSecretObject.Namespace).Get(context.TODO(), sonarSecretObject.Name, metav1.GetOptions{})
+	existingSecret, err := s.coreClient.Secrets(sonarSecretObject.Namespace).
+		Get(context.TODO(), sonarSecretObject.Name, metav1.GetOptions{})
 
 	if err != nil {
 		if k8serr.IsNotFound(err) {
@@ -98,7 +99,7 @@ func (s K8SService) CreateSecret(sonarName, namespace, secretName string, data m
 		return nil, err
 	}
 
-	return sonarSecretObject, nil
+	return existingSecret, nil
 }
 
 func (s K8SService) GetExternalEndpoint(ctx context.Context, namespace string, name string) (string, error) {

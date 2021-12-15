@@ -161,7 +161,7 @@ func (sc Client) InstallPlugins(plugins []string) error {
 
 func (sc Client) GetInstalledPlugins() ([]string, error) {
 	resp, err := sc.resty.R().Get("/plugins/installed")
-	if err != nil || resp.IsError() {
+	if err := sc.checkError(resp, err); err != nil {
 		return nil, err
 	}
 
