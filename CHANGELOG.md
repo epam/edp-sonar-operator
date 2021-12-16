@@ -2,8 +2,15 @@
 ## [Unreleased]
 
 
+<a name="v2.10.1"></a>
+## [v2.10.1] - 2021-12-16
+### Bug Fixes
+
+- Upgrade SonarQube to the LTS 8.9.4 version [EPMDEDP-8041](https://jiraeu.epam.com/browse/EPMDEDP-8041)
+
+
 <a name="v2.10.0"></a>
-## [v2.10.0] - 2021-12-06
+## [v2.10.0] - 2021-12-09
 ### Features
 
 - Provide operator's build information [EPMDEDP-7847](https://jiraeu.epam.com/browse/EPMDEDP-7847)
@@ -54,7 +61,8 @@
 <a name="v2.7.0"></a>
 ## [v2.7.0] - 2021-12-03
 
-[Unreleased]: https://github.com/epam/edp-sonar-operator/compare/v2.10.0...HEAD
+[Unreleased]: https://github.com/epam/edp-sonar-operator/compare/v2.10.1...HEAD
+[v2.10.1]: https://github.com/epam/edp-sonar-operator/compare/v2.10.0...v2.10.1
 [v2.10.0]: https://github.com/epam/edp-sonar-operator/compare/v2.9.0...v2.10.0
 [v2.9.0]: https://github.com/epam/edp-sonar-operator/compare/v2.8.0...v2.9.0
 [v2.8.0]: https://github.com/epam/edp-sonar-operator/compare/v2.7.2...v2.8.0
