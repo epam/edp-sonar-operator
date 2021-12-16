@@ -157,7 +157,7 @@ func TestClient_AddGroupToPermissionTemplate(t *testing.T) {
 
 	httpmock.RegisterResponder("POST", "/permissions/add_group_to_template",
 		httpmock.NewStringResponder(200, ""))
-	if err := sc.AddGroupToPermissionTemplate(context.Background(),
+	if err := sc.AddGroupToPermissionTemplate(context.Background(), "tpl1",
 		&PermissionTemplateGroup{GroupName: "test", Permissions: []string{"admin"}}); err != nil {
 		t.Fatal(err)
 	}
@@ -165,7 +165,7 @@ func TestClient_AddGroupToPermissionTemplate(t *testing.T) {
 	httpmock.RegisterResponder("POST", "/permissions/add_group_to_template",
 		httpmock.NewStringResponder(500, "add fatal"))
 
-	err := sc.AddGroupToPermissionTemplate(context.Background(),
+	err := sc.AddGroupToPermissionTemplate(context.Background(), "tpl1",
 		&PermissionTemplateGroup{GroupName: "test", Permissions: []string{"admin"}})
 
 	if err == nil {
@@ -203,7 +203,7 @@ func TestClient_RemoveGroupFromPermissionTemplate(t *testing.T) {
 
 	httpmock.RegisterResponder("POST", "/permissions/remove_group_from_template",
 		httpmock.NewStringResponder(200, ""))
-	if err := sc.RemoveGroupFromPermissionTemplate(context.Background(),
+	if err := sc.RemoveGroupFromPermissionTemplate(context.Background(), "tpl1",
 		&PermissionTemplateGroup{GroupName: "test1", Permissions: []string{"foo"}}); err != nil {
 		t.Fatal(err)
 	}
@@ -211,7 +211,7 @@ func TestClient_RemoveGroupFromPermissionTemplate(t *testing.T) {
 	httpmock.RegisterResponder("POST", "/permissions/remove_group_from_template",
 		httpmock.NewStringResponder(500, "remove fatal"))
 
-	err := sc.RemoveGroupFromPermissionTemplate(context.Background(),
+	err := sc.RemoveGroupFromPermissionTemplate(context.Background(), "tpl1",
 		&PermissionTemplateGroup{GroupName: "test1", Permissions: []string{"foo"}})
 
 	if err == nil {

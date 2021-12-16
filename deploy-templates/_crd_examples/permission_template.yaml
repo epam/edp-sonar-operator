@@ -1,14 +1,14 @@
 apiVersion: v2.edp.epam.com/v1alpha1
 kind: SonarPermissionTemplate
 metadata:
-  name: test-tpl321
+  name: edp-default
 spec:
   sonarOwner: sonar
-  name: test-tpl321
-  description: "tpl desc"
+  name: edp-default
+  description: "EDP permission templates"
   projectKeyPattern: ".+"
   groupPermissions:
-    - groupName: testgroup1
-      permissions: ["scan", "user"]
-
-
+    - groupName: sonar-administrators
+      permissions: [ "admin" ]
+    - groupName: sonar-developers
+      permissions: [ "codeviewer", "issueadmin", "securityhotspotadmin", "user" ]

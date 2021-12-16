@@ -76,7 +76,7 @@ func (r *Reconcile) Reconcile(ctx context.Context, request reconcile.Request) (r
 	if err := r.tryReconcile(ctx, &instance); err != nil {
 		instance.Status.Value = err.Error()
 		result.RequeueAfter = helper.SetFailureCount(&instance)
-		log.Error(err, "an error has occurred while handling keycloak realm idp", "name",
+		log.Error(err, "an error has occurred while handling sonar permission template", "name",
 			request.Name)
 	} else {
 		helper.SetSuccessStatus(&instance)
@@ -115,7 +115,7 @@ func (r *Reconcile) tryReconcile(ctx context.Context, instance *sonarApi.SonarPe
 		tpl.ID = instance.Status.ID
 
 		if err := sClient.UpdatePermissionTemplate(ctx, tpl); err != nil {
-			return errors.Wrap(err, "unable to update group")
+			return errors.Wrap(err, "unable to update permission template")
 		}
 	}
 
@@ -149,15 +149,14 @@ func syncPermissionTemplateGroups(ctx context.Context, instance *sonarApi.SonarP
 	}
 
 	for _, g := range groups {
-		if err := sClient.RemoveGroupFromPermissionTemplate(ctx, &g); err != nil {
-			return errors.Wrap(err, "unable to remote group from permission template")
+		if err := sClient.RemoveGroupFromPermissionTemplate(ctx, instance.Status.ID, &g); err != nil {
+			return errors.Wrap(err, "unable to remove group from permission template")
 		}
 	}
 
 	for _, g := range instance.Spec.GroupPermissions {
-		if err := sClient.AddGroupToPermissionTemplate(ctx, &sonarClient.PermissionTemplateGroup{
+		if err := sClient.AddGroupToPermissionTemplate(ctx, instance.Status.ID, &sonarClient.PermissionTemplateGroup{
 			GroupName:   g.GroupName,
-			TemplateID:  instance.Status.ID,
 			Permissions: g.Permissions,
 		}); err != nil {
 			return errors.Wrap(err, "unable to add group to permission template")

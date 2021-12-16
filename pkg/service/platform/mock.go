@@ -43,7 +43,9 @@ func (m *Mock) CreateJenkinsServiceAccount(namespace string, secretName string, 
 	panic("not implemented")
 }
 
-func (m *Mock) CreateJenkinsScript(namespace string, configMap string) error { panic("not implemented") }
+func (m *Mock) CreateJenkinsScript(namespace string, configMap string) error {
+	panic("not implemented")
+}
 
 func (m *Mock) CreateEDPComponentIfNotExist(sonar *v1alpha1.Sonar, url string, icon string) error {
 	panic("not implemented")

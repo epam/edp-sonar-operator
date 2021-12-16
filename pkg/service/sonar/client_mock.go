@@ -105,12 +105,15 @@ func (c *ClientMock) DeleteGroup(ctx context.Context, groupName string) error {
 	return c.Called(groupName).Error(0)
 }
 
-func (c *ClientMock) AddGroupToPermissionTemplate(ctx context.Context, permGroup *sonar.PermissionTemplateGroup) error {
-	return c.Called(permGroup).Error(0)
+func (c *ClientMock) AddGroupToPermissionTemplate(ctx context.Context, templateID string,
+	permGroup *sonar.PermissionTemplateGroup) error {
+	return c.Called(templateID, permGroup).Error(0)
 }
 
 func (c *ClientMock) CreatePermissionTemplate(ctx context.Context, tpl *sonar.PermissionTemplate) error {
-	return c.Called(tpl).Error(0)
+	called := c.Called(tpl)
+	tpl.ID = called.String(0)
+	return called.Error(1)
 }
 
 func (c *ClientMock) UpdatePermissionTemplate(ctx context.Context, tpl *sonar.PermissionTemplate) error {
@@ -143,8 +146,9 @@ func (c *ClientMock) GetPermissionTemplateGroups(ctx context.Context, templateID
 	return called.Get(0).([]sonar.PermissionTemplateGroup), nil
 }
 
-func (c *ClientMock) RemoveGroupFromPermissionTemplate(ctx context.Context, permGroup *sonar.PermissionTemplateGroup) error {
-	return c.Called(permGroup).Error(0)
+func (c *ClientMock) RemoveGroupFromPermissionTemplate(ctx context.Context, templateID string,
+	permGroup *sonar.PermissionTemplateGroup) error {
+	return c.Called(templateID, permGroup).Error(0)
 }
 
 func (c *ClientMock) SetDefaultPermissionTemplate(ctx context.Context, name string) error {

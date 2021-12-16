@@ -101,19 +101,20 @@ func TestNewReconcile(t *testing.T) {
 	serviceMock.On("ClientForChild").Return(&clientMock, nil)
 	clientMock.On("GetPermissionTemplate", ptpl.Spec.Name).Return(nil,
 		sonarClient.ErrNotFound("not found")).Once()
-	clientMock.On("CreatePermissionTemplate", specToClientTemplate(&ptpl.Spec)).Return(nil)
+	clientMock.On("CreatePermissionTemplate", specToClientTemplate(&ptpl.Spec)).
+		Return("tplid1", nil)
 
 	tplGroup := sonarClient.PermissionTemplateGroup{GroupName: "baz", Permissions: []string{"scan"}}
-	clientMock.On("GetPermissionTemplateGroups", "").
+	clientMock.On("GetPermissionTemplateGroups", "tplid1").
 		Return([]sonarClient.PermissionTemplateGroup{tplGroup}, nil)
-	clientMock.On("RemoveGroupFromPermissionTemplate", &tplGroup).Return(nil)
-	clientMock.On("AddGroupToPermissionTemplate",
+	clientMock.On("RemoveGroupFromPermissionTemplate", "tplid1", &tplGroup).Return(nil)
+	clientMock.On("AddGroupToPermissionTemplate", "tplid1",
 		&sonarClient.PermissionTemplateGroup{
 			GroupName:   ptpl.Spec.GroupPermissions[0].GroupName,
 			Permissions: ptpl.Spec.GroupPermissions[0].Permissions,
 		}).Return(nil)
 	serviceMock.On("DeleteResource").Return(true, nil)
-	clientMock.On("DeletePermissionTemplate", "").Return(nil)
+	clientMock.On("DeletePermissionTemplate", "tplid1").Return(nil)
 	if _, err := rec.Reconcile(context.Background(), rq); err != nil {
 		t.Fatal(err)
 	}

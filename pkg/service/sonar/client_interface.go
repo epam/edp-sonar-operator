@@ -45,8 +45,8 @@ type PermissionTemplate interface {
 	DeletePermissionTemplate(ctx context.Context, id string) error
 	SearchPermissionTemplates(ctx context.Context, name string) ([]sonar.PermissionTemplate, error)
 	GetPermissionTemplate(ctx context.Context, name string) (*sonar.PermissionTemplate, error)
-	AddGroupToPermissionTemplate(ctx context.Context, permGroup *sonar.PermissionTemplateGroup) error
+	AddGroupToPermissionTemplate(ctx context.Context, templateID string, permGroup *sonar.PermissionTemplateGroup) error
 	GetPermissionTemplateGroups(ctx context.Context, templateID string) ([]sonar.PermissionTemplateGroup, error)
-	RemoveGroupFromPermissionTemplate(ctx context.Context, permGroup *sonar.PermissionTemplateGroup) error
+	RemoveGroupFromPermissionTemplate(ctx context.Context, templateID string, permGroup *sonar.PermissionTemplateGroup) error
 	SetDefaultPermissionTemplate(ctx context.Context, name string) error
 }

@@ -14,7 +14,7 @@ type PermissionTemplate struct {
 }
 
 type PermissionTemplateGroup struct {
-	TemplateID  string   `json:"id"`
+	GroupID     string   `json:"id"`
 	GroupName   string   `json:"name"`
 	Permissions []string `json:"permissions"`
 }
@@ -100,10 +100,11 @@ func (sc *Client) GetPermissionTemplate(ctx context.Context, name string) (*Perm
 	return nil, ErrNotFound("permission template not found")
 }
 
-func (sc *Client) AddGroupToPermissionTemplate(ctx context.Context, permGroup *PermissionTemplateGroup) error {
+func (sc *Client) AddGroupToPermissionTemplate(ctx context.Context, templateID string,
+	permGroup *PermissionTemplateGroup) error {
 	for _, perm := range permGroup.Permissions {
 		rsp, err := sc.startRequest(ctx).SetFormData(map[string]string{
-			"templateId": permGroup.TemplateID,
+			"templateId": templateID,
 			"groupName":  permGroup.GroupName,
 			"permission": perm,
 		}).Post("/permissions/add_group_to_template")
@@ -127,10 +128,11 @@ func (sc *Client) GetPermissionTemplateGroups(ctx context.Context, templateID st
 	return response.Groups, nil
 }
 
-func (sc *Client) RemoveGroupFromPermissionTemplate(ctx context.Context, permGroup *PermissionTemplateGroup) error {
+func (sc *Client) RemoveGroupFromPermissionTemplate(ctx context.Context, templateID string,
+	permGroup *PermissionTemplateGroup) error {
 	for _, perm := range permGroup.Permissions {
 		rsp, err := sc.startRequest(ctx).SetFormData(map[string]string{
-			"templateId": permGroup.TemplateID,
+			"templateId": templateID,
 			"groupName":  permGroup.GroupName,
 			"permission": perm,
 		}).Post("/permissions/remove_group_from_template")
