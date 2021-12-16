@@ -1,7 +1,7 @@
 global:
   edpName: ""
   platform: "openshift"
-  dnsWildCard: "delivery.aws.main.edp.projects.epam.com"
+  dnsWildCard: "example.com"
   openshift:
     deploymentType: "deploymentConfigs"
 
@@ -35,7 +35,7 @@ sonar:
   deploy: true
   name: "sonar"
   image: "sonarqube"
-  version: "8.9.3-community"
+  version: "8.9.4-community"
   imagePullPolicy: "IfNotPresent"
   initImage: "busybox"
   basePath: ""
