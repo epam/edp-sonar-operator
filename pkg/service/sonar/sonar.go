@@ -283,7 +283,7 @@ func (s Service) createKeycloakClient(instance v1alpha1.Sonar, baseUrl string) e
 					Composite: "administrator",
 				},
 				{
-					Name:      "sonar-users",
+					Name:      "sonar-developers",
 					Composite: "developer",
 				},
 			},

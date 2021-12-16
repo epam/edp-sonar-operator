@@ -1,3 +1,4 @@
+{{- if .Values.sonar.deploy -}}
 apiVersion: v2.edp.epam.com/v1alpha1
 kind: SonarPermissionTemplate
 metadata:
@@ -5,10 +6,11 @@ metadata:
 spec:
   sonarOwner: sonar
   name: edp-default
-  description: "EDP permission templates"
+  description: "EDP permission templates (DO NOT REMOVE)"
   projectKeyPattern: ".+"
   groupPermissions:
     - groupName: sonar-administrators
       permissions: [ "admin", "user" ]
     - groupName: sonar-developers
       permissions: [ "codeviewer", "issueadmin", "securityhotspotadmin", "user" ]
+{{ end }}

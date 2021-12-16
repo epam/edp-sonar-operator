@@ -4,6 +4,7 @@ kind: Sonar
 metadata:
   name: sonar
 spec:
+  defaultPermissionTemplate: edp-default
   edpSpec:
     dnsWildcard: {{ .Values.global.dnsWildCard }}
   type: Sonar
@@ -17,7 +18,7 @@ spec:
     {{- range .Values.sonar.imagePullSecrets }}
     - {{. -}}
     {{- end -}}
-  {{end}}
+  {{ end }}
   volumes:
     - capacity: {{ .Values.sonar.storage.data.size }}
       name: data
@@ -25,4 +26,4 @@ spec:
     - capacity: {{ .Values.sonar.storage.database.size }}
       name: db
       storage_class: {{ .Values.sonar.storage.database.class }}
-{{end}}
+{{ end }}
