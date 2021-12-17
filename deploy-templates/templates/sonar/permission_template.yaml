@@ -9,6 +9,8 @@ spec:
   description: "EDP permission templates (DO NOT REMOVE)"
   projectKeyPattern: ".+"
   groupPermissions:
+    - groupName: non-interactive-users
+      permissions: [ "user" ]
     - groupName: sonar-administrators
       permissions: [ "admin", "user" ]
     - groupName: sonar-developers
