@@ -38,6 +38,7 @@ const (
 	readUserLogin                    = "read"
 	readUserUsername                 = "Read-only user"
 	nonInteractiveGroupName          = "non-interactive-users"
+	sonarDevelopersGroupName         = "sonar-developers"
 	webhookUrl                       = "sonarqube-webhook/"
 	defaultPassword                  = "admin"
 	claimName                        = "roles"
@@ -283,7 +284,7 @@ func (s Service) createKeycloakClient(instance v1alpha1.Sonar, baseUrl string) e
 					Composite: "administrator",
 				},
 				{
-					Name:      "sonar-developers",
+					Name:      sonarDevelopersGroupName,
 					Composite: "developer",
 				},
 			},
@@ -507,8 +508,8 @@ func (s Service) Configure(ctx context.Context, instance *v1alpha1.Sonar) error 
 		return errors.Wrap(err, "Failed to configure EDP way quality gate!")
 	}
 
-	if err := setupGroup(ctx, sc); err != nil {
-		return errors.Wrap(err, "unable to setup group")
+	if err := setupGroups(ctx, sc); err != nil {
+		return errors.Wrap(err, "unable to setup groups")
 	}
 
 	if err := s.setupWebhook(ctx, sc, instance.Namespace); err != nil {
@@ -570,13 +571,16 @@ func setDefaultPermissionTemplate(ctx context.Context, sc ClientInterface, templ
 	return nil
 }
 
-func setupGroup(ctx context.Context, sc ClientInterface) error {
-	if _, err := sc.GetGroup(ctx, nonInteractiveGroupName); sonar.IsErrNotFound(err) {
-		if err := sc.CreateGroup(ctx, &sonar.Group{Name: nonInteractiveGroupName}); err != nil {
-			return errors.Wrapf(err, "Failed to create %s group!", nonInteractiveGroupName)
+func setupGroups(ctx context.Context, sc ClientInterface) error {
+	groups := []string{nonInteractiveGroupName, sonarDevelopersGroupName}
+	for _, g := range groups {
+		if _, err := sc.GetGroup(ctx, g); sonar.IsErrNotFound(err) {
+			if err := sc.CreateGroup(ctx, &sonar.Group{Name: g}); err != nil {
+				return errors.Wrapf(err, "Failed to create %s group!", g)
+			}
+		} else if err != nil {
+			return errors.Wrap(err, "unexpected error during group check")
 		}
-	} else if err != nil {
-		return errors.Wrap(err, "unexpected error during group check")
 	}
 
 	if err := sc.AddPermissionsToGroup(nonInteractiveGroupName, "scan"); err != nil {
