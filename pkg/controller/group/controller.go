@@ -4,11 +4,6 @@ import (
 	"context"
 	"reflect"
 
-	sonarApi "github.com/epam/edp-sonar-operator/v2/pkg/apis/edp/v1alpha1"
-	sonarClient "github.com/epam/edp-sonar-operator/v2/pkg/client/sonar"
-	"github.com/epam/edp-sonar-operator/v2/pkg/helper"
-	"github.com/epam/edp-sonar-operator/v2/pkg/service/platform"
-	"github.com/epam/edp-sonar-operator/v2/pkg/service/sonar"
 	"github.com/go-logr/logr"
 	"github.com/pkg/errors"
 	k8sErrors "k8s.io/apimachinery/pkg/api/errors"
@@ -19,6 +14,12 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/event"
 	"sigs.k8s.io/controller-runtime/pkg/predicate"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
+
+	sonarApi "github.com/epam/edp-sonar-operator/v2/pkg/apis/edp/v1alpha1"
+	sonarClient "github.com/epam/edp-sonar-operator/v2/pkg/client/sonar"
+	"github.com/epam/edp-sonar-operator/v2/pkg/helper"
+	"github.com/epam/edp-sonar-operator/v2/pkg/service/platform"
+	"github.com/epam/edp-sonar-operator/v2/pkg/service/sonar"
 )
 
 const finalizer = "sonar.group.operator"

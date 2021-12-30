@@ -6,11 +6,15 @@ import (
 	"github.com/pkg/errors"
 )
 
-type PermissionTemplate struct {
-	ID                string `json:"id,omitempty"`
+type PermissionTemplateData struct {
 	Name              string `json:"name"`
 	Description       string `json:"description"`
 	ProjectKeyPattern string `json:"projectKeyPattern"`
+}
+
+type PermissionTemplate struct {
+	ID string `json:"id,omitempty"`
+	PermissionTemplateData
 }
 
 type PermissionTemplateGroup struct {
@@ -31,7 +35,7 @@ type searchPermissionTemplatesResponse struct {
 	PermissionTemplates []PermissionTemplate `json:"permissionTemplates"`
 }
 
-func (sc *Client) CreatePermissionTemplate(ctx context.Context, tpl *PermissionTemplate) error {
+func (sc *Client) CreatePermissionTemplate(ctx context.Context, tpl *PermissionTemplateData) (string, error) {
 	var result createPermissionTemplateResponse
 	rsp, err := sc.startRequest(ctx).SetResult(&result).SetFormData(map[string]string{
 		"name":              tpl.Name,
@@ -39,12 +43,11 @@ func (sc *Client) CreatePermissionTemplate(ctx context.Context, tpl *PermissionT
 		"projectKeyPattern": tpl.ProjectKeyPattern,
 	}).Post("/permissions/create_template")
 
-	if err := sc.checkError(rsp, err); err != nil {
-		return errors.Wrap(err, "unable to create permission template")
+	if err = sc.checkError(rsp, err); err != nil {
+		return "", errors.Wrap(err, "unable to create permission template")
 	}
 
-	tpl.ID = result.PermissionTemplate.ID
-	return nil
+	return result.PermissionTemplate.ID, nil
 }
 
 func (sc *Client) UpdatePermissionTemplate(ctx context.Context, tpl *PermissionTemplate) error {

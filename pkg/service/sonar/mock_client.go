@@ -4,8 +4,9 @@ import (
 	"context"
 	"time"
 
-	"github.com/epam/edp-sonar-operator/v2/pkg/client/sonar"
 	"github.com/stretchr/testify/mock"
+
+	"github.com/epam/edp-sonar-operator/v2/pkg/client/sonar"
 )
 
 type ClientMock struct {
@@ -110,10 +111,9 @@ func (c *ClientMock) AddGroupToPermissionTemplate(ctx context.Context, templateI
 	return c.Called(templateID, permGroup).Error(0)
 }
 
-func (c *ClientMock) CreatePermissionTemplate(ctx context.Context, tpl *sonar.PermissionTemplate) error {
+func (c *ClientMock) CreatePermissionTemplate(ctx context.Context, tpl *sonar.PermissionTemplateData) (string, error) {
 	called := c.Called(tpl)
-	tpl.ID = called.String(0)
-	return called.Error(1)
+	return called.String(0), called.Error(1)
 }
 
 func (c *ClientMock) UpdatePermissionTemplate(ctx context.Context, tpl *sonar.PermissionTemplate) error {

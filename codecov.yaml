@@ -4,3 +4,4 @@ ignore:
   - "**/service_types.go"
   - "**/factory.go"
   - "**/mock_*.go"
+  - "**/mocks/**"

@@ -74,7 +74,7 @@ func (sc *Client) UpdateGroup(ctx context.Context, currentName string, group *Gr
 	}
 
 	rsp, err := sc.startRequest(ctx).SetFormData(rqParams).Post("/user_groups/update")
-	if err := sc.checkError(rsp, err); err != nil {
+	if err = sc.checkError(rsp, err); err != nil {
 		return errors.Wrap(err, "unable to update group")
 	}
 

@@ -9,6 +9,7 @@ func FileExists(filename string) bool {
 	if os.IsNotExist(err) {
 		return false
 	}
+
 	return !info.IsDir()
 }
 
@@ -18,5 +19,6 @@ func CheckPluginInstalled(pluginsList []string, plugin string) bool {
 			return true
 		}
 	}
+
 	return false
 }

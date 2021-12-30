@@ -19,7 +19,7 @@ func TestSonarClient_CreatePermissionTemplate(t *testing.T) {
 	cs := initClient()
 	httpmock.RegisterResponder("POST", "/permissions/create_template",
 		httpmock.NewStringResponder(200, ""))
-	if err := cs.CreatePermissionTemplate(context.Background(), &PermissionTemplate{
+	if _, err := cs.CreatePermissionTemplate(context.Background(), &PermissionTemplateData{
 		Name: "foo",
 	}); err != nil {
 		t.Fatal(err)
@@ -28,7 +28,7 @@ func TestSonarClient_CreatePermissionTemplate(t *testing.T) {
 	httpmock.RegisterResponder("POST", "/permissions/create_template",
 		httpmock.NewStringResponder(500, "create fatal"))
 
-	err := cs.CreatePermissionTemplate(context.Background(), &PermissionTemplate{
+	_, err := cs.CreatePermissionTemplate(context.Background(), &PermissionTemplateData{
 		Name: "foo",
 	})
 
@@ -45,7 +45,7 @@ func TestClient_UpdatePermissionTemplate(t *testing.T) {
 	cs := initClient()
 	httpmock.RegisterResponder("POST", "/permissions/update_template",
 		httpmock.NewStringResponder(200, ""))
-	if err := cs.UpdatePermissionTemplate(context.Background(), &PermissionTemplate{Name: "foo"}); err != nil {
+	if err := cs.UpdatePermissionTemplate(context.Background(), &PermissionTemplate{PermissionTemplateData: PermissionTemplateData{Name: "foo"}}); err != nil {
 		t.Fatal(err)
 	}
 
@@ -53,7 +53,9 @@ func TestClient_UpdatePermissionTemplate(t *testing.T) {
 		httpmock.NewStringResponder(500, "update fatal"))
 
 	err := cs.UpdatePermissionTemplate(context.Background(), &PermissionTemplate{
-		Name: "foo",
+		PermissionTemplateData: PermissionTemplateData{
+			Name: "foo",
+		},
 	})
 
 	if err == nil {
@@ -115,7 +117,9 @@ func TestClient_GetPermissionTemplate(t *testing.T) {
 		httpmock.NewJsonResponderOrPanic(200,
 			searchPermissionTemplatesResponse{PermissionTemplates: []PermissionTemplate{
 				{
-					Name: "test",
+					PermissionTemplateData: PermissionTemplateData{
+						Name: "test",
+					},
 				},
 			}}))
 	if _, err := cs.GetPermissionTemplate(context.Background(), "test"); err != nil {
@@ -126,7 +130,9 @@ func TestClient_GetPermissionTemplate(t *testing.T) {
 		httpmock.NewJsonResponderOrPanic(200,
 			searchPermissionTemplatesResponse{PermissionTemplates: []PermissionTemplate{
 				{
-					Name: "mest",
+					PermissionTemplateData: PermissionTemplateData{
+						Name: "mest",
+					},
 				},
 			}}))
 

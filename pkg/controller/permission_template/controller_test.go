@@ -5,19 +5,21 @@ import (
 	"testing"
 	"time"
 
-	"github.com/pkg/errors"
-
 	"github.com/epam/edp-common/pkg/mock"
 	k8sMockClient "github.com/epam/edp-common/pkg/mock/controller-runtime/client"
-	"github.com/epam/edp-sonar-operator/v2/pkg/apis/edp/v1alpha1"
-	sonarClient "github.com/epam/edp-sonar-operator/v2/pkg/client/sonar"
-	"github.com/epam/edp-sonar-operator/v2/pkg/service/sonar"
+	"github.com/pkg/errors"
+	tMock "github.com/stretchr/testify/mock"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/client/fake"
 	"sigs.k8s.io/controller-runtime/pkg/event"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
+
+	"github.com/epam/edp-sonar-operator/v2/pkg/apis/edp/v1alpha1"
+	sonarClient "github.com/epam/edp-sonar-operator/v2/pkg/client/sonar"
+	"github.com/epam/edp-sonar-operator/v2/pkg/service/platform"
+	sonarMocks "github.com/epam/edp-sonar-operator/v2/pkg/service/sonar/mocks"
 )
 
 func TestNewReconcile_NotFound(t *testing.T) {
@@ -56,15 +58,30 @@ func TestNewReconcile_NotFound(t *testing.T) {
 	}
 }
 
+const (
+	objectMetaName      = "tpl1"
+	objectMetaNamespace = "ns"
+)
+
+func ObjectMeta() metav1.ObjectMeta {
+	now := time.Now().UTC()
+	return metav1.ObjectMeta{
+		Name:              objectMetaName,
+		Namespace:         objectMetaNamespace,
+		DeletionTimestamp: &metav1.Time{Time: now},
+	}
+}
+
 func TestNewReconcile(t *testing.T) {
-	ptpl := v1alpha1.SonarPermissionTemplate{
-		ObjectMeta: metav1.ObjectMeta{
-			Name:              "tpl1",
-			Namespace:         "ns",
-			DeletionTimestamp: &metav1.Time{Time: time.Now()},
+	ctx := context.Background()
+	sampleTemplate := v1alpha1.SonarPermissionTemplate{
+		TypeMeta: metav1.TypeMeta{
+			Kind:       "SonarPermissionTemplate",
+			APIVersion: "v2.edp.epam.com/v1alpha1",
 		},
+		ObjectMeta: ObjectMeta(),
 		Spec: v1alpha1.SonarPermissionTemplateSpec{
-			Name:              "tpl1",
+			Name:              objectMetaName,
 			ProjectKeyPattern: ".+",
 			SonarOwner:        "sonar",
 			Description:       "desc",
@@ -75,9 +92,14 @@ func TestNewReconcile(t *testing.T) {
 				},
 			},
 		},
+		Status: v1alpha1.SonarPermissionTemplateStatus{
+			Value:        "",
+			FailureCount: 0,
+			ID:           "",
+		},
 	}
 	sn := v1alpha1.Sonar{
-		ObjectMeta: metav1.ObjectMeta{Name: "sonar", Namespace: ptpl.Namespace},
+		ObjectMeta: metav1.ObjectMeta{Name: "sonar", Namespace: objectMetaNamespace},
 		TypeMeta:   metav1.TypeMeta{Kind: "Sonar", APIVersion: "v2.edp.epam.com/v1alpha1"},
 		Spec:       v1alpha1.SonarSpec{BasePath: "path"},
 	}
@@ -86,54 +108,67 @@ func TestNewReconcile(t *testing.T) {
 	if err := v1alpha1.AddToScheme(scheme); err != nil {
 		t.Fatal(err)
 	}
-	rq := reconcile.Request{NamespacedName: types.NamespacedName{Namespace: ptpl.Namespace, Name: ptpl.Name}}
-	fakeCl := fake.NewClientBuilder().WithScheme(scheme).WithRuntimeObjects(&ptpl, &sn).Build()
+	permissionTemplate1 := sampleTemplate.DeepCopy()
+	rq := reconcile.Request{NamespacedName: types.NamespacedName{Namespace: objectMetaNamespace, Name: objectMetaName}}
+	fakeCl := fake.NewClientBuilder().WithScheme(scheme).WithObjects(permissionTemplate1, &sn).Build()
 	l := mock.Logger{}
-	rec, err := NewReconcile(fakeCl, scheme, &l, "kubernetes")
+	rec, err := NewReconcile(fakeCl, scheme, &l, platform.Kubernetes)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	serviceMock := sonar.ServiceMock{}
+	serviceMock := sonarMocks.ServiceInterface{}
 	rec.service = &serviceMock
-	clientMock := sonar.ClientMock{}
+	clientMock := &sonarMocks.ClientInterface{}
 
-	serviceMock.On("ClientForChild").Return(&clientMock, nil)
-	clientMock.On("GetPermissionTemplate", ptpl.Spec.Name).Return(nil,
+	serviceMock.On("ClientForChild", ctx, tMock.AnythingOfType("*v1alpha1.SonarPermissionTemplate")).Return(clientMock, nil)
+	serviceMock.On("K8sClient").Return(fakeCl)
+	clientMock.On("GetPermissionTemplate", ctx, permissionTemplate1.Spec.Name).Return(nil,
 		sonarClient.ErrNotFound("not found")).Once()
-	clientMock.On("CreatePermissionTemplate", specToClientTemplate(&ptpl.Spec)).
-		Return("tplid1", nil)
+	permissionTemplateID := "uniq_tpl_id_1"
+	clientMock.On("CreatePermissionTemplate", ctx, specToClientTemplateData(&permissionTemplate1.Spec)).
+		Return(permissionTemplateID, nil)
 
 	tplGroup := sonarClient.PermissionTemplateGroup{GroupName: "baz", Permissions: []string{"scan"}}
-	clientMock.On("GetPermissionTemplateGroups", "tplid1").
+	clientMock.On("GetPermissionTemplateGroups", ctx, permissionTemplateID).
 		Return([]sonarClient.PermissionTemplateGroup{tplGroup}, nil)
-	clientMock.On("RemoveGroupFromPermissionTemplate", "tplid1", &tplGroup).Return(nil)
-	clientMock.On("AddGroupToPermissionTemplate", "tplid1",
+	clientMock.On("RemoveGroupFromPermissionTemplate", ctx, permissionTemplateID, &tplGroup).Return(nil)
+	clientMock.On("AddGroupToPermissionTemplate", ctx, permissionTemplateID,
 		&sonarClient.PermissionTemplateGroup{
-			GroupName:   ptpl.Spec.GroupPermissions[0].GroupName,
-			Permissions: ptpl.Spec.GroupPermissions[0].Permissions,
+			GroupName:   permissionTemplate1.Spec.GroupPermissions[0].GroupName,
+			Permissions: permissionTemplate1.Spec.GroupPermissions[0].Permissions,
 		}).Return(nil)
-	serviceMock.On("DeleteResource").Return(true, nil)
-	clientMock.On("DeletePermissionTemplate", "tplid1").Return(nil)
-	if _, err := rec.Reconcile(context.Background(), rq); err != nil {
+	serviceMock.
+		On("DeleteResource",
+			ctx,
+			tMock.AnythingOfType("*v1alpha1.SonarPermissionTemplate"),
+			finalizer,
+			tMock.AnythingOfType("func() error"),
+		).
+		Return(true, nil)
+	clientMock.On("DeletePermissionTemplate", permissionTemplateID).Return(nil)
+	if _, err = rec.Reconcile(ctx, rq); err != nil {
 		t.Fatal(err)
 	}
 
-	if err := l.LastError(); err != nil {
+	if err = l.LastError(); err != nil {
 		t.Fatalf("%+v", err)
 	}
 
-	ptpl.Status.ID = "id11"
-	clientMock.On("GetPermissionTemplate", ptpl.Spec.Name).
-		Return(specToClientTemplate(&ptpl.Spec), nil).Once()
-	tpl := specToClientTemplate(&ptpl.Spec)
-	tpl.ID = ptpl.Status.ID
-	clientMock.On("UpdatePermissionTemplate", tpl).Return(nil)
-	clientMock.On("GetPermissionTemplateGroups", tpl.ID).
+	//ptpl.Status.ID = "id11"
+	permissionTemplateID2 := "id11"
+	permissionTemplate2 := sampleTemplate.DeepCopy()
+	permissionTemplate2.Status.ID = permissionTemplateID2
+	clientMock.On("GetPermissionTemplate", ctx, permissionTemplate2.Spec.Name).
+		Return(specToClientTemplate(&permissionTemplate2.Spec, permissionTemplateID2), nil).Once()
+	tpl := specToClientTemplate(&permissionTemplate2.Spec, permissionTemplateID2)
+	//tpl.ID = ptpl.Status.ID
+	clientMock.On("UpdatePermissionTemplate", ctx, tpl).Return(nil)
+	clientMock.On("GetPermissionTemplateGroups", ctx, tpl.ID).
 		Return(nil, errors.New("get perm groups fatal"))
-	rec.client = fake.NewClientBuilder().WithScheme(scheme).WithRuntimeObjects(&ptpl, &sn).Build()
+	rec.client = fake.NewClientBuilder().WithScheme(scheme).WithObjects(permissionTemplate2, &sn).Build()
 
-	if _, err := rec.Reconcile(context.Background(), rq); err != nil {
+	if _, err = rec.Reconcile(ctx, rq); err != nil {
 		t.Fatal(err)
 	}
 

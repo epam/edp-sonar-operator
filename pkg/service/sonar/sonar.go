@@ -16,13 +16,6 @@ import (
 	platformHelper "github.com/epam/edp-jenkins-operator/v2/pkg/service/platform/helper"
 	keycloakApi "github.com/epam/edp-keycloak-operator/pkg/apis/v1/v1alpha1"
 	"github.com/epam/edp-keycloak-operator/pkg/controller/helper"
-	"github.com/epam/edp-sonar-operator/v2/pkg/apis/edp/v1alpha1"
-	"github.com/epam/edp-sonar-operator/v2/pkg/client/sonar"
-	sonarClient "github.com/epam/edp-sonar-operator/v2/pkg/client/sonar"
-	pkgHelper "github.com/epam/edp-sonar-operator/v2/pkg/helper"
-	"github.com/epam/edp-sonar-operator/v2/pkg/service/platform"
-	sonarHelper "github.com/epam/edp-sonar-operator/v2/pkg/service/sonar/helper"
-	sonarSpec "github.com/epam/edp-sonar-operator/v2/pkg/service/sonar/spec"
 	"github.com/pkg/errors"
 	k8sErr "k8s.io/apimachinery/pkg/api/errors"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -30,6 +23,14 @@ import (
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/util/json"
 	"sigs.k8s.io/controller-runtime/pkg/client"
+
+	"github.com/epam/edp-sonar-operator/v2/pkg/apis/edp/v1alpha1"
+	"github.com/epam/edp-sonar-operator/v2/pkg/client/sonar"
+	sonarClient "github.com/epam/edp-sonar-operator/v2/pkg/client/sonar"
+	pkgHelper "github.com/epam/edp-sonar-operator/v2/pkg/helper"
+	"github.com/epam/edp-sonar-operator/v2/pkg/service/platform"
+	sonarHelper "github.com/epam/edp-sonar-operator/v2/pkg/service/sonar/helper"
+	sonarSpec "github.com/epam/edp-sonar-operator/v2/pkg/service/sonar/spec"
 )
 
 const (
@@ -59,6 +60,7 @@ type ServiceInterface interface {
 	ClientForChild(ctx context.Context, instance ChildInstance) (ClientInterface, error)
 	DeleteResource(ctx context.Context, instance Deletable, finalizer string,
 		deleteFunc func() error) (bool, error)
+	K8sClient() client.Client
 }
 
 type ChildInstance interface {
@@ -89,6 +91,10 @@ type Service struct {
 	k8sClient          client.Client
 	k8sScheme          *runtime.Scheme
 	sonarClientBuilder func(ctx context.Context, instance *v1alpha1.Sonar, useDefaultPassword bool) (ClientInterface, error)
+}
+
+func (s Service) K8sClient() client.Client {
+	return s.k8sClient
 }
 
 func (s Service) ClientForChild(ctx context.Context, instance ChildInstance) (ClientInterface, error) {

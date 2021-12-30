@@ -40,7 +40,7 @@ type Group interface {
 }
 
 type PermissionTemplate interface {
-	CreatePermissionTemplate(ctx context.Context, tpl *sonar.PermissionTemplate) error
+	CreatePermissionTemplate(ctx context.Context, tpl *sonar.PermissionTemplateData) (string, error)
 	UpdatePermissionTemplate(ctx context.Context, tpl *sonar.PermissionTemplate) error
 	DeletePermissionTemplate(ctx context.Context, id string) error
 	SearchPermissionTemplates(ctx context.Context, name string) ([]sonar.PermissionTemplate, error)

@@ -2,22 +2,26 @@ package group
 
 import (
 	"context"
-	"github.com/epam/edp-common/pkg/mock"
 	"testing"
 	"time"
 
-	"github.com/epam/edp-sonar-operator/v2/pkg/apis/edp/v1alpha1"
-	sonarClient "github.com/epam/edp-sonar-operator/v2/pkg/client/sonar"
-	"github.com/epam/edp-sonar-operator/v2/pkg/service/sonar"
+	"github.com/epam/edp-common/pkg/mock"
+	tMock "github.com/stretchr/testify/mock"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/client/fake"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
+
+	"github.com/epam/edp-sonar-operator/v2/pkg/apis/edp/v1alpha1"
+	sonarClient "github.com/epam/edp-sonar-operator/v2/pkg/client/sonar"
+	"github.com/epam/edp-sonar-operator/v2/pkg/service/platform"
+	sonarMocks "github.com/epam/edp-sonar-operator/v2/pkg/service/sonar/mocks"
 )
 
 func TestNewReconcile(t *testing.T) {
 	tm := metav1.Time{Time: time.Now()}
+	ctx := context.Background()
 
 	sg := v1alpha1.SonarGroup{
 		Spec: v1alpha1.SonarGroupSpec{
@@ -46,35 +50,42 @@ func TestNewReconcile(t *testing.T) {
 	rq := reconcile.Request{NamespacedName: types.NamespacedName{Namespace: sg.Namespace, Name: sg.Name}}
 	fakeCl := fake.NewClientBuilder().WithScheme(scheme).WithRuntimeObjects(&sg, &sn).Build()
 	l := mock.Logger{}
-	rec, err := NewReconcile(fakeCl, scheme, &l, "kubernetes")
+	rec, err := NewReconcile(fakeCl, scheme, &l, platform.Kubernetes)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	serviceMock := sonar.ServiceMock{}
+	serviceMock := sonarMocks.ServiceInterface{}
 	rec.service = &serviceMock
-	clientMock := sonar.ClientMock{}
+	clientMock := sonarMocks.ClientInterface{}
 
-	serviceMock.On("ClientForChild").Return(&clientMock, nil)
-	serviceMock.On("DeleteResource").Return(true, nil)
-	clientMock.On("GetGroup", sg.Spec.Name).Return(&sonarClient.Group{}, nil).Once()
-	clientMock.On("UpdateGroup", sg.Spec.Name,
-		&sonarClient.Group{Name: sg.Spec.Name, Description: sg.Spec.Description}).Return(nil).Once()
-	clientMock.On("DeleteGroup", sg.Spec.Name).Return(nil)
-	if _, err := rec.Reconcile(context.Background(), rq); err != nil {
+	serviceMock.On("ClientForChild", ctx, tMock.AnythingOfType("*v1alpha1.SonarGroup")).Return(&clientMock, nil)
+	serviceMock.
+		On("DeleteResource",
+			ctx,
+			tMock.AnythingOfType("*v1alpha1.SonarGroup"),
+			finalizer,
+			tMock.AnythingOfType("func() error"),
+		).
+		Return(true, nil)
+	clientMock.On("GetGroup", ctx, sg.Spec.Name).Return(&sonarClient.Group{}, nil)
+	clientMock.
+		On("UpdateGroup",
+			ctx,
+			sg.Spec.Name,
+			&sonarClient.Group{
+				Name:        sg.Spec.Name,
+				Description: sg.Spec.Description,
+			}).
+		Return(nil)
+	if _, err = rec.Reconcile(ctx, rq); err != nil {
 		t.Fatal(err)
 	}
 
-	if err := l.LastError(); err != nil {
+	if err = l.LastError(); err != nil {
 		t.Fatal(err)
 	}
 
-	clientMock.On("GetGroup", sg.Spec.Name).
-		Return(nil, sonarClient.ErrNotFound("not found")).Once()
-	clientMock.On("CreateGroup",
-		&sonarClient.Group{Name: sg.Spec.Name, Description: sg.Spec.Description}).Return(nil)
-	if _, err := rec.Reconcile(context.Background(), rq); err != nil {
-		t.Fatal(err)
-	}
-
+	serviceMock.AssertExpectations(t)
+	clientMock.AssertExpectations(t)
 }

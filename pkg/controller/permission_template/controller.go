@@ -4,11 +4,6 @@ import (
 	"context"
 	"reflect"
 
-	sonarApi "github.com/epam/edp-sonar-operator/v2/pkg/apis/edp/v1alpha1"
-	sonarClient "github.com/epam/edp-sonar-operator/v2/pkg/client/sonar"
-	"github.com/epam/edp-sonar-operator/v2/pkg/helper"
-	"github.com/epam/edp-sonar-operator/v2/pkg/service/platform"
-	"github.com/epam/edp-sonar-operator/v2/pkg/service/sonar"
 	"github.com/go-logr/logr"
 	"github.com/pkg/errors"
 	k8sErrors "k8s.io/apimachinery/pkg/api/errors"
@@ -19,6 +14,12 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/event"
 	"sigs.k8s.io/controller-runtime/pkg/predicate"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
+
+	sonarApi "github.com/epam/edp-sonar-operator/v2/pkg/apis/edp/v1alpha1"
+	sonarClient "github.com/epam/edp-sonar-operator/v2/pkg/client/sonar"
+	"github.com/epam/edp-sonar-operator/v2/pkg/helper"
+	"github.com/epam/edp-sonar-operator/v2/pkg/service/platform"
+	"github.com/epam/edp-sonar-operator/v2/pkg/service/sonar"
 )
 
 const finalizer = "sonar.permission_template.operator"
@@ -98,12 +99,11 @@ func (r *Reconcile) tryReconcile(ctx context.Context, instance *sonarApi.SonarPe
 
 	_, err = sClient.GetPermissionTemplate(ctx, instance.Spec.Name)
 	if sonarClient.IsErrNotFound(err) {
-		sonarPermTpl := specToClientTemplate(&instance.Spec)
-
-		if err := sClient.CreatePermissionTemplate(ctx, sonarPermTpl); err != nil {
-			return errors.Wrap(err, "unable to create sonar permission template")
+		templateID, createErr := createPermissionTemplate(ctx, instance, sClient, r.service.K8sClient(), r.log)
+		if createErr != nil {
+			return errors.Wrap(createErr, "unable to create sonar permission template")
 		}
-		instance.Status.ID = sonarPermTpl.ID
+		instance.Status.ID = templateID
 	} else if err != nil {
 		return errors.Wrap(err, "unexpected error during get sonar permission template")
 	} else {
@@ -111,20 +111,18 @@ func (r *Reconcile) tryReconcile(ctx context.Context, instance *sonarApi.SonarPe
 			return errors.New("permission template already exists in sonar")
 		}
 
-		tpl := specToClientTemplate(&instance.Spec)
-		tpl.ID = instance.Status.ID
-
-		if err := sClient.UpdatePermissionTemplate(ctx, tpl); err != nil {
+		tpl := specToClientTemplate(&instance.Spec, instance.Status.ID)
+		if err = sClient.UpdatePermissionTemplate(ctx, tpl); err != nil {
 			return errors.Wrap(err, "unable to update permission template")
 		}
 	}
 
-	if err := syncPermissionTemplateGroups(ctx, instance, sClient); err != nil {
+	if err = syncPermissionTemplateGroups(ctx, instance, sClient); err != nil {
 		return errors.Wrap(err, "unable to sync permission template groups")
 	}
 
-	if _, err := r.service.DeleteResource(ctx, instance, finalizer, func() error {
-		if err := sClient.DeletePermissionTemplate(ctx, instance.Status.ID); err != nil {
+	if _, err = r.service.DeleteResource(ctx, instance, finalizer, func() error {
+		if err = sClient.DeletePermissionTemplate(ctx, instance.Status.ID); err != nil {
 			return errors.Wrap(err, "unable to delete permission template")
 		}
 
@@ -136,9 +134,20 @@ func (r *Reconcile) tryReconcile(ctx context.Context, instance *sonarApi.SonarPe
 	return nil
 }
 
-func specToClientTemplate(spec *sonarApi.SonarPermissionTemplateSpec) *sonarClient.PermissionTemplate {
-	return &sonarClient.PermissionTemplate{Name: spec.Name, Description: spec.Description,
-		ProjectKeyPattern: spec.ProjectKeyPattern}
+func specToClientTemplate(spec *sonarApi.SonarPermissionTemplateSpec, ID string) *sonarClient.PermissionTemplate {
+	templateData := specToClientTemplateData(spec)
+	return &sonarClient.PermissionTemplate{
+		ID:                     ID,
+		PermissionTemplateData: *templateData,
+	}
+}
+
+func specToClientTemplateData(spec *sonarApi.SonarPermissionTemplateSpec) *sonarClient.PermissionTemplateData {
+	return &sonarClient.PermissionTemplateData{
+		Name:              spec.Name,
+		Description:       spec.Description,
+		ProjectKeyPattern: spec.ProjectKeyPattern,
+	}
 }
 
 func syncPermissionTemplateGroups(ctx context.Context, instance *sonarApi.SonarPermissionTemplate,
@@ -164,4 +173,26 @@ func syncPermissionTemplateGroups(ctx context.Context, instance *sonarApi.SonarP
 	}
 
 	return nil
+}
+
+func createPermissionTemplate(ctx context.Context, sonarPermissionTemplate *sonarApi.SonarPermissionTemplate,
+	sonarClient sonar.ClientInterface, k8sClient client.Client, logger logr.Logger,
+) (string, error) {
+	sonarPermTpl := specToClientTemplateData(&sonarPermissionTemplate.Spec)
+	templateID, err := sonarClient.CreatePermissionTemplate(ctx, sonarPermTpl)
+	if err != nil {
+		return "", errors.Wrap(err, "unable to create sonar permission template")
+	}
+	logger = logger.
+		WithValues("template_id", templateID).
+		WithValues("permission_template", sonarPermissionTemplate.Spec.Name)
+	logger.Info("created permission template in sonar")
+
+	sonarPermissionTemplate.Status.ID = templateID
+	if err = k8sClient.Status().Update(ctx, sonarPermissionTemplate); err != nil {
+		return "", errors.Wrap(err, "unable to update deletable object")
+	}
+	logger.Info("updated cr status in k8s")
+
+	return templateID, nil
 }
