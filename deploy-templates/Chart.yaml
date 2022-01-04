@@ -3,8 +3,8 @@ description: A Helm chart for EDP Sonar Operator
 home: https://solutionshub.epam.com/solution/epam-delivery-platform
 name: sonar-operator
 type: application
-version: 2.10.1
-appVersion: 2.10.1
+version: 2.10.2
+appVersion: 2.10.2
 maintainers:
   - name: EPAM EDP Team
 sources:
