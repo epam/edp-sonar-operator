@@ -7,13 +7,14 @@ import (
 	"time"
 
 	"github.com/epam/edp-common/pkg/mock"
-	"github.com/epam/edp-sonar-operator/v2/pkg/apis/edp/v1alpha1"
 	"github.com/stretchr/testify/assert"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/client/fake"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
+
+	"github.com/epam/edp-sonar-operator/v2/pkg/apis/edp/v1alpha1"
 )
 
 func TestReconcileSonar_Reconcile_ShouldFailToCreateDBSecret(t *testing.T) {

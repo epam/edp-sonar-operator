@@ -8,11 +8,12 @@ import (
 	"strings"
 	"time"
 
-	sonarClientHelper "github.com/epam/edp-sonar-operator/v2/pkg/client/helper"
 	"github.com/pkg/errors"
 	"github.com/totherme/unstructured"
 	"gopkg.in/resty.v1"
 	ctrl "sigs.k8s.io/controller-runtime"
+
+	sonarClientHelper "github.com/epam/edp-sonar-operator/v2/pkg/client/helper"
 )
 
 var log = ctrl.Log.WithName("sonar_client")
@@ -275,7 +276,7 @@ func (sc Client) checkQualityGateExist(qgName string) (exist bool, qgId string, 
 			currentQualityGateName, _ := qualityGate.F("name").StringValue()
 			if currentQualityGateName == qgName {
 				qualityGateId, _ := qualityGate.F("id").NumValue()
-				if ok, _ := qualityGate.F("isDefault").BoolValue(); ok {
+				if ok, _ = qualityGate.F("isDefault").BoolValue(); ok {
 					return true, fmt.Sprintf("%v", qualityGateId), ok, nil
 				}
 				return true, fmt.Sprintf("%v", qualityGateId), ok, nil
@@ -320,7 +321,7 @@ func (sc Client) UploadProfile(profileName string, profilePath string) (string, 
 	}
 
 	if !sonarClientHelper.FileExists(profilePath) {
-		return "", fmt.Errorf("File %s does not exist in path provided: %s !", profileName, profilePath)
+		return "", fmt.Errorf("file %s does not exist in path provided: %s", profileName, profilePath)
 	}
 
 	log.Info(fmt.Sprintf("Uploading profile %s from path %s", profileName, profilePath))
@@ -634,8 +635,12 @@ func (sc Client) SetProjectsDefaultVisibility(visibility string) error {
 		SetBody(fmt.Sprintf("organization=default-organization&projectVisibility=%v", visibility)).
 		SetHeader("Content-Type", "application/x-www-form-urlencoded").
 		Post("/projects/update_default_visibility")
-	if err != nil || resp.IsError() {
+	if err != nil {
 		return err
+	}
+	if resp.IsError() {
+		errMsg := fmt.Sprintf("setting project visibility failed. Response - %s", resp.Status())
+		return errors.New(errMsg)
 	}
 	return nil
 }
