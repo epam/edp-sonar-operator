@@ -6,19 +6,18 @@ import (
 	"time"
 
 	"github.com/dchest/uniuri"
-	"github.com/epam/edp-sonar-operator/v2/pkg/service/platform"
-	"github.com/epam/edp-sonar-operator/v2/pkg/service/sonar"
 	"github.com/go-logr/logr"
-	coreV1Api "k8s.io/api/core/v1"
-	ctrl "sigs.k8s.io/controller-runtime"
-
-	sonarApi "github.com/epam/edp-sonar-operator/v2/pkg/apis/edp/v1alpha1"
 	"github.com/pkg/errors"
-
+	coreV1Api "k8s.io/api/core/v1"
 	k8sErrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/runtime"
+	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
+
+	sonarApi "github.com/epam/edp-sonar-operator/v2/pkg/apis/edp/v1alpha1"
+	"github.com/epam/edp-sonar-operator/v2/pkg/service/platform"
+	"github.com/epam/edp-sonar-operator/v2/pkg/service/sonar"
 )
 
 const (
@@ -93,7 +92,7 @@ func (r *ReconcileSonar) Reconcile(ctx context.Context, request reconcile.Reques
 	if err != nil {
 		return reconcile.Result{RequeueAfter: DefaultRequeueTime * time.Second}, err
 	}
-	if err := r.platform.SetOwnerReference(instance, secret); err != nil {
+	if err = r.platform.SetOwnerReference(instance, secret); err != nil {
 		return reconcile.Result{RequeueAfter: DefaultRequeueTime * time.Second}, err
 	}
 
@@ -106,13 +105,13 @@ func (r *ReconcileSonar) Reconcile(ctx context.Context, request reconcile.Reques
 
 	if instance.Status.Status == "" {
 		log.Info("Configuration has started")
-		err := r.updateStatus(ctx, instance, StatusConfiguring)
+		err = r.updateStatus(ctx, instance, StatusConfiguring)
 		if err != nil {
 			return reconcile.Result{RequeueAfter: DefaultRequeueTime * time.Second}, err
 		}
 	}
 
-	if err := r.service.Configure(ctx, instance); err != nil {
+	if err = r.service.Configure(ctx, instance); err != nil {
 		log.Error(err, "Configuration has failed")
 		return reconcile.Result{RequeueAfter: DefaultRequeueTime * time.Second},
 			errors.Wrapf(err, "Configuration failed")
@@ -201,7 +200,7 @@ func (r ReconcileSonar) updateAvailableStatus(ctx context.Context, instance *son
 		instance.Status.Available = value
 		instance.Status.LastTimeUpdated = time.Now()
 		if err := r.client.Status().Update(ctx, instance); err != nil {
-			if err := r.client.Update(ctx, instance); err != nil {
+			if err = r.client.Update(ctx, instance); err != nil {
 				return errors.Wrapf(err, "Couldn't update availability status to %v", value)
 			}
 		}

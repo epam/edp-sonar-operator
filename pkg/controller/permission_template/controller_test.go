@@ -16,10 +16,11 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/event"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 
+	cMock "github.com/epam/edp-sonar-operator/v2/mocks/client"
+	sMock "github.com/epam/edp-sonar-operator/v2/mocks/service"
 	"github.com/epam/edp-sonar-operator/v2/pkg/apis/edp/v1alpha1"
 	sonarClient "github.com/epam/edp-sonar-operator/v2/pkg/client/sonar"
 	"github.com/epam/edp-sonar-operator/v2/pkg/service/platform"
-	sonarMocks "github.com/epam/edp-sonar-operator/v2/pkg/service/sonar/mocks"
 )
 
 func TestNewReconcile_NotFound(t *testing.T) {
@@ -117,9 +118,9 @@ func TestNewReconcile(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	serviceMock := sonarMocks.ServiceInterface{}
+	serviceMock := sMock.ServiceInterface{}
 	rec.service = &serviceMock
-	clientMock := &sonarMocks.ClientInterface{}
+	clientMock := &cMock.ClientInterface{}
 
 	serviceMock.On("ClientForChild", ctx, tMock.AnythingOfType("*v1alpha1.SonarPermissionTemplate")).Return(clientMock, nil)
 	serviceMock.On("K8sClient").Return(fakeCl)

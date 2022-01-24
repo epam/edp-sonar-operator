@@ -8,15 +8,18 @@ import (
 	"time"
 
 	jenkinsV1Api "github.com/epam/edp-jenkins-operator/v2/pkg/apis/v2/v1alpha1"
-	"github.com/epam/edp-sonar-operator/v2/pkg/apis/edp/v1alpha1"
-	sonarClient "github.com/epam/edp-sonar-operator/v2/pkg/client/sonar"
-	"github.com/epam/edp-sonar-operator/v2/pkg/service/platform"
 	"github.com/pkg/errors"
 	"github.com/stretchr/testify/assert"
+	tMock "github.com/stretchr/testify/mock"
 	coreV1Api "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client/fake"
+
+	cMock "github.com/epam/edp-sonar-operator/v2/mocks/client"
+	pMock "github.com/epam/edp-sonar-operator/v2/mocks/platform"
+	"github.com/epam/edp-sonar-operator/v2/pkg/apis/edp/v1alpha1"
+	sonarClient "github.com/epam/edp-sonar-operator/v2/pkg/client/sonar"
 )
 
 func TestSonarServiceImpl_DeleteResource(t *testing.T) {
@@ -61,8 +64,8 @@ func TestServiceMock_Configure(t *testing.T) {
 	jns := jenkinsV1Api.Jenkins{Spec: jenkinsV1Api.JenkinsSpec{BasePath: "zabagdo"}, ObjectMeta: metav1.ObjectMeta{
 		Name: "js1", Namespace: snr.Namespace,
 	}}
-	plMock := platform.Mock{}
-	clMock := ClientMock{}
+	plMock := pMock.Service{}
+	clMock := cMock.ClientInterface{}
 
 	s := Service{
 		k8sClient:       fake.NewClientBuilder().WithScheme(sch).WithRuntimeObjects(&jns).Build(),
@@ -78,20 +81,19 @@ func TestServiceMock_Configure(t *testing.T) {
 	}}
 
 	plMock.On("CreateSecret", snr.Name, snr.Namespace,
-		fmt.Sprintf("%s-admin-password", snr.Name)).Return(&adminSecret, nil)
+		fmt.Sprintf("%s-admin-password", snr.Name), tMock.AnythingOfType("map[string][]uint8")).Return(&adminSecret, nil)
 	plMock.On("SetOwnerReference", &snr, &adminSecret).Return(nil)
-	plMock.On("GetExternalEndpoint", snr.Namespace, snr.Name).Return("url", nil)
-	clMock.On("ChangePassword", "admin", "admin", "pwd123").Return(nil)
+	clMock.On("ChangePassword", context.TODO(), "admin", "admin", "pwd123").Return(nil)
 	clMock.On("InstallPlugins",
 		[]string{"authoidc", "checkstyle", "findbugs", "pmd", "jacoco", "xml", "javascript", "go", "ansible", "yaml",
 			"python", "csharp", "groovy"}).Return(nil)
 	clMock.On("UploadProfile", "EDP way").
 		Return("profile123", nil)
 	clMock.On("CreateQualityGate", "EDP way").Return("qg1", nil)
-	clMock.On("GetGroup", nonInteractiveGroupName).Return(nil, sonarClient.ErrNotFound("not found"))
-	clMock.On("GetGroup", sonarDevelopersGroupName).Return(nil, sonarClient.ErrNotFound("not found"))
-	clMock.On("CreateGroup", &sonarClient.Group{Name: nonInteractiveGroupName}).Return(nil)
-	clMock.On("CreateGroup", &sonarClient.Group{Name: sonarDevelopersGroupName}).Return(nil)
+	clMock.On("GetGroup", context.TODO(), nonInteractiveGroupName).Return(nil, sonarClient.ErrNotFound("not found"))
+	clMock.On("GetGroup", context.TODO(), sonarDevelopersGroupName).Return(nil, sonarClient.ErrNotFound("not found"))
+	clMock.On("CreateGroup", context.TODO(), &sonarClient.Group{Name: nonInteractiveGroupName}).Return(nil)
+	clMock.On("CreateGroup", context.TODO(), &sonarClient.Group{Name: sonarDevelopersGroupName}).Return(nil)
 	clMock.On("AddPermissionsToGroup", nonInteractiveGroupName, "scan").Return(nil)
 	clMock.On("AddWebhook", "jenkins",
 		"http://jenkins.ns:8080/zabagdo/sonarqube-webhook/").Return(nil)
@@ -99,11 +101,13 @@ func TestServiceMock_Configure(t *testing.T) {
 		"coverage/lcov.info").Return(nil)
 	clMock.On("ConfigureGeneralSettings", "values", "sonar.coverage.jacoco.xmlReportPaths",
 		"target/site/jacoco/jacoco.xml").Return(nil)
-	clMock.On("SetDefaultPermissionTemplate", snr.Spec.DefaultPermissionTemplate).Return(nil)
+	clMock.On("SetDefaultPermissionTemplate", context.TODO(), snr.Spec.DefaultPermissionTemplate).Return(nil)
 
 	if err := s.Configure(context.Background(), &snr); err != nil {
 		t.Fatalf("%+v", err)
 	}
+	plMock.AssertExpectations(t)
+	clMock.AssertExpectations(t)
 }
 
 func TestServiceMock_Configure_FailGetGroupForCreation(t *testing.T) {
@@ -125,8 +129,8 @@ func TestServiceMock_Configure_FailGetGroupForCreation(t *testing.T) {
 	jns := jenkinsV1Api.Jenkins{Spec: jenkinsV1Api.JenkinsSpec{BasePath: "zabagdo"}, ObjectMeta: metav1.ObjectMeta{
 		Name: "js1", Namespace: snr.Namespace,
 	}}
-	plMock := platform.Mock{}
-	clMock := ClientMock{}
+	plMock := pMock.Service{}
+	clMock := cMock.ClientInterface{}
 
 	s := Service{
 		k8sClient:       fake.NewClientBuilder().WithScheme(sch).WithRuntimeObjects(&jns).Build(),
@@ -142,19 +146,19 @@ func TestServiceMock_Configure_FailGetGroupForCreation(t *testing.T) {
 	}}
 
 	plMock.On("CreateSecret", snr.Name, snr.Namespace,
-		fmt.Sprintf("%s-admin-password", snr.Name)).Return(&adminSecret, nil)
+		fmt.Sprintf("%s-admin-password", snr.Name), tMock.AnythingOfType("map[string][]uint8")).Return(&adminSecret, nil)
 	plMock.On("SetOwnerReference", &snr, &adminSecret).Return(nil)
 	plMock.On("GetExternalEndpoint", snr.Namespace, snr.Name).Return("url", nil)
-	clMock.On("ChangePassword", "admin", "admin", "pwd123").Return(nil)
+	clMock.On("ChangePassword", context.TODO(), "admin", "admin", "pwd123").Return(nil)
 	clMock.On("InstallPlugins",
 		[]string{"authoidc", "checkstyle", "findbugs", "pmd", "jacoco", "xml", "javascript", "go", "ansible", "yaml",
 			"python", "csharp", "groovy"}).Return(nil)
 	clMock.On("UploadProfile", "EDP way").
 		Return("profile123", nil)
 	clMock.On("CreateQualityGate", "EDP way").Return("qg1", nil)
-	clMock.On("GetGroup", nonInteractiveGroupName).Return(nil, sonarClient.ErrNotFound("not found"))
-	clMock.On("GetGroup", sonarDevelopersGroupName).Return(nil, errors.New("FATAL:GETGROUPS"))
-	clMock.On("CreateGroup", &sonarClient.Group{Name: nonInteractiveGroupName}).Return(nil)
+	clMock.On("GetGroup", context.TODO(), nonInteractiveGroupName).Return(nil, sonarClient.ErrNotFound("not found"))
+	clMock.On("GetGroup", context.TODO(), sonarDevelopersGroupName).Return(nil, errors.New("FATAL:GETGROUPS"))
+	clMock.On("CreateGroup", context.TODO(), &sonarClient.Group{Name: nonInteractiveGroupName}).Return(nil)
 
 	err := s.Configure(context.Background(), &snr)
 	assert.Error(t, err)
@@ -182,8 +186,8 @@ func TestServiceMock_Configure_FailCreateGroup(t *testing.T) {
 	jns := jenkinsV1Api.Jenkins{Spec: jenkinsV1Api.JenkinsSpec{BasePath: "zabagdo"}, ObjectMeta: metav1.ObjectMeta{
 		Name: "js1", Namespace: snr.Namespace,
 	}}
-	plMock := platform.Mock{}
-	clMock := ClientMock{}
+	plMock := pMock.Service{}
+	clMock := cMock.ClientInterface{}
 
 	s := Service{
 		k8sClient:       fake.NewClientBuilder().WithScheme(sch).WithRuntimeObjects(&jns).Build(),
@@ -199,19 +203,19 @@ func TestServiceMock_Configure_FailCreateGroup(t *testing.T) {
 	}}
 
 	plMock.On("CreateSecret", snr.Name, snr.Namespace,
-		fmt.Sprintf("%s-admin-password", snr.Name)).Return(&adminSecret, nil)
+		fmt.Sprintf("%s-admin-password", snr.Name), tMock.AnythingOfType("map[string][]uint8")).Return(&adminSecret, nil)
 	plMock.On("SetOwnerReference", &snr, &adminSecret).Return(nil)
 	plMock.On("GetExternalEndpoint", snr.Namespace, snr.Name).Return("url", nil)
-	clMock.On("ChangePassword", "admin", "admin", "pwd123").Return(nil)
+	clMock.On("ChangePassword", context.TODO(), "admin", "admin", "pwd123").Return(nil)
 	clMock.On("InstallPlugins",
 		[]string{"authoidc", "checkstyle", "findbugs", "pmd", "jacoco", "xml", "javascript", "go", "ansible", "yaml",
 			"python", "csharp", "groovy"}).Return(nil)
 	clMock.On("UploadProfile", "EDP way").
 		Return("profile123", nil)
 	clMock.On("CreateQualityGate", "EDP way").Return("qg1", nil)
-	clMock.On("GetGroup", nonInteractiveGroupName).Return(nil, sonarClient.ErrNotFound("not found"))
-	clMock.On("GetGroup", sonarDevelopersGroupName).Return(nil, sonarClient.ErrNotFound("not found"))
-	clMock.On("CreateGroup", &sonarClient.Group{Name: nonInteractiveGroupName}).Return(errors.New("FATAL:CREATE"))
+	clMock.On("GetGroup", context.TODO(), nonInteractiveGroupName).Return(nil, sonarClient.ErrNotFound("not found"))
+	clMock.On("GetGroup", context.TODO(), sonarDevelopersGroupName).Return(nil, sonarClient.ErrNotFound("not found"))
+	clMock.On("CreateGroup", context.TODO(), &sonarClient.Group{Name: nonInteractiveGroupName}).Return(errors.New("FATAL:CREATE"))
 
 	err := s.Configure(context.Background(), &snr)
 	assert.Error(t, err)
@@ -239,8 +243,8 @@ func TestServiceMock_Configure_FailAddPermissions(t *testing.T) {
 	jns := jenkinsV1Api.Jenkins{Spec: jenkinsV1Api.JenkinsSpec{BasePath: "zabagdo"}, ObjectMeta: metav1.ObjectMeta{
 		Name: "js1", Namespace: snr.Namespace,
 	}}
-	plMock := platform.Mock{}
-	clMock := ClientMock{}
+	plMock := pMock.Service{}
+	clMock := cMock.ClientInterface{}
 
 	s := Service{
 		k8sClient:       fake.NewClientBuilder().WithScheme(sch).WithRuntimeObjects(&jns).Build(),
@@ -256,20 +260,20 @@ func TestServiceMock_Configure_FailAddPermissions(t *testing.T) {
 	}}
 
 	plMock.On("CreateSecret", snr.Name, snr.Namespace,
-		fmt.Sprintf("%s-admin-password", snr.Name)).Return(&adminSecret, nil)
+		fmt.Sprintf("%s-admin-password", snr.Name), tMock.AnythingOfType("map[string][]uint8")).Return(&adminSecret, nil)
 	plMock.On("SetOwnerReference", &snr, &adminSecret).Return(nil)
 	plMock.On("GetExternalEndpoint", snr.Namespace, snr.Name).Return("url", nil)
-	clMock.On("ChangePassword", "admin", "admin", "pwd123").Return(nil)
+	clMock.On("ChangePassword", context.TODO(), "admin", "admin", "pwd123").Return(nil)
 	clMock.On("InstallPlugins",
 		[]string{"authoidc", "checkstyle", "findbugs", "pmd", "jacoco", "xml", "javascript", "go", "ansible", "yaml",
 			"python", "csharp", "groovy"}).Return(nil)
 	clMock.On("UploadProfile", "EDP way").
 		Return("profile123", nil)
 	clMock.On("CreateQualityGate", "EDP way").Return("qg1", nil)
-	clMock.On("GetGroup", nonInteractiveGroupName).Return(nil, sonarClient.ErrNotFound("not found"))
-	clMock.On("GetGroup", sonarDevelopersGroupName).Return(nil, sonarClient.ErrNotFound("not found"))
-	clMock.On("CreateGroup", &sonarClient.Group{Name: nonInteractiveGroupName}).Return(nil)
-	clMock.On("CreateGroup", &sonarClient.Group{Name: sonarDevelopersGroupName}).Return(nil)
+	clMock.On("GetGroup", context.TODO(), nonInteractiveGroupName).Return(nil, sonarClient.ErrNotFound("not found"))
+	clMock.On("GetGroup", context.TODO(), sonarDevelopersGroupName).Return(nil, sonarClient.ErrNotFound("not found"))
+	clMock.On("CreateGroup", context.TODO(), &sonarClient.Group{Name: nonInteractiveGroupName}).Return(nil)
+	clMock.On("CreateGroup", context.TODO(), &sonarClient.Group{Name: sonarDevelopersGroupName}).Return(nil)
 	clMock.On("AddPermissionsToGroup", nonInteractiveGroupName, "scan").Return(errors.New("FATAL:ADDPERM"))
 
 	err := s.Configure(context.Background(), &snr)

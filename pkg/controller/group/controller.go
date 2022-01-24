@@ -100,7 +100,7 @@ func (r *Reconcile) tryReconcile(ctx context.Context, instance *sonarApi.SonarGr
 	_, err = sClient.GetGroup(ctx, instance.Spec.Name)
 	if sonarClient.IsErrNotFound(err) {
 		sonarGroup := sonarClient.Group{Name: instance.Spec.Name, Description: instance.Spec.Description}
-		if err := sClient.CreateGroup(ctx, &sonarGroup); err != nil {
+		if err = sClient.CreateGroup(ctx, &sonarGroup); err != nil {
 			return errors.Wrap(err, "unable to create sonar group")
 		}
 		instance.Status.ID = sonarGroup.ID
