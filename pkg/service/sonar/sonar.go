@@ -50,6 +50,10 @@ const (
 	imgFolder                        = "img"
 	sonarIcon                        = "sonar.svg"
 	jenkinsDefaultScriptConfigMapKey = "context"
+	main                             = "main"
+	annotation                       = "openid-configuration"
+	admin                            = "admin"
+	tokenType                        = "token"
 )
 
 type ServiceInterface interface {
@@ -161,7 +165,7 @@ func (s Service) initSonarClient(ctx context.Context, instance *v1alpha1.Sonar, 
 		return nil, errors.Wrapf(err, "Unable to get route for %v", instance.Name)
 	}
 
-	return sonarClient.InitNewRestClient(fmt.Sprintf("%s/api", u), "admin", password), nil
+	return sonarClient.InitNewRestClient(fmt.Sprintf("%s/api", u), admin, password), nil
 }
 
 func (s Service) Integration(ctx context.Context, instance v1alpha1.Sonar) (*v1alpha1.Sonar, error) {
@@ -177,9 +181,9 @@ func (s Service) Integration(ctx context.Context, instance v1alpha1.Sonar) (*v1a
 		if realm.Annotations == nil {
 			return &instance, errors.New("realm main does not have required annotations")
 		}
-		openIdConfiguration := realm.Annotations["openid-configuration"]
+		openIdConfiguration := realm.Annotations[annotation]
 		var c map[string]interface{}
-		err := json.Unmarshal([]byte(openIdConfiguration), &c)
+		err = json.Unmarshal([]byte(openIdConfiguration), &c)
 		if err != nil {
 			return &instance, errors.Wrap(err, "failed to unmarshal OpenID configuration")
 		}
@@ -236,7 +240,7 @@ func (s Service) Integration(ctx context.Context, instance v1alpha1.Sonar) (*v1a
 
 	dv := "private"
 	log.Printf("trying to set %v visibility for projects as default", dv)
-	if err := sc.SetProjectsDefaultVisibility(dv); err != nil {
+	if err = sc.SetProjectsDefaultVisibility(dv); err != nil {
 		return nil, errors.Wrapf(err, "couldn't set default %v visibility for projects", dv)
 	}
 
@@ -246,7 +250,7 @@ func (s Service) Integration(ctx context.Context, instance v1alpha1.Sonar) (*v1a
 func (s Service) getKeycloakRealm(instance v1alpha1.Sonar) (*keycloakApi.KeycloakRealm, error) {
 	realm := &keycloakApi.KeycloakRealm{}
 	err := s.k8sClient.Get(context.TODO(), types.NamespacedName{
-		Name:      "main",
+		Name:      main,
 		Namespace: instance.Namespace,
 	}, realm)
 	if err != nil {
@@ -324,7 +328,7 @@ func (s Service) ExposeConfiguration(ctx context.Context, instance *v1alpha1.Son
 	if sonarClient.IsErrNotFound(err) {
 		sonarUser := sonarClient.User{
 			Login: jenkinsLogin, Name: jenkinsUsername, Password: uniuri.New()}
-		if err := sc.CreateUser(ctx, &sonarUser); err != nil {
+		if err = sc.CreateUser(ctx, &sonarUser); err != nil {
 			return errors.Wrapf(err, "Failed to create user %v in Sonar", jenkinsUsername)
 		}
 	} else if err != nil {
@@ -336,7 +340,7 @@ func (s Service) ExposeConfiguration(ctx context.Context, instance *v1alpha1.Son
 		return errors.Wrapf(err, "Failed to add %v user in %v group!", jenkinsLogin, nonInteractiveGroupName)
 	}
 
-	err = sc.AddPermissionsToUser(jenkinsLogin, "admin")
+	err = sc.AddPermissionsToUser(jenkinsLogin, admin)
 	if err != nil {
 		return errors.Wrapf(err, "Failed to add admin permissions to  %v user", jenkinsLogin)
 	}
@@ -359,7 +363,7 @@ func (s Service) ExposeConfiguration(ctx context.Context, instance *v1alpha1.Son
 			if err != nil {
 				return errors.Wrapf(err, "Failed to create secret for  %v user", ciUserName)
 			}
-			if err := s.platformService.SetOwnerReference(instance, secret); err != nil {
+			if err = s.platformService.SetOwnerReference(instance, secret); err != nil {
 				return errors.Wrapf(err, "Failed to set owner reference for secret %v", secret)
 			}
 		}
@@ -367,7 +371,7 @@ func (s Service) ExposeConfiguration(ctx context.Context, instance *v1alpha1.Son
 		return errors.Wrapf(err, "unexpected error during get user token for user %s", jenkinsLogin)
 	}
 
-	err = s.platformService.CreateJenkinsServiceAccount(instance.Namespace, ciUserName, "token")
+	err = s.platformService.CreateJenkinsServiceAccount(instance.Namespace, ciUserName, tokenType)
 	if err != nil {
 		return errors.Wrapf(err, "Failed to create Jenkins Service Account for %v", ciUserName)
 	}
@@ -421,7 +425,7 @@ func (s Service) ExposeConfiguration(ctx context.Context, instance *v1alpha1.Son
 		if readToken != nil {
 			readSecret := map[string][]byte{
 				"username": []byte(readUserLogin),
-				"token":    []byte(*readToken),
+				tokenType:  []byte(*readToken),
 			}
 
 			secret, err := s.platformService.CreateSecret(instance.Name, instance.Namespace, readUserSecretName, readSecret)
@@ -502,31 +506,31 @@ func (s Service) Configure(ctx context.Context, instance *v1alpha1.Sonar) error 
 		return errors.Wrap(err, "Failed to initialize Sonar Client!")
 	}
 
-	if err := installPlugins(sc); err != nil {
+	if err = installPlugins(sc); err != nil {
 		return errors.Wrap(err, "unable to install plugins")
 	}
 
-	if err := uploadProfile(sc); err != nil {
+	if err = uploadProfile(sc); err != nil {
 		return errors.Wrap(err, "unable to upload profile")
 	}
 
-	if err := createQualityGate(sc); err != nil {
+	if err = createQualityGate(sc); err != nil {
 		return errors.Wrap(err, "Failed to configure EDP way quality gate!")
 	}
 
-	if err := setupGroups(ctx, sc); err != nil {
+	if err = setupGroups(ctx, sc); err != nil {
 		return errors.Wrap(err, "unable to setup groups")
 	}
 
-	if err := s.setupWebhook(ctx, sc, instance.Namespace); err != nil {
+	if err = s.setupWebhook(ctx, sc, instance.Namespace); err != nil {
 		return errors.Wrap(err, "unable to setup webhook")
 	}
 
-	if err := configureGeneralSettings(sc); err != nil {
+	if err = configureGeneralSettings(sc); err != nil {
 		return errors.Wrap(err, "unable to configure general settings")
 	}
 
-	if err := setDefaultPermissionTemplate(ctx, sc, instance.Spec.DefaultPermissionTemplate); err != nil {
+	if err = setDefaultPermissionTemplate(ctx, sc, instance.Spec.DefaultPermissionTemplate); err != nil {
 		return errors.Wrap(err, "unable to set default permission template")
 	}
 
@@ -538,7 +542,7 @@ func (s *Service) setupWebhook(ctx context.Context, sc ClientInterface, instance
 	if err != nil {
 		return errors.Wrap(err, "unable to get internal jenkins url")
 	}
-	if err := sc.AddWebhook(jenkinsLogin, fmt.Sprintf("%v/%v", jenkinsUrl, webhookUrl)); err != nil {
+	if err = sc.AddWebhook(jenkinsLogin, fmt.Sprintf("%v/%v", jenkinsUrl, webhookUrl)); err != nil {
 		return errors.Wrap(err, "Failed to add Jenkins webhook!")
 	}
 
@@ -556,7 +560,7 @@ func (s *Service) configurePassword(ctx context.Context, instance *v1alpha1.Sona
 		return errors.Wrap(err, "Failed to initialize Sonar Client!")
 	}
 
-	err = sc.ChangePassword(ctx, "admin", defaultPassword, string(credentials["password"]))
+	err = sc.ChangePassword(ctx, admin, defaultPassword, string(credentials["password"]))
 	if sonarClient.IsHTTPErrorCode(err, http.StatusUnauthorized) ||
 		sonarClient.IsHTTPErrorCode(err, http.StatusForbidden) {
 		return nil
@@ -653,14 +657,14 @@ func configureGeneralSettings(sc ClientInterface) error {
 func (s Service) createAdminSecret(instance *v1alpha1.Sonar) (map[string][]byte, error) {
 	secret, err := s.platformService.CreateSecret(instance.Name, instance.Namespace,
 		fmt.Sprintf("%s-admin-password", instance.Name), map[string][]byte{
-			"user":     []byte("admin"),
+			"user":     []byte(admin),
 			"password": []byte(uniuri.New()),
 		})
 	if err != nil {
 		return nil, errors.Wrapf(err, "Failed to create password for Admin in %s Sonar!", instance.Name)
 	}
 
-	if err := s.platformService.SetOwnerReference(instance, secret); err != nil {
+	if err = s.platformService.SetOwnerReference(instance, secret); err != nil {
 		return nil, errors.Wrapf(err, "Failed to set owner reference for secret %v", secret)
 	}
 

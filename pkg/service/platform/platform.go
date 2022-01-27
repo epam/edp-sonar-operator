@@ -60,7 +60,7 @@ func NewService(platformType string, scheme *runtime.Scheme, client client.Clien
 		}
 		return s, nil
 	default:
-		err := errors.New(fmt.Sprintf("Platform %s is not supported!", platformType))
+		err = fmt.Errorf("platform %s is not supported", platformType)
 		return nil, err
 	}
 }
