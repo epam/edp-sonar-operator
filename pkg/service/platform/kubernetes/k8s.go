@@ -7,9 +7,6 @@ import (
 
 	edpCompApi "github.com/epam/edp-component-operator/pkg/apis/v1/v1alpha1"
 	jenkinsV1Api "github.com/epam/edp-jenkins-operator/v2/pkg/apis/v2/v1alpha1"
-	"github.com/epam/edp-sonar-operator/v2/pkg/apis/edp/v1alpha1"
-	"github.com/epam/edp-sonar-operator/v2/pkg/service/platform/helper"
-	platformHelper "github.com/epam/edp-sonar-operator/v2/pkg/service/platform/helper"
 	"github.com/pkg/errors"
 	coreV1Api "k8s.io/api/core/v1"
 	k8serr "k8s.io/apimachinery/pkg/api/errors"
@@ -23,16 +20,34 @@ import (
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
+
+	"github.com/epam/edp-sonar-operator/v2/pkg/apis/edp/v1alpha1"
+	"github.com/epam/edp-sonar-operator/v2/pkg/service/platform/helper"
+	platformHelper "github.com/epam/edp-sonar-operator/v2/pkg/service/platform/helper"
 )
 
 var log = ctrl.Log.WithName("platform")
 
+// K8SClusterClient is client for k8s cluster
+type K8SClusterClient interface {
+	coreV1Client.CoreV1Interface
+}
+
+// PodsStateClient is client to control, update, snapshot pods state
+type PodsStateClient interface {
+	appsV1Client.AppsV1Interface
+}
+
+type ExtensionClient interface {
+	extensionsV1Client.ExtensionsV1beta1Interface
+}
+
 type K8SService struct {
 	Scheme             *runtime.Scheme
 	client             client.Client
-	coreClient         coreV1Client.CoreV1Client
-	AppsClient         appsV1Client.AppsV1Client
-	ExtensionsV1Client extensionsV1Client.ExtensionsV1beta1Client
+	k8sClusterClient   K8SClusterClient
+	AppsClient         PodsStateClient
+	ExtensionsV1Client ExtensionClient
 }
 
 func (s *K8SService) Init(config *rest.Config, scheme *runtime.Scheme, client client.Client) error {
@@ -52,18 +67,19 @@ func (s *K8SService) Init(config *rest.Config, scheme *runtime.Scheme, client cl
 	}
 
 	s.client = client
-	s.coreClient = *coreClient
-	s.ExtensionsV1Client = *ecl
-	s.AppsClient = *acl
+	s.k8sClusterClient = coreClient
+	s.ExtensionsV1Client = ecl
+	s.AppsClient = acl
 	s.Scheme = scheme
 	return nil
 }
 
 func (s K8SService) GetSecretData(namespace string, name string) (map[string][]byte, error) {
-	sonarSecret, err := s.coreClient.Secrets(namespace).Get(context.TODO(), name, metav1.GetOptions{})
+	sonarSecret, err := s.k8sClusterClient.Secrets(namespace).Get(context.Background(), name, metav1.GetOptions{})
 	if err != nil && k8serr.IsNotFound(err) {
 		log.Info("Secret in namespace not found", "secret name", name, "namespace", namespace)
-		return nil, nil
+		var emptyMap map[string][]byte
+		return emptyMap, nil
 	} else if err != nil {
 		return nil, err
 	}
@@ -83,13 +99,13 @@ func (s K8SService) CreateSecret(sonarName, namespace, secretName string, data m
 		Type: "Opaque",
 	}
 
-	existingSecret, err := s.coreClient.Secrets(sonarSecretObject.Namespace).
+	existingSecret, err := s.k8sClusterClient.Secrets(sonarSecretObject.Namespace).
 		Get(context.TODO(), sonarSecretObject.Name, metav1.GetOptions{})
 
 	if err != nil {
 		if k8serr.IsNotFound(err) {
 			log.V(1).Info("Creating a new Secret for Sonar", "namespace", sonarSecretObject.Namespace, "secret name", sonarSecretObject.Name, "sonar name", sonarName)
-			sonarSecret, err := s.coreClient.Secrets(sonarSecretObject.Namespace).Create(context.TODO(), sonarSecretObject, metav1.CreateOptions{})
+			sonarSecret, err := s.k8sClusterClient.Secrets(sonarSecretObject.Namespace).Create(context.Background(), sonarSecretObject, metav1.CreateOptions{})
 			if err != nil {
 				return nil, err
 			}
@@ -126,14 +142,15 @@ func (s K8SService) CreateConfigMap(instance *v1alpha1.Sonar, configMapName stri
 	if err := controllerutil.SetControllerReference(instance, configMapObject, s.Scheme); err != nil {
 		return errors.Wrapf(err, "Couldn't set reference for Config Map %v object", configMapObject.Name)
 	}
-	_, err := s.coreClient.ConfigMaps(instance.Namespace).Get(context.TODO(), configMapObject.Name, metav1.GetOptions{})
+	_, err := s.k8sClusterClient.ConfigMaps(instance.Namespace).Get(context.Background(), configMapObject.Name, metav1.GetOptions{})
 	if err != nil {
 		if k8serr.IsNotFound(err) {
-			cm, err := s.coreClient.ConfigMaps(configMapObject.Namespace).Create(context.TODO(), configMapObject, metav1.CreateOptions{})
+			cm, err := s.k8sClusterClient.ConfigMaps(configMapObject.Namespace).Create(context.Background(), configMapObject, metav1.CreateOptions{})
 			if err != nil {
 				return errors.Wrapf(err, "Couldn't create Config Map %v object", configMapObject.Name)
 			}
 			log.Info("ConfigMap has been created", "namespace", cm.Namespace, "config map name", cm.Name)
+			return nil
 		}
 		return errors.Wrapf(err, "Couldn't get ConfigMap %v object", configMapObject.Name)
 	}
@@ -217,7 +234,7 @@ func (s K8SService) getJenkinsServiceAccount(name, namespace string) (*jenkinsV1
 }
 
 func (s K8SService) GetAvailableDeploymentReplicas(instance *v1alpha1.Sonar) (*int, error) {
-	c, err := s.AppsClient.Deployments(instance.Namespace).Get(context.TODO(), instance.Name, metav1.GetOptions{})
+	c, err := s.AppsClient.Deployments(instance.Namespace).Get(context.Background(), instance.Name, metav1.GetOptions{})
 	if err != nil {
 		return nil, err
 	}
@@ -270,8 +287,6 @@ func (s K8SService) createEDPComponent(sonar *v1alpha1.Sonar, url string, icon s
 }
 
 func (s K8SService) SetOwnerReference(sonar *v1alpha1.Sonar, object client.Object) error {
-	if err := controllerutil.SetControllerReference(sonar, object, s.Scheme); err != nil {
-		return err
-	}
-	return nil
+	err := controllerutil.SetControllerReference(sonar, object, s.Scheme)
+	return err
 }

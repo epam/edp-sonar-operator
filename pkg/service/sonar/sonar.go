@@ -157,7 +157,10 @@ func (s Service) initSonarClient(ctx context.Context, instance *v1alpha1.Sonar, 
 		if err != nil {
 			return nil, errors.Wrapf(err, "Failed to get %v secret for Sonar client!", adminSecretName)
 		}
-		password = string(credentials["password"])
+
+		if newPassword, ok := credentials["password"]; ok {
+			password = string(newPassword)
+		}
 	}
 
 	u, err := s.platformService.GetExternalEndpoint(ctx, instance.Namespace, instance.Name)
