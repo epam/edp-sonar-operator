@@ -6,9 +6,6 @@ import (
 	"os"
 	"strings"
 
-	"github.com/epam/edp-sonar-operator/v2/pkg/apis/edp/v1alpha1"
-	platformHelper "github.com/epam/edp-sonar-operator/v2/pkg/service/platform/helper"
-	"github.com/epam/edp-sonar-operator/v2/pkg/service/platform/kubernetes"
 	appsV1client "github.com/openshift/client-go/apps/clientset/versioned/typed/apps/v1"
 	projectV1Client "github.com/openshift/client-go/project/clientset/versioned/typed/project/v1"
 	routeV1Client "github.com/openshift/client-go/route/clientset/versioned/typed/route/v1"
@@ -20,16 +17,40 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/client-go/rest"
 	"sigs.k8s.io/controller-runtime/pkg/client"
+
+	"github.com/epam/edp-sonar-operator/v2/pkg/apis/edp/v1alpha1"
+	platformHelper "github.com/epam/edp-sonar-operator/v2/pkg/service/platform/helper"
+	"github.com/epam/edp-sonar-operator/v2/pkg/service/platform/kubernetes"
 )
+
+type OpenshiftPodsStateClient interface {
+	appsV1client.AppsV1Interface
+}
+
+type RouteClient interface {
+	routeV1Client.RouteV1Interface
+}
+
+type SecurityClient interface {
+	securityV1Client.SecurityV1Interface
+}
+
+type ProjectClient interface {
+	projectV1Client.ProjectV1Interface
+}
+
+type TemplateClient interface {
+	templateV1Client.TemplateV1Interface
+}
 
 type OpenshiftService struct {
 	kubernetes.K8SService
 
-	templateClient templateV1Client.TemplateV1Client
-	projectClient  projectV1Client.ProjectV1Client
-	securityClient securityV1Client.SecurityV1Client
-	appClient      appsV1client.AppsV1Client
-	routeClient    routeV1Client.RouteV1Client
+	templateClient TemplateClient
+	projectClient  ProjectClient
+	securityClient SecurityClient
+	appClient      OpenshiftPodsStateClient
+	routeClient    RouteClient
 }
 
 const (
@@ -49,30 +70,30 @@ func (service *OpenshiftService) Init(config *rest.Config, scheme *runtime.Schem
 		return err
 	}
 
-	service.templateClient = *templateClient
+	service.templateClient = templateClient
 	projectClient, err := projectV1Client.NewForConfig(config)
 	if err != nil {
 		return err
 	}
 
-	service.projectClient = *projectClient
+	service.projectClient = projectClient
 	securityClient, err := securityV1Client.NewForConfig(config)
 	if err != nil {
 		return err
 	}
 
-	service.securityClient = *securityClient
+	service.securityClient = securityClient
 	appClient, err := appsV1client.NewForConfig(config)
 	if err != nil {
 		return err
 	}
 
-	service.appClient = *appClient
+	service.appClient = appClient
 	routeClient, err := routeV1Client.NewForConfig(config)
 	if err != nil {
 		return err
 	}
-	service.routeClient = *routeClient
+	service.routeClient = routeClient
 
 	return nil
 }
@@ -96,7 +117,7 @@ func (service OpenshiftService) GetExternalEndpoint(ctx context.Context, namespa
 
 func (service OpenshiftService) GetAvailableDeploymentReplicas(instance *v1alpha1.Sonar) (*int, error) {
 	if os.Getenv(deploymentTypeEnvName) == deploymentConfigsDeploymentType {
-		c, err := service.appClient.DeploymentConfigs(instance.Namespace).Get(context.TODO(), instance.Name, metav1.GetOptions{})
+		c, err := service.appClient.DeploymentConfigs(instance.Namespace).Get(context.Background(), instance.Name, metav1.GetOptions{})
 		if err != nil {
 			return nil, err
 		}
