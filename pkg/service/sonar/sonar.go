@@ -79,9 +79,10 @@ type Deletable interface {
 
 func NewService(platformService platform.Service, k8sClient client.Client, k8sScheme *runtime.Scheme) *Service {
 	svc := Service{
-		platformService: platformService,
-		k8sClient:       k8sClient,
-		k8sScheme:       k8sScheme,
+		platformService:      platformService,
+		k8sClient:            k8sClient,
+		k8sScheme:            k8sScheme,
+		runningInClusterFunc: pkgHelper.RunningInCluster,
 	}
 
 	svc.sonarClientBuilder = svc.initSonarClient
@@ -91,10 +92,11 @@ func NewService(platformService platform.Service, k8sClient client.Client, k8sSc
 
 type Service struct {
 	// Providing sonar service implementation through the interface (platform abstract)
-	platformService    platform.Service
-	k8sClient          client.Client
-	k8sScheme          *runtime.Scheme
-	sonarClientBuilder func(ctx context.Context, instance *v1alpha1.Sonar, useDefaultPassword bool) (ClientInterface, error)
+	platformService      platform.Service
+	k8sClient            client.Client
+	k8sScheme            *runtime.Scheme
+	sonarClientBuilder   func(ctx context.Context, instance *v1alpha1.Sonar, useDefaultPassword bool) (ClientInterface, error)
+	runningInClusterFunc func() bool
 }
 
 func (s Service) K8sClient() client.Client {
@@ -500,6 +502,9 @@ func getIcon() (*string, error) {
 }
 
 func (s Service) Configure(ctx context.Context, instance *v1alpha1.Sonar) error {
+	if s.runningInClusterFunc == nil {
+		return errors.New("missing runningInClusterFunc")
+	}
 	if err := s.configurePassword(ctx, instance); err != nil {
 		return errors.Wrap(err, "unable to setup password for sonar")
 	}
@@ -513,7 +518,7 @@ func (s Service) Configure(ctx context.Context, instance *v1alpha1.Sonar) error 
 		return errors.Wrap(err, "unable to install plugins")
 	}
 
-	if err = uploadProfile(sc); err != nil {
+	if err = uploadProfile(sc, s.runningInClusterFunc); err != nil {
 		return errors.Wrap(err, "unable to upload profile")
 	}
 
@@ -603,9 +608,9 @@ func setupGroups(ctx context.Context, sc ClientInterface) error {
 	return nil
 }
 
-func uploadProfile(sc ClientInterface) error {
+func uploadProfile(sc ClientInterface, isRunningInCluster func() bool) error {
 	profilePath := defaultProfileAbsolutePath
-	if !pkgHelper.RunningInCluster() {
+	if !isRunningInCluster() {
 		profilePath = fmt.Sprintf("%v\\..\\%v\\%v", pkgHelper.GetExecutableFilePath(), localConfigsRelativePath,
 			defaultQualityProfilesFileName)
 	}

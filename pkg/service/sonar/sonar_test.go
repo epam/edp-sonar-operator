@@ -4,11 +4,12 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	keycloakApi "github.com/epam/edp-keycloak-operator/pkg/apis/v1/v1alpha1"
-	v1 "k8s.io/api/admission/v1"
 	"strings"
 	"testing"
 	"time"
+
+	keycloakApi "github.com/epam/edp-keycloak-operator/pkg/apis/v1/v1alpha1"
+	v1 "k8s.io/api/admission/v1"
 
 	jenkinsV1Api "github.com/epam/edp-jenkins-operator/v2/pkg/apis/v2/v1alpha1"
 	"github.com/pkg/errors"
@@ -44,6 +45,26 @@ func createSonarInstance() v1alpha1.Sonar {
 			DefaultPermissionTemplate: template,
 		},
 	}
+}
+
+func plugins() []string {
+	return []string{"authoidc", "checkstyle", "findbugs", "pmd", "jacoco", "xml", "javascript", "go", "ansible",
+		"yaml", "python", "csharp", "groovy"}
+}
+
+func qualityGates() []map[string]string {
+	return []map[string]string{
+		{"error": "80", "metric": "new_coverage", "op": "LT", "period": "1"},
+		{"error": "0", "metric": "test_errors", "op": "GT"},
+		{"error": "3", "metric": "new_duplicated_lines_density", "op": "GT", "period": "1"},
+		{"error": "0", "metric": "test_failures", "op": "GT"},
+		{"error": "0", "metric": "blocker_violations", "op": "GT"},
+		{"error": "0", "metric": "critical_violations", "op": "GT"},
+	}
+}
+
+func returnTrue() bool {
+	return true
 }
 
 func TestSonarServiceImpl_DeleteResource(t *testing.T) {
@@ -99,6 +120,7 @@ func TestServiceMock_Configure(t *testing.T) {
 			useDefaultPassword bool) (ClientInterface, error) {
 			return &clMock, nil
 		},
+		runningInClusterFunc: returnTrue,
 	}
 
 	adminSecret := coreV1Api.Secret{Data: map[string][]byte{
@@ -109,12 +131,10 @@ func TestServiceMock_Configure(t *testing.T) {
 		fmt.Sprintf("%s-admin-password", snr.Name), tMock.AnythingOfType("map[string][]uint8")).Return(&adminSecret, nil)
 	plMock.On("SetOwnerReference", &snr, &adminSecret).Return(nil)
 	clMock.On("ChangePassword", ctx, "admin", "admin", "pwd123").Return(nil)
-	clMock.On("InstallPlugins",
-		[]string{"authoidc", "checkstyle", "findbugs", "pmd", "jacoco", "xml", "javascript", "go", "ansible", "yaml",
-			"python", "csharp", "groovy"}).Return(nil)
-	clMock.On("UploadProfile", "EDP way").
+	clMock.On("InstallPlugins", plugins()).Return(nil)
+	clMock.On("UploadProfile", "EDP way", defaultProfileAbsolutePath).
 		Return("profile123", nil)
-	clMock.On("CreateQualityGate", "EDP way").Return("qg1", nil)
+	clMock.On("CreateQualityGate", "EDP way", qualityGates()).Return("qg1", nil)
 	clMock.On("GetGroup", ctx, nonInteractiveGroupName).Return(nil, sonarClient.ErrNotFound("not found"))
 	clMock.On("GetGroup", ctx, sonarDevelopersGroupName).Return(nil, sonarClient.ErrNotFound("not found"))
 	clMock.On("CreateGroup", ctx, &sonarClient.Group{Name: nonInteractiveGroupName}).Return(nil)
@@ -165,6 +185,7 @@ func TestServiceMock_Configure_FailGetGroupForCreation(t *testing.T) {
 			useDefaultPassword bool) (ClientInterface, error) {
 			return &clMock, nil
 		},
+		runningInClusterFunc: returnTrue,
 	}
 
 	adminSecret := coreV1Api.Secret{Data: map[string][]byte{
@@ -176,12 +197,10 @@ func TestServiceMock_Configure_FailGetGroupForCreation(t *testing.T) {
 	plMock.On("SetOwnerReference", &snr, &adminSecret).Return(nil)
 	plMock.On("GetExternalEndpoint", snr.Namespace, snr.Name).Return("url", nil)
 	clMock.On("ChangePassword", ctx, "admin", "admin", "pwd123").Return(nil)
-	clMock.On("InstallPlugins",
-		[]string{"authoidc", "checkstyle", "findbugs", "pmd", "jacoco", "xml", "javascript", "go", "ansible", "yaml",
-			"python", "csharp", "groovy"}).Return(nil)
-	clMock.On("UploadProfile", "EDP way").
+	clMock.On("InstallPlugins", plugins()).Return(nil)
+	clMock.On("UploadProfile", "EDP way", defaultProfileAbsolutePath).
 		Return("profile123", nil)
-	clMock.On("CreateQualityGate", "EDP way").Return("qg1", nil)
+	clMock.On("CreateQualityGate", "EDP way", qualityGates()).Return("qg1", nil)
 	clMock.On("GetGroup", ctx, nonInteractiveGroupName).Return(nil, sonarClient.ErrNotFound("not found"))
 	clMock.On("GetGroup", ctx, sonarDevelopersGroupName).Return(nil, errors.New("FATAL:GETGROUPS"))
 	clMock.On("CreateGroup", ctx, &sonarClient.Group{Name: nonInteractiveGroupName}).Return(nil)
@@ -223,6 +242,7 @@ func TestServiceMock_Configure_FailCreateGroup(t *testing.T) {
 			useDefaultPassword bool) (ClientInterface, error) {
 			return &clMock, nil
 		},
+		runningInClusterFunc: returnTrue,
 	}
 
 	adminSecret := coreV1Api.Secret{Data: map[string][]byte{
@@ -234,12 +254,10 @@ func TestServiceMock_Configure_FailCreateGroup(t *testing.T) {
 	plMock.On("SetOwnerReference", &snr, &adminSecret).Return(nil)
 	plMock.On("GetExternalEndpoint", snr.Namespace, snr.Name).Return("url", nil)
 	clMock.On("ChangePassword", ctx, "admin", "admin", "pwd123").Return(nil)
-	clMock.On("InstallPlugins",
-		[]string{"authoidc", "checkstyle", "findbugs", "pmd", "jacoco", "xml", "javascript", "go", "ansible", "yaml",
-			"python", "csharp", "groovy"}).Return(nil)
-	clMock.On("UploadProfile", "EDP way").
+	clMock.On("InstallPlugins", plugins()).Return(nil)
+	clMock.On("UploadProfile", "EDP way", defaultProfileAbsolutePath).
 		Return("profile123", nil)
-	clMock.On("CreateQualityGate", "EDP way").Return("qg1", nil)
+	clMock.On("CreateQualityGate", "EDP way", qualityGates()).Return("qg1", nil)
 	clMock.On("GetGroup", ctx, nonInteractiveGroupName).Return(nil, sonarClient.ErrNotFound("not found"))
 	clMock.On("GetGroup", ctx, sonarDevelopersGroupName).Return(nil, sonarClient.ErrNotFound("not found"))
 	clMock.On("CreateGroup", ctx, &sonarClient.Group{Name: nonInteractiveGroupName}).Return(errors.New("FATAL:CREATE"))
@@ -281,6 +299,7 @@ func TestServiceMock_Configure_FailAddPermissions(t *testing.T) {
 			useDefaultPassword bool) (ClientInterface, error) {
 			return &clMock, nil
 		},
+		runningInClusterFunc: returnTrue,
 	}
 
 	adminSecret := coreV1Api.Secret{Data: map[string][]byte{
@@ -292,12 +311,10 @@ func TestServiceMock_Configure_FailAddPermissions(t *testing.T) {
 	plMock.On("SetOwnerReference", &snr, &adminSecret).Return(nil)
 	plMock.On("GetExternalEndpoint", snr.Namespace, snr.Name).Return("url", nil)
 	clMock.On("ChangePassword", ctx, "admin", "admin", "pwd123").Return(nil)
-	clMock.On("InstallPlugins",
-		[]string{"authoidc", "checkstyle", "findbugs", "pmd", "jacoco", "xml", "javascript", "go", "ansible", "yaml",
-			"python", "csharp", "groovy"}).Return(nil)
-	clMock.On("UploadProfile", "EDP way").
+	clMock.On("InstallPlugins", plugins()).Return(nil)
+	clMock.On("UploadProfile", "EDP way", defaultProfileAbsolutePath).
 		Return("profile123", nil)
-	clMock.On("CreateQualityGate", "EDP way").Return("qg1", nil)
+	clMock.On("CreateQualityGate", "EDP way", qualityGates()).Return("qg1", nil)
 	clMock.On("GetGroup", ctx, nonInteractiveGroupName).Return(nil, sonarClient.ErrNotFound("not found"))
 	clMock.On("GetGroup", ctx, sonarDevelopersGroupName).Return(nil, sonarClient.ErrNotFound("not found"))
 	clMock.On("CreateGroup", ctx, &sonarClient.Group{Name: nonInteractiveGroupName}).Return(nil)
@@ -1036,7 +1053,10 @@ func TestService_Configure_configurePasswordErr(t *testing.T) {
 		fmt.Sprintf("%s-admin-password", instance.Name),
 		tMock.AnythingOfType("map[string][]uint8")).Return(nil, errTest)
 
-	service := Service{platformService: &plMock}
+	service := Service{
+		platformService:      &plMock,
+		runningInClusterFunc: returnTrue,
+	}
 	err := service.Configure(ctx, &instance)
 	assert.Error(t, err)
 	assert.True(t, strings.Contains(err.Error(), "unable to setup password for sonar"))
@@ -1059,6 +1079,7 @@ func TestService_Configure_BadBuilder(t *testing.T) {
 		sonarClientBuilder: func(ctx context.Context, instance *v1alpha1.Sonar, useDefaultPassword bool) (ClientInterface, error) {
 			return nil, errors.New("test")
 		},
+		runningInClusterFunc: returnTrue,
 	}
 	err := service.Configure(ctx, &instance)
 	assert.Error(t, err)
@@ -1080,13 +1101,14 @@ func TestService_Configure_installPluginsErr(t *testing.T) {
 		tMock.AnythingOfType("map[string][]uint8")).Return(&secret, nil)
 	plMock.On("SetOwnerReference", &instance, &secret).Return(nil)
 	clMock.On("ChangePassword", ctx, admin, defaultPassword, defaultPassword).Return(nil)
-	clMock.On("InstallPlugins", tMock.AnythingOfType("[]string")).Return(errTest)
+	clMock.On("InstallPlugins", plugins()).Return(errTest)
 
 	service := Service{
 		platformService: &plMock,
 		sonarClientBuilder: func(ctx context.Context, instance *v1alpha1.Sonar, useDefaultPassword bool) (ClientInterface, error) {
 			return &clMock, nil
 		},
+		runningInClusterFunc: returnTrue,
 	}
 	err := service.Configure(ctx, &instance)
 	assert.Error(t, err)
@@ -1109,14 +1131,15 @@ func TestService_Configure_uploadProfileErr(t *testing.T) {
 		tMock.AnythingOfType("map[string][]uint8")).Return(&secret, nil)
 	plMock.On("SetOwnerReference", &instance, &secret).Return(nil)
 	clMock.On("ChangePassword", ctx, admin, defaultPassword, defaultPassword).Return(nil)
-	clMock.On("InstallPlugins", tMock.AnythingOfType("[]string")).Return(nil)
-	clMock.On("UploadProfile", "EDP way").Return("", errTest)
+	clMock.On("InstallPlugins", plugins()).Return(nil)
+	clMock.On("UploadProfile", "EDP way", defaultProfileAbsolutePath).Return("", errTest)
 
 	service := Service{
 		platformService: &plMock,
 		sonarClientBuilder: func(ctx context.Context, instance *v1alpha1.Sonar, useDefaultPassword bool) (ClientInterface, error) {
 			return &clMock, nil
 		},
+		runningInClusterFunc: returnTrue,
 	}
 	err := service.Configure(ctx, &instance)
 	assert.Error(t, err)
@@ -1139,15 +1162,16 @@ func TestService_Configure_createQualityGateErr(t *testing.T) {
 		tMock.AnythingOfType("map[string][]uint8")).Return(&secret, nil)
 	plMock.On("SetOwnerReference", &instance, &secret).Return(nil)
 	clMock.On("ChangePassword", ctx, admin, defaultPassword, defaultPassword).Return(nil)
-	clMock.On("InstallPlugins", tMock.AnythingOfType("[]string")).Return(nil)
-	clMock.On("UploadProfile", edpWay).Return("", nil)
-	clMock.On("CreateQualityGate", "EDP way").Return("", errTest)
+	clMock.On("InstallPlugins", plugins()).Return(nil)
+	clMock.On("UploadProfile", edpWay, defaultProfileAbsolutePath).Return("", nil)
+	clMock.On("CreateQualityGate", "EDP way", qualityGates()).Return("", errTest)
 
 	service := Service{
 		platformService: &plMock,
 		sonarClientBuilder: func(ctx context.Context, instance *v1alpha1.Sonar, useDefaultPassword bool) (ClientInterface, error) {
 			return &clMock, nil
 		},
+		runningInClusterFunc: returnTrue,
 	}
 	err := service.Configure(ctx, &instance)
 	assert.Error(t, err)
@@ -1176,9 +1200,9 @@ func TestService_Configure_setupWebhookErr(t *testing.T) {
 		tMock.AnythingOfType("map[string][]uint8")).Return(&secret, nil)
 	plMock.On("SetOwnerReference", &instance, &secret).Return(nil)
 	clMock.On("ChangePassword", ctx, admin, defaultPassword, defaultPassword).Return(nil)
-	clMock.On("InstallPlugins", tMock.AnythingOfType("[]string")).Return(nil)
-	clMock.On("UploadProfile", edpWay).Return("", nil)
-	clMock.On("CreateQualityGate", "EDP way").Return("", nil)
+	clMock.On("InstallPlugins", plugins()).Return(nil)
+	clMock.On("UploadProfile", edpWay, defaultProfileAbsolutePath).Return("", nil)
+	clMock.On("CreateQualityGate", "EDP way", qualityGates()).Return("", nil)
 	clMock.On("GetGroup", ctx, nonInteractiveGroupName).Return(nil, nil)
 	clMock.On("GetGroup", ctx, sonarDevelopersGroupName).Return(nil, nil)
 	clMock.On("AddPermissionsToGroup", nonInteractiveGroupName, "scan").Return(nil)
@@ -1190,8 +1214,9 @@ func TestService_Configure_setupWebhookErr(t *testing.T) {
 		sonarClientBuilder: func(ctx context.Context, instance *v1alpha1.Sonar, useDefaultPassword bool) (ClientInterface, error) {
 			return &clMock, nil
 		},
-		k8sClient: client,
-		k8sScheme: scheme,
+		k8sClient:            client,
+		k8sScheme:            scheme,
+		runningInClusterFunc: returnTrue,
 	}
 	err := service.Configure(ctx, &instance)
 	assert.Error(t, err)
@@ -1220,9 +1245,9 @@ func TestService_Configure_configureGeneralSettingsErr(t *testing.T) {
 		tMock.AnythingOfType("map[string][]uint8")).Return(&secret, nil)
 	plMock.On("SetOwnerReference", &instance, &secret).Return(nil)
 	clMock.On("ChangePassword", ctx, admin, defaultPassword, defaultPassword).Return(nil)
-	clMock.On("InstallPlugins", tMock.AnythingOfType("[]string")).Return(nil)
-	clMock.On("UploadProfile", edpWay).Return("", nil)
-	clMock.On("CreateQualityGate", "EDP way").Return("", nil)
+	clMock.On("InstallPlugins", plugins()).Return(nil)
+	clMock.On("UploadProfile", edpWay, defaultProfileAbsolutePath).Return("", nil)
+	clMock.On("CreateQualityGate", "EDP way", qualityGates()).Return("", nil)
 	clMock.On("GetGroup", ctx, nonInteractiveGroupName).Return(nil, nil)
 	clMock.On("GetGroup", ctx, sonarDevelopersGroupName).Return(nil, nil)
 	clMock.On("AddPermissionsToGroup", nonInteractiveGroupName, "scan").Return(nil)
@@ -1236,8 +1261,9 @@ func TestService_Configure_configureGeneralSettingsErr(t *testing.T) {
 		sonarClientBuilder: func(ctx context.Context, instance *v1alpha1.Sonar, useDefaultPassword bool) (ClientInterface, error) {
 			return &clMock, nil
 		},
-		k8sClient: client,
-		k8sScheme: scheme,
+		k8sClient:            client,
+		k8sScheme:            scheme,
+		runningInClusterFunc: returnTrue,
 	}
 	err := service.Configure(ctx, &instance)
 	assert.Error(t, err)
@@ -1266,9 +1292,9 @@ func TestService_Configure_setDefaultPermissionTemplateErr(t *testing.T) {
 		tMock.AnythingOfType("map[string][]uint8")).Return(&secret, nil)
 	plMock.On("SetOwnerReference", &instance, &secret).Return(nil)
 	clMock.On("ChangePassword", ctx, admin, defaultPassword, defaultPassword).Return(nil)
-	clMock.On("InstallPlugins", tMock.AnythingOfType("[]string")).Return(nil)
-	clMock.On("UploadProfile", edpWay).Return("", nil)
-	clMock.On("CreateQualityGate", "EDP way").Return("", nil)
+	clMock.On("InstallPlugins", plugins()).Return(nil)
+	clMock.On("UploadProfile", edpWay, defaultProfileAbsolutePath).Return("", nil)
+	clMock.On("CreateQualityGate", "EDP way", qualityGates()).Return("", nil)
 	clMock.On("GetGroup", ctx, nonInteractiveGroupName).Return(nil, nil)
 	clMock.On("GetGroup", ctx, sonarDevelopersGroupName).Return(nil, nil)
 	clMock.On("AddPermissionsToGroup", nonInteractiveGroupName, "scan").Return(nil)
@@ -1285,8 +1311,9 @@ func TestService_Configure_setDefaultPermissionTemplateErr(t *testing.T) {
 		sonarClientBuilder: func(ctx context.Context, instance *v1alpha1.Sonar, useDefaultPassword bool) (ClientInterface, error) {
 			return &clMock, nil
 		},
-		k8sClient: client,
-		k8sScheme: scheme,
+		k8sClient:            client,
+		k8sScheme:            scheme,
+		runningInClusterFunc: returnTrue,
 	}
 	err := service.Configure(ctx, &instance)
 	assert.Error(t, err)

@@ -53,3 +53,26 @@ clean:  ## clean up
 .PHONY: changelog
 changelog: ## generate changelog
 	@git-chglog -o CHANGELOG.md v2.7.0..
+
+.PHONY: gen-mocks
+gen-mocks: gen-platform-service-mock gen-sonar-client-mock gen-sonar-service-mock gen-k8s-clients-mock gen-openshift-clients-mock
+
+.PHONY: gen-platform-service-mock
+gen-platform-service-mock:
+	docker run -v `pwd`:/src -w /src vektra/mockery:v2.9 --case snake --name Service --dir ./pkg/service/platform --output mocks/platform --outpkg mock --exported --filename mock_service.go
+
+.PHONY: gen-sonar-service-mock
+gen-sonar-service-mock:
+	docker run -v `pwd`:/src -w /src vektra/mockery:v2.9 --case snake --name ServiceInterface --dir ./pkg/service/sonar --output mocks/service --outpkg mock --exported --filename sonar_service.go
+
+.PHONY: gen-sonar-client-mock
+gen-sonar-client-mock:
+	docker run -v `pwd`:/src -w /src vektra/mockery:v2.9 --case snake --name ClientInterface --dir ./pkg/service/sonar --output mocks/client --outpkg mock --exported --filename sonar_client.go
+
+.PHONY: gen-k8s-clients-mock
+gen-k8s-clients-mock:
+	docker run -v `pwd`:/src -w /src vektra/mockery:v2.9 --case snake --all --dir ./pkg/service/platform/kubernetes --output mocks/k8s --outpkg mock --exported
+
+.PHONY: gen-openshift-clients-mock
+gen-openshift-clients-mock:
+	docker run -v `pwd`:/src -w /src vektra/mockery:v2.9 --case snake --all --dir ./pkg/service/platform/openshift --output mocks/openshift --outpkg mock --exported

@@ -69,7 +69,7 @@ func TestK8SService_Init(t *testing.T) {
 
 func TestK8SService_GetSecretData_GetErr(t *testing.T) {
 	errTest := errors.New("Test")
-	coreClient := kMock.CoreV1Interface{}
+	coreClient := kMock.K8SClusterClient{}
 	secrets := &kMock.SecretInterface{}
 	coreClient.On("Secrets", namespace).Return(secrets)
 	secrets.On("Get", context.Background(), name, metav1.GetOptions{}).Return(nil, errTest)
@@ -84,7 +84,7 @@ func TestK8SService_GetSecretData_GetErr(t *testing.T) {
 }
 
 func TestK8SService_GetSecretData_NotFound(t *testing.T) {
-	coreClient := kMock.CoreV1Interface{}
+	coreClient := kMock.K8SClusterClient{}
 	secrets := &kMock.SecretInterface{}
 	coreClient.On("Secrets", namespace).Return(secrets)
 	secrets.On("Get", context.Background(), name, metav1.GetOptions{}).Return(nil, k8errors.NewNotFound(schema.GroupResource{}, name))
@@ -103,7 +103,7 @@ func TestK8SService_GetSecretData(t *testing.T) {
 	secret := coreV1Api.Secret{
 		Data: data,
 	}
-	coreClient := kMock.CoreV1Interface{}
+	coreClient := kMock.K8SClusterClient{}
 	secrets := &kMock.SecretInterface{}
 	coreClient.On("Secrets", namespace).Return(secrets)
 	secrets.On("Get", context.Background(), name, metav1.GetOptions{}).Return(&secret, nil)
@@ -120,7 +120,7 @@ func TestK8SService_GetSecretData(t *testing.T) {
 func TestK8SService_CreateSecret_GetErr(t *testing.T) {
 	data := map[string][]byte{"data": []byte("data")}
 	errTest := errors.New("Test")
-	coreClient := kMock.CoreV1Interface{}
+	coreClient := kMock.K8SClusterClient{}
 	secrets := &kMock.SecretInterface{}
 	coreClient.On("Secrets", namespace).Return(secrets)
 	secrets.On("Get", context.Background(), secretName, metav1.GetOptions{}).Return(nil, errTest)
@@ -138,7 +138,7 @@ func TestK8SService_CreateSecret_CreateErr(t *testing.T) {
 	data := map[string][]byte{"data": []byte("data")}
 	secret := createSecret(name, namespace, data)
 	errTest := errors.New("Test")
-	coreClient := kMock.CoreV1Interface{}
+	coreClient := kMock.K8SClusterClient{}
 	secrets := &kMock.SecretInterface{}
 	coreClient.On("Secrets", namespace).Return(secrets)
 	secrets.On("Get", context.Background(), secretName, metav1.GetOptions{}).Return(nil, k8errors.NewNotFound(schema.GroupResource{}, name))
@@ -158,7 +158,7 @@ func TestK8SService_CreateSecret_AlreadyExist(t *testing.T) {
 	existedSecret := coreV1Api.Secret{
 		Data: data,
 	}
-	coreClient := kMock.CoreV1Interface{}
+	coreClient := kMock.K8SClusterClient{}
 	secrets := &kMock.SecretInterface{}
 	coreClient.On("Secrets", namespace).Return(secrets)
 	secrets.On("Get", context.Background(), secretName, metav1.GetOptions{}).Return(&existedSecret, nil)
@@ -175,7 +175,7 @@ func TestK8SService_CreateSecret_AlreadyExist(t *testing.T) {
 func TestK8SService_CreateSecret(t *testing.T) {
 	data := map[string][]byte{"data": []byte("data")}
 	secret := createSecret(name, namespace, data)
-	coreClient := kMock.CoreV1Interface{}
+	coreClient := kMock.K8SClusterClient{}
 	secrets := &kMock.SecretInterface{}
 	coreClient.On("Secrets", namespace).Return(secrets)
 	secrets.On("Get", context.Background(), secretName, metav1.GetOptions{}).Return(nil, k8errors.NewNotFound(schema.GroupResource{}, name))
@@ -193,7 +193,7 @@ func TestK8SService_CreateSecret(t *testing.T) {
 func TestK8SService_GetExternalEndpoint_Err(t *testing.T) {
 	errTest := errors.New("test")
 	ctx := context.Background()
-	extensionClient := kMock.ExtensionsClient{}
+	extensionClient := kMock.ExtensionClient{}
 	ingresses := &kMock.Ingress{}
 	extensionClient.On("Ingresses", namespace).Return(ingresses)
 	ingresses.On("Get", ctx, name, metav1.GetOptions{}).Return(nil, errTest)
@@ -227,7 +227,7 @@ func TestK8SService_GetExternalEndpoint(t *testing.T) {
 		},
 	}
 	ctx := context.Background()
-	extensionClient := kMock.ExtensionsClient{}
+	extensionClient := kMock.ExtensionClient{}
 	ingresses := &kMock.Ingress{}
 	extensionClient.On("Ingresses", namespace).Return(ingresses)
 	ingresses.On("Get", ctx, name, metav1.GetOptions{}).Return(&ingressCR, nil)
@@ -247,7 +247,7 @@ func TestK8SService_CreateConfigMap_BadScheme(t *testing.T) {
 	scheme := runtime.NewScheme()
 	configMapData := map[string]string{}
 	sonarCR := v1alpha1.Sonar{ObjectMeta: metav1.ObjectMeta{Name: name}}
-	coreClient := kMock.CoreV1Interface{}
+	coreClient := kMock.K8SClusterClient{}
 	configMapClient := &kMock.ConfigMapInterface{}
 
 	service := K8SService{
@@ -267,7 +267,7 @@ func TestK8SService_CreateConfigMap_GetErr(t *testing.T) {
 	errTest := errors.New("test")
 	configMapData := map[string]string{}
 	sonarCR := v1alpha1.Sonar{ObjectMeta: metav1.ObjectMeta{Name: name}}
-	coreClient := kMock.CoreV1Interface{}
+	coreClient := kMock.K8SClusterClient{}
 	configMapClient := &kMock.ConfigMapInterface{}
 	coreClient.On("ConfigMaps", "").Return(configMapClient)
 	configMapClient.On("Get", context.Background(), name, metav1.GetOptions{}).Return(nil, errTest)
@@ -288,7 +288,7 @@ func TestK8SService_CreateConfigMap_AlreadyExist(t *testing.T) {
 	scheme.AddKnownTypes(v1.SchemeGroupVersion, &v1alpha1.Sonar{})
 	configMapData := map[string]string{}
 	sonarCR := v1alpha1.Sonar{ObjectMeta: metav1.ObjectMeta{Name: name}}
-	coreClient := kMock.CoreV1Interface{}
+	coreClient := kMock.K8SClusterClient{}
 	configMapClient := &kMock.ConfigMapInterface{}
 	coreClient.On("ConfigMaps", "").Return(configMapClient)
 	configMapClient.On("Get", context.Background(), name, metav1.GetOptions{}).Return(nil, nil)
@@ -311,7 +311,7 @@ func TestK8SService_CreateConfigMap_CreateErr(t *testing.T) {
 	scheme.AddKnownTypes(v1.SchemeGroupVersion, &v1alpha1.Sonar{})
 
 	sonarCR := v1alpha1.Sonar{ObjectMeta: metav1.ObjectMeta{Name: name}}
-	coreClient := kMock.CoreV1Interface{}
+	coreClient := kMock.K8SClusterClient{}
 	configMapClient := &kMock.ConfigMapInterface{}
 	coreClient.On("ConfigMaps", "").Return(configMapClient)
 	configMapClient.On("Get", context.Background(), name, metav1.GetOptions{}).Return(nil, k8errors.NewNotFound(schema.GroupResource{}, name))
@@ -337,7 +337,7 @@ func TestK8SService_CreateConfigMap(t *testing.T) {
 	scheme.AddKnownTypes(v1.SchemeGroupVersion, &v1alpha1.Sonar{})
 
 	sonarCR := v1alpha1.Sonar{ObjectMeta: metav1.ObjectMeta{Name: name}}
-	coreClient := kMock.CoreV1Interface{}
+	coreClient := kMock.K8SClusterClient{}
 	configMapClient := &kMock.ConfigMapInterface{}
 	coreClient.On("ConfigMaps", "").Return(configMapClient)
 	configMapClient.On("Get", context.Background(), name, metav1.GetOptions{}).Return(nil, k8errors.NewNotFound(schema.GroupResource{}, name))
@@ -484,7 +484,7 @@ func TestK8SService_CreateEDPComponentIfNotExist(t *testing.T) {
 
 func TestK8SService_GetAvailableDeploymentReplicas_GetErr(t *testing.T) {
 	sonarCR := v1alpha1.Sonar{ObjectMeta: createObjectMeta()}
-	appClient := kMock.AppsV1Client{}
+	appClient := kMock.PodsStateClient{}
 	deploymentClient := &kMock.Deployment{}
 	errTest := errors.New("test")
 
@@ -501,7 +501,7 @@ func TestK8SService_GetAvailableDeploymentReplicas_GetErr(t *testing.T) {
 
 func TestK8SService_GetAvailableDeploymentReplicas(t *testing.T) {
 	sonarCR := v1alpha1.Sonar{ObjectMeta: createObjectMeta()}
-	appClient := kMock.AppsV1Client{}
+	appClient := kMock.PodsStateClient{}
 	deploymentClient := &kMock.Deployment{}
 	deploymentCR := appsV1.Deployment{Status: appsV1.DeploymentStatus{
 		AvailableReplicas: 1,
