@@ -1,11 +1,82 @@
 apiVersion: v2
 description: A Helm chart for EDP Sonar Operator
-home: https://solutionshub.epam.com/solution/epam-delivery-platform
+home: https://epam.github.io/edp-install/
 name: sonar-operator
 type: application
 version: 2.11.0-SNAPSHOT
 appVersion: 2.11.0-SNAPSHOT
+icon: https://epam.github.io/edp-install/assets/logo.png
+keywords:
+  - edp
+  - sonarqube
+  - gates
+  - pipelines
 maintainers:
-  - name: EPAM EDP Team
+  - name: epmd-edp
+    email: SupportEPMD-EDP@epam.com
+    url: https://solutionshub.epam.com/solution/epam-delivery-platform
+  - name: sergk
+    url: https://github.com/SergK
 sources:
   - https://github.com/epam/edp-sonar-operator
+annotations:
+  artifacthub.io/license: Apache-2.0
+  artifacthub.io/operator: "true"
+  artifacthub.io/images: |
+    - name: release2_10_2
+      image: epamedp/sonar-operator:2.10.2
+    - name: release2_10_1
+      image: epamedp/sonar-operator:2.10.1
+    - name: release2_10_0
+      image: epamedp/sonar-operator:2.10.0
+    - name: release2_9_0
+      image: epamedp/sonar-operator:2.9.0
+    - name: release2_8_0
+      image: epamedp/sonar-operator:2.8.0
+    - name: sonar
+      image: sonarqube:8.9.6-community
+  artifacthub.io/operatorCapabilities: Full Lifecycle
+  artifacthub.io/crds: |
+    - kind: Sonar
+      version: v2.edp.epam.com/v1alpha1
+      name: sonar
+      displayName: Sonar
+      description: Sonar configuraion with predefined Quility Gates, CI users and Groups
+    - kind: SonarGroup
+      version: v2.edp.epam.com/v1alpha1
+      name: sonargroup
+      displayName: SonarGroup
+      description: Sonar Group Management
+    - kind: SonarPermissionTemplate
+      version: v2.edp.epam.com/v1alpha1
+      name: sonarpermissiontemplate
+      displayName: SonarPermissionTemplate
+      description: Sonar Permission template Management
+  artifacthub.io/crdsExamples: |
+    - apiVersion: v2.edp.epam.com/v1alpha1
+      kind: SonarGroup
+      metadata:
+        name: sonar-developers
+      spec:
+        sonarOwner: sonar
+        name: sonar-developers
+        description: "Developers"
+    - apiVersion: v2.edp.epam.com/v1alpha1
+      kind: SonarPermissionTemplate
+      metadata:
+        name: edp-default
+      spec:
+        sonarOwner: sonar
+        name: edp-default
+        description: "EDP permission templates"
+        projectKeyPattern: ".+"
+        groupPermissions:
+          - groupName: sonar-administrators
+            permissions: [ "admin", "user" ]
+          - groupName: sonar-developers
+            permissions: [ "codeviewer", "issueadmin", "securityhotspotadmin", "user" ]
+  artifacthub.io/links: |
+    - name: EDP Documentation
+      url: https://epam.github.io/edp-install/
+    - name: EPAM SolutionHub
+      url: https://solutionshub.epam.com/solution/epam-delivery-platform
