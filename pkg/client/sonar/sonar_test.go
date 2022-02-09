@@ -13,8 +13,6 @@ import (
 	"github.com/jarcoal/httpmock"
 	"github.com/stretchr/testify/assert"
 	"gopkg.in/resty.v1"
-
-	"github.com/epam/edp-sonar-operator/v2/pkg/client/models"
 )
 
 const (
@@ -33,20 +31,20 @@ const (
 	id             = "AU-Tpxb--iU5OvuD2FLy"
 )
 
-func createListResponse() models.QualityGatesList {
-	defaultGate := models.QualityGate{
+func createListResponse() QualityGatesListResponse {
+	defaultGate := QualityGate{
 		IsDefault: true,
 		Name:      name,
 		ID:        id,
 	}
-	nonDefaultGate := models.QualityGate{
+	nonDefaultGate := QualityGate{
 		IsDefault: false,
 		Name:      nonDefaultName,
 		ID:        id,
 	}
 
-	return models.QualityGatesList{
-		QualityFates: []models.QualityGate{defaultGate, nonDefaultGate},
+	return QualityGatesListResponse{
+		QualityGates: []QualityGate{defaultGate, nonDefaultGate},
 	}
 }
 
@@ -64,14 +62,14 @@ func createFileWithData(path string) error {
 	return nil
 }
 
-func createProfileResp(profileName string, isDefault bool) models.QualityProfilesSearch {
-	respProfile := models.Profiles{
+func createProfileResp(profileName string, isDefault bool) QualityProfilesSearchResponse {
+	respProfile := Profiles{
 		Key:       key,
 		IsDefault: isDefault,
 		Name:      profileName,
 	}
-	return models.QualityProfilesSearch{
-		Profiles: []models.Profiles{respProfile},
+	return QualityProfilesSearchResponse{
+		Profiles: []Profiles{respProfile},
 	}
 }
 
@@ -136,8 +134,8 @@ func TestClient_GetInstalledPlugins_UnmarshalErr(t *testing.T) {
 func TestClient_GetInstalledPlugins(t *testing.T) {
 	restClient := CreateMockResty()
 	expectedPlugin := []string{name}
-	data := []map[string]interface{}{{"key": name}}
-	body := map[string][]map[string]interface{}{"plugins": data}
+	plugin := Plugin{Key: name}
+	body := InstalledPluginsResponse{Plugins: []Plugin{plugin}}
 	raw, err := json.Marshal(body)
 	if err != nil {
 		t.Fatal(err)
@@ -164,8 +162,8 @@ func TestClient_InstallPlugins_PostErr(t *testing.T) {
 
 	restClient := CreateMockResty()
 	plugins := []string{"test"}
-	data := []map[string]interface{}{{"key": name}}
-	body := map[string][]map[string]interface{}{"plugins": data}
+	plugin := Plugin{Key: name}
+	body := InstalledPluginsResponse{Plugins: []Plugin{plugin}}
 	raw, err := json.Marshal(body)
 	if err != nil {
 		t.Fatal(err)
@@ -181,8 +179,8 @@ func TestClient_InstallPlugins_PostErr(t *testing.T) {
 func TestClient_InstallPlugins_RebootErr(t *testing.T) {
 	restClient := CreateMockResty()
 	plugins := []string{"test"}
-	data := []map[string]interface{}{{"key": name}}
-	body := map[string][]map[string]interface{}{"plugins": data}
+	plugin := Plugin{Key: name}
+	body := InstalledPluginsResponse{Plugins: []Plugin{plugin}}
 	raw, err := json.Marshal(body)
 	if err != nil {
 		t.Fatal(err)
@@ -197,12 +195,12 @@ func TestClient_InstallPlugins_RebootErr(t *testing.T) {
 }
 
 func TestClient_InstallPlugins(t *testing.T) {
-	status := map[string]interface{}{"status": "UP"}
+	status := SystemStatusResponse{Status: "UP"}
 	rawStatus, err := json.Marshal(status)
 	restClient := CreateMockResty()
 	plugins := []string{"test"}
-	data := []map[string]interface{}{{"key": name}}
-	body := map[string][]map[string]interface{}{"plugins": data}
+	plugin := Plugin{Key: name}
+	body := InstalledPluginsResponse{Plugins: []Plugin{plugin}}
 	raw, err := json.Marshal(body)
 	if err != nil {
 		t.Fatal(err)
@@ -335,8 +333,8 @@ func TestClient_AddWebhook_checkWebhookExistErr(t *testing.T) {
 
 func TestClient_AddWebhook_ExistWebHook(t *testing.T) {
 	restClient := CreateMockResty()
-	data := []map[string]interface{}{{"name": name}}
-	body := map[string][]map[string]interface{}{"webhooks": data}
+	webhook := Webhook{Name: name}
+	body := WebhooksListResponse{Webhooks: []Webhook{webhook}}
 	raw, err := json.Marshal(body)
 	if err != nil {
 		t.Fatal(err)
@@ -351,8 +349,7 @@ func TestClient_AddWebhook_ExistWebHook(t *testing.T) {
 
 func TestClient_AddWebhook_PostErr(t *testing.T) {
 	restClient := CreateMockResty()
-	data := []map[string]interface{}{{}}
-	body := map[string][]map[string]interface{}{"webhooks": data}
+	body := WebhooksListResponse{}
 	raw, err := json.Marshal(body)
 	if err != nil {
 		t.Fatal(err)
@@ -368,8 +365,7 @@ func TestClient_AddWebhook_PostErr(t *testing.T) {
 
 func TestClient_AddWebhook_BadStatus(t *testing.T) {
 	restClient := CreateMockResty()
-	data := []map[string]interface{}{{}}
-	body := map[string][]map[string]interface{}{"webhooks": data}
+	body := WebhooksListResponse{}
 	raw, err := json.Marshal(body)
 	if err != nil {
 		t.Fatal(err)
@@ -386,8 +382,7 @@ func TestClient_AddWebhook_BadStatus(t *testing.T) {
 
 func TestClient_AddWebhook(t *testing.T) {
 	restClient := CreateMockResty()
-	data := []map[string]interface{}{{}}
-	body := map[string][]map[string]interface{}{"webhooks": data}
+	body := WebhooksListResponse{}
 	raw, err := json.Marshal(body)
 	if err != nil {
 		t.Fatal(err)
@@ -434,7 +429,7 @@ func TestClient_GenerateUserToken_UnmarshallErr(t *testing.T) {
 
 func TestClient_GenerateUserToken(t *testing.T) {
 	restClient := CreateMockResty()
-	body := map[string]string{"token": tokenValue}
+	body := UserTokensGenerateResponse{Token: tokenValue}
 	raw, err := json.Marshal(body)
 	if err != nil {
 		t.Fatal(err)
@@ -468,7 +463,7 @@ func TestClient_CreateQualityGate_AlreadyDefault(t *testing.T) {
 	httpmock.RegisterResponder(http.MethodGet, "https://domain/qualitygates/list", responder)
 	gate, err := client.CreateQualityGate(name, nil)
 	assert.NoError(t, err)
-	assert.Equal(t, "0", gate)
+	assert.Equal(t, "AU-Tpxb--iU5OvuD2FLy", gate)
 }
 
 func TestClient_CreateQualityGate_NotDefault_setDefaultQualityGateErr(t *testing.T) {
@@ -495,11 +490,11 @@ func TestClient_CreateQualityGate_NotDefault(t *testing.T) {
 		t.Fatal(err)
 	}
 	httpmock.RegisterResponder(http.MethodGet, "https://domain/qualitygates/list", responder)
-	httpmock.RegisterResponder(http.MethodPost, "https://domain/qualitygates/set_as_default?id=0", httpmock.NewStringResponder(http.StatusOK, ""))
+	httpmock.RegisterResponder(http.MethodPost, "https://domain/qualitygates/set_as_default?id="+id, httpmock.NewStringResponder(http.StatusOK, ""))
 
 	gate, err := client.CreateQualityGate(nonDefaultName, nil)
 	assert.NoError(t, err)
-	assert.Equal(t, "0", gate)
+	assert.Equal(t, "AU-Tpxb--iU5OvuD2FLy", gate)
 }
 
 func TestClient_CreateQualityGate_PostErr(t *testing.T) {
@@ -557,7 +552,7 @@ func TestClient_CreateQualityGate_createConditionErr(t *testing.T) {
 	client := Client{resty: restClient}
 	condition := []map[string]string{{"gateId": ""}}
 
-	resp := map[string]interface{}{"id": "1"}
+	resp := QualityGatesCreateResponse{ID: gID}
 	raw, err := json.Marshal(resp)
 	if err != nil {
 		t.Fatal(err)
@@ -579,7 +574,7 @@ func TestClient_CreateQualityGate_setDefaultQualityGateErr(t *testing.T) {
 	restClient := CreateMockResty()
 	client := Client{resty: restClient}
 
-	resp := map[string]interface{}{"id": gID}
+	resp := QualityGatesCreateResponse{ID: gID}
 	raw, err := json.Marshal(resp)
 	if err != nil {
 		t.Fatal(err)
@@ -602,7 +597,7 @@ func TestClient_CreateQualityGate(t *testing.T) {
 	restClient := CreateMockResty()
 	client := Client{resty: restClient}
 
-	resp := map[string]interface{}{"id": gID}
+	resp := QualityGatesCreateResponse{ID: gID}
 	raw, err := json.Marshal(resp)
 	if err != nil {
 		t.Fatal(err)
@@ -853,14 +848,34 @@ func TestClient_ConfigureGeneralSettings_checkGeneralSettingErr(t *testing.T) {
 	assert.True(t, strings.Contains(err.Error(), "no responder found"))
 }
 
+func TestClient_ConfigureGeneralSettings_generalSettingsExist2(t *testing.T) {
+	restClient := CreateMockResty()
+	client := Client{resty: restClient}
+	setting := Setting{
+		Key:    key,
+		Values: []string{name},
+	}
+	respBody := SettingsValuesResponse{Settings: []Setting{setting}}
+	response, err := httpmock.NewJsonResponder(http.StatusOK, respBody)
+
+	if err != nil {
+		t.Fatal()
+	}
+
+	httpmock.RegisterResponder(http.MethodGet, "https://domain/settings/values", response)
+
+	err = client.ConfigureGeneralSettings(valueType, key, name)
+	assert.NoError(t, err)
+}
+
 func TestClient_ConfigureGeneralSettings_generalSettingsExist(t *testing.T) {
 	restClient := CreateMockResty()
 	client := Client{resty: restClient}
-	setting := models.Setting{
+	setting := Setting{
 		Key:   key,
 		Value: name,
 	}
-	respBody := models.SettingsValues{Setting: []models.Setting{setting}}
+	respBody := SettingsValuesResponse{Settings: []Setting{setting}}
 	response, err := httpmock.NewJsonResponder(http.StatusOK, respBody)
 
 	if err != nil {
@@ -876,11 +891,11 @@ func TestClient_ConfigureGeneralSettings_generalSettingsExist(t *testing.T) {
 func TestClient_ConfigureGeneralSettings_PostErr(t *testing.T) {
 	restClient := CreateMockResty()
 	client := Client{resty: restClient}
-	setting := models.Setting{
+	setting := Setting{
 		Key:   key,
 		Value: newName,
 	}
-	respBody := models.SettingsValues{Setting: []models.Setting{setting}}
+	respBody := SettingsValuesResponse{Settings: []Setting{setting}}
 	response, err := httpmock.NewJsonResponder(http.StatusOK, respBody)
 
 	if err != nil {
@@ -897,11 +912,11 @@ func TestClient_ConfigureGeneralSettings_PostErr(t *testing.T) {
 func TestClient_ConfigureGeneralSettings_PostBadStatus(t *testing.T) {
 	restClient := CreateMockResty()
 	client := Client{resty: restClient}
-	setting := models.Setting{
+	setting := Setting{
 		Key:   key,
 		Value: newName,
 	}
-	respBody := models.SettingsValues{Setting: []models.Setting{setting}}
+	respBody := SettingsValuesResponse{Settings: []Setting{setting}}
 	response, err := httpmock.NewJsonResponder(http.StatusOK, respBody)
 
 	if err != nil {
@@ -919,11 +934,11 @@ func TestClient_ConfigureGeneralSettings_PostBadStatus(t *testing.T) {
 func TestClient_ConfigureGeneralSettings(t *testing.T) {
 	restClient := CreateMockResty()
 	client := Client{resty: restClient}
-	setting := models.Setting{
+	setting := Setting{
 		Key:   key,
 		Value: newName,
 	}
-	respBody := models.SettingsValues{Setting: []models.Setting{setting}}
+	respBody := SettingsValuesResponse{Settings: []Setting{setting}}
 	response, err := httpmock.NewJsonResponder(http.StatusOK, respBody)
 
 	if err != nil {

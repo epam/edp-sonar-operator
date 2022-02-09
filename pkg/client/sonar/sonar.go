@@ -9,7 +9,6 @@ import (
 	"time"
 
 	"github.com/pkg/errors"
-	"github.com/totherme/unstructured"
 	"gopkg.in/resty.v1"
 	ctrl "sigs.k8s.io/controller-runtime"
 
@@ -88,8 +87,14 @@ func (sc Client) Reboot() error {
 	return nil
 }
 
+type SystemStatusResponse struct {
+	ID      string `json:"id"`
+	Version string `json:"version"`
+	Status  string `json:"status"`
+}
+
 func (sc Client) WaitForStatusIsUp(retryCount int, timeout time.Duration) error {
-	var raw map[string]interface{}
+	var systemStatusResponse SystemStatusResponse
 
 	sc.resty.SetRetryCount(retryCount).
 		SetRetryWaitTime(timeout * time.Second).
@@ -98,12 +103,12 @@ func (sc Client) WaitForStatusIsUp(retryCount int, timeout time.Duration) error 
 				if response.IsError() || !response.IsSuccess() {
 					return response.IsError(), nil
 				}
-				err := json.Unmarshal([]byte(response.String()), &raw)
+				err := json.Unmarshal([]byte(response.String()), &systemStatusResponse)
 				if err != nil {
 					return true, err
 				}
-				log.Info(fmt.Sprintf("Current Sonar status - %s", raw["status"].(string)))
-				if raw["status"].(string) == "UP" {
+				log.Info(fmt.Sprintf("Current Sonar status - %s", systemStatusResponse.Status))
+				if systemStatusResponse.Status == "UP" {
 					return false, nil
 				}
 				return true, nil
@@ -160,24 +165,52 @@ func (sc Client) InstallPlugins(plugins []string) error {
 	return nil
 }
 
+type InstalledPluginsResponse struct {
+	Plugins []Plugin `json:"plugins"`
+}
+
+type Plugin struct {
+	Key                 string `json:"key"`
+	Name                string `json:"name"`
+	Description         string `json:"description"`
+	Version             string `json:"version"`
+	License             string `json:"license"`
+	OrganizationName    string `json:"organizationName"`
+	OrganizationURL     string `json:"organizationUrl"`
+	EditionBundled      bool   `json:"editionBundled"`
+	HomepageURL         string `json:"homepageUrl"`
+	IssueTrackerURL     string `json:"issueTrackerUrl"`
+	ImplementationBuild string `json:"implementationBuild"`
+	Filename            string `json:"filename"`
+	Hash                string `json:"hash"`
+	SonarLintSupported  bool   `json:"sonarLintSupported"`
+	DocumentationPath   string `json:"documentationPath,omitempty"`
+	UpdatedAt           int    `json:"updatedAt"`
+}
+
 func (sc Client) GetInstalledPlugins() ([]string, error) {
 	resp, err := sc.resty.R().Get("/plugins/installed")
-	if err := sc.checkError(resp, err); err != nil {
+	if err = sc.checkError(resp, err); err != nil {
 		return nil, err
 	}
 
-	var raw map[string][]map[string]interface{}
-	err = json.Unmarshal(resp.Body(), &raw)
+	var installedPluginsResponse InstalledPluginsResponse
+	err = json.Unmarshal(resp.Body(), &installedPluginsResponse)
 	if err != nil {
 		return nil, errors.Wrapf(err, "cant unmarshal %s", resp.Body())
 	}
 
 	var installedPlugins []string
-	for _, v := range raw["plugins"] {
-		installedPlugins = append(installedPlugins, fmt.Sprintf("%v", v["key"]))
+	for _, v := range installedPluginsResponse.Plugins {
+		installedPlugins = append(installedPlugins, v.Key)
 	}
 
 	return installedPlugins, nil
+}
+
+type QualityGatesCreateResponse struct {
+	ID   string `json:"id"`
+	Name string `json:"name"`
 }
 
 func (sc Client) CreateQualityGate(qgName string, conditions []map[string]string) (string, error) {
@@ -211,12 +244,12 @@ func (sc Client) CreateQualityGate(qgName string, conditions []map[string]string
 		return "", errors.New(errMsg)
 	}
 
-	var raw map[string]interface{}
-	err = json.Unmarshal(resp.Body(), &raw)
+	var qualityGate QualityGatesCreateResponse
+	err = json.Unmarshal(resp.Body(), &qualityGate)
 	if err != nil {
 		return "", errors.Wrapf(err, "cant unmarshal %s", resp.Body())
 	}
-	qgId = fmt.Sprintf("%v", raw["id"])
+	qgId = fmt.Sprintf("%v", qualityGate.ID)
 
 	for _, item := range conditions {
 		item["gateId"] = qgId
@@ -250,6 +283,33 @@ func (sc Client) createCondition(conditionMap map[string]string) error {
 	return nil
 }
 
+type QualityGatesListResponse struct {
+	QualityGates []QualityGate  `json:"qualitygates"`
+	Default      int            `json:"default"`
+	Actions      QualityActions `json:"actions"`
+}
+
+type QualityActions struct {
+	Create bool `json:"create"`
+}
+
+type QualityGate struct {
+	ID        string  `json:"id"`
+	Name      string  `json:"name"`
+	IsDefault bool    `json:"isDefault"`
+	IsBuiltIn bool    `json:"isBuiltIn"`
+	Actions   Actions `json:"actions"`
+}
+
+type Actions struct {
+	Rename            bool `json:"rename"`
+	SetAsDefault      bool `json:"setAsDefault"`
+	Copy              bool `json:"copy"`
+	AssociateProjects bool `json:"associateProjects"`
+	Delete            bool `json:"delete"`
+	ManageConditions  bool `json:"manageConditions"`
+}
+
 func (sc Client) checkQualityGateExist(qgName string) (exist bool, qgId string, isDefault bool, error error) {
 	resp, err := sc.resty.R().
 		Get("/qualitygates/list")
@@ -260,27 +320,18 @@ func (sc Client) checkQualityGateExist(qgName string) (exist bool, qgId string, 
 		errMsg := fmt.Sprintf("Listing quality gates in Sonar failed. Response code -%v", resp.StatusCode())
 		return false, "", false, errors.Wrap(err, errMsg)
 	}
-
-	responseJson, err := unstructured.ParseJSON(string(resp.Body()))
+	var qualityGatesListResponse QualityGatesListResponse
+	err = json.Unmarshal(resp.Body(), &qualityGatesListResponse)
 	if err != nil {
 		return false, "", false, err
 	}
 
-	if ok := responseJson.HasKey("qualitygates"); ok {
-		qualityGates, _ := responseJson.GetByPointer("/qualitygates")
-		qualityGatesList, err := qualityGates.ListValue()
-		if err != nil || len(qualityGatesList) == 0 {
-			return false, "", false, err
-		}
-		for _, qualityGate := range qualityGatesList {
-			currentQualityGateName, _ := qualityGate.F("name").StringValue()
-			if currentQualityGateName == qgName {
-				qualityGateId, _ := qualityGate.F("id").NumValue()
-				if ok, _ = qualityGate.F("isDefault").BoolValue(); ok {
-					return true, fmt.Sprintf("%v", qualityGateId), ok, nil
-				}
-				return true, fmt.Sprintf("%v", qualityGateId), ok, nil
-			}
+	if qualityGatesListResponse.QualityGates == nil || len(qualityGatesListResponse.QualityGates) == 0 {
+		return false, "", false, err
+	}
+	for _, qGate := range qualityGatesListResponse.QualityGates {
+		if qGate.Name == qgName {
+			return true, qGate.ID, qGate.IsDefault, nil
 		}
 	}
 
@@ -351,6 +402,38 @@ func (sc Client) UploadProfile(profileName string, profilePath string) (string, 
 	return profileId, nil
 }
 
+type QualityProfilesSearchResponse struct {
+	Profiles []Profiles `json:"profiles"`
+	Actions  Actions    `json:"actions,omitempty"`
+}
+
+type Profiles struct {
+	Key                       string         `json:"key"`
+	Name                      string         `json:"name"`
+	Language                  string         `json:"language"`
+	LanguageName              string         `json:"languageName,omitempty"`
+	IsInherited               bool           `json:"isInherited,omitempty"`
+	IsBuiltIn                 bool           `json:"isBuiltIn,omitempty"`
+	ActiveRuleCount           int            `json:"activeRuleCount,omitempty"`
+	ActiveDeprecatedRuleCount int            `json:"activeDeprecatedRuleCount,omitempty"`
+	IsDefault                 bool           `json:"isDefault"`
+	RuleUpdatedAt             string         `json:"ruleUpdatedAt,omitempty"`
+	LastUsed                  string         `json:"lastUsed,omitempty"`
+	Actions                   ProfileActions `json:"actions,omitempty"`
+	ParentKey                 string         `json:"parentKey,omitempty"`
+	ParentName                string         `json:"parentName,omitempty"`
+	ProjectCount              int            `json:"projectCount,omitempty"`
+	UserUpdatedAt             string         `json:"userUpdatedAt,omitempty"`
+}
+
+type ProfileActions struct {
+	Edit              bool `json:"edit"`
+	SetAsDefault      bool `json:"setAsDefault"`
+	Copy              bool `json:"copy"`
+	Delete            bool `json:"delete"`
+	AssociateProjects bool `json:"associateProjects"`
+}
+
 func (sc Client) checkProfileExist(requiredProfileName string) (exits bool, profileId string, isDefault bool, error error) {
 	resp, err := sc.resty.R().
 		Get(fmt.Sprintf("/qualityprofiles/search?qualityProfile=%v", strings.Replace(requiredProfileName, " ", "+", -1)))
@@ -362,26 +445,19 @@ func (sc Client) checkProfileExist(requiredProfileName string) (exits bool, prof
 		return false, "", false, errors.New(errMsg)
 	}
 
-	responseJson, err := unstructured.ParseJSON(string(resp.Body()))
+	var qualityProfilesSearchResponse QualityProfilesSearchResponse
+
+	err = json.Unmarshal(resp.Body(), &qualityProfilesSearchResponse)
 	if err != nil {
 		return false, "", false, err
 	}
-
-	if ok := responseJson.HasKey("profiles"); ok {
-		profilesData, _ := responseJson.GetByPointer("/profiles")
-		profileList, err := profilesData.ListValue()
-		if err != nil || len(profileList) == 0 {
-			return false, "", false, nil
-		}
-		for _, profile := range profileList {
-			currentProfileName, _ := profile.F("name").StringValue()
-			if currentProfileName == requiredProfileName {
-				profileId, _ := profile.F("key").StringValue()
-				if ok, _ := profile.F("isDefault").BoolValue(); ok {
-					return true, profileId, ok, nil
-				}
-				return true, profileId, false, nil
-			}
+	if qualityProfilesSearchResponse.Profiles == nil {
+		return false, "", false, nil
+	}
+	profiles := qualityProfilesSearchResponse.Profiles
+	for _, profile := range profiles {
+		if profile.Name == requiredProfileName {
+			return true, profile.Key, profile.IsDefault, nil
 		}
 	}
 
@@ -468,6 +544,13 @@ func (sc Client) AddPermissionsToGroup(groupName string, permissions string) err
 	return nil
 }
 
+type UserTokensGenerateResponse struct {
+	Login     string `json:"login"`
+	Name      string `json:"name"`
+	CreatedAt string `json:"createdAt"`
+	Token     string `json:"token"`
+}
+
 func (sc Client) GenerateUserToken(userName string) (*string, error) {
 	emptyString := ""
 
@@ -488,12 +571,12 @@ func (sc Client) GenerateUserToken(userName string) (*string, error) {
 	}
 	log.Info(fmt.Sprintf("Token for user %v has been generated", userName))
 
-	var rawResponse map[string]string
-	err = json.Unmarshal(resp.Body(), &rawResponse)
+	var userTokensGenerateResponse UserTokensGenerateResponse
+	err = json.Unmarshal(resp.Body(), &userTokensGenerateResponse)
 	if err != nil {
 		return nil, errors.Wrapf(err, "cant unmarshal %s", resp.Body())
 	}
-	token := rawResponse["token"]
+	token := userTokensGenerateResponse.Token
 
 	return &token, nil
 }
@@ -527,6 +610,17 @@ func (sc Client) AddWebhook(webhookName string, webhookUrl string) error {
 	return nil
 }
 
+type WebhooksListResponse struct {
+	Webhooks []Webhook `json:"webhooks"`
+}
+
+type Webhook struct {
+	Key    string `json:"key"`
+	Name   string `json:"name"`
+	URL    string `json:"url"`
+	Secret string `json:"secret,omitempty"`
+}
+
 func (sc Client) checkWebhookExist(webhookName string) (bool, error) {
 	resp, err := sc.resty.R().
 		Get("/webhooks/list")
@@ -538,14 +632,14 @@ func (sc Client) checkWebhookExist(webhookName string) (bool, error) {
 		return false, errors.New(errMsg)
 	}
 
-	var raw map[string][]map[string]interface{}
+	var raw WebhooksListResponse
 	err = json.Unmarshal(resp.Body(), &raw)
 	if err != nil {
 		return false, errors.Wrapf(err, "cant unmarshal %s", resp.Body())
 	}
 
-	for _, v := range raw["webhooks"] {
-		if v["name"] == webhookName {
+	for _, v := range raw.Webhooks {
+		if v.Name == webhookName {
 			return true, nil
 		}
 	}
@@ -583,6 +677,23 @@ func (sc Client) ConfigureGeneralSettings(valueType string, key string, value st
 	return nil
 }
 
+type SettingsValuesResponse struct {
+	Settings []Setting `json:"settings"`
+}
+
+type Setting struct {
+	Key         string              `json:"key"`
+	Value       string              `json:"value,omitempty"`
+	Inherited   bool                `json:"inherited"`
+	Values      []string            `json:"values,omitempty"`
+	FieldValues []SettingFieldValue `json:"fieldValues,omitempty"`
+}
+
+type SettingFieldValue struct {
+	Boolean string `json:"boolean"`
+	Text    string `json:"text"`
+}
+
 func (sc Client) checkGeneralSetting(key string, valueToCheck string) (bool, error) {
 	resp, err := sc.resty.R().
 		Get("/settings/values")
@@ -590,23 +701,24 @@ func (sc Client) checkGeneralSetting(key string, valueToCheck string) (bool, err
 		return false, err
 	}
 
-	var raw map[string][]map[string]interface{}
-	err = json.Unmarshal(resp.Body(), &raw)
+	var settingsValuesResponse SettingsValuesResponse
+	err = json.Unmarshal(resp.Body(), &settingsValuesResponse)
 	if err != nil {
 		return false, errors.Wrap(err, "Failed to unmarshal response body!")
 	}
 
-	for _, v := range raw["settings"] {
-		if v["key"] == key {
-			if value, exists := v["value"]; exists {
-				if checkValue(value, valueToCheck) {
+	for _, v := range settingsValuesResponse.Settings {
+		if v.Key == key {
+			if v.Values != nil {
+				if checkValue(v.Values, valueToCheck) {
 					return true, nil
 				}
-			} else if value, exists := v["values"]; exists {
-				if checkValue(value, valueToCheck) {
+			} else if v.Value != "" {
+				if checkValue(v.Value, valueToCheck) {
 					return true, nil
 				}
 			}
+
 		}
 	}
 
