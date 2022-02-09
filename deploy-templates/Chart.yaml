@@ -23,18 +23,22 @@ annotations:
   artifacthub.io/license: Apache-2.0
   artifacthub.io/operator: "true"
   artifacthub.io/images: |
-    - name: release2_10_2
+    - name: sonar-operator:2.10.2
       image: epamedp/sonar-operator:2.10.2
-    - name: release2_10_1
+    - name: sonar-operator:2.10.1
       image: epamedp/sonar-operator:2.10.1
-    - name: release2_10_0
+    - name: sonar-operator:2.10.0
       image: epamedp/sonar-operator:2.10.0
-    - name: release2_9_0
+    - name: sonar-operator:2.9.0
       image: epamedp/sonar-operator:2.9.0
-    - name: release2_8_0
-      image: epamedp/sonar-operator:2.8.0
-    - name: sonar
+    - name: sonarqube:8.9.6-community
       image: sonarqube:8.9.6-community
+    - name: postgres:9.6
+      image: postgres:9.6
+    - name: rjkernick/alpine-wget:latest
+      image: rjkernick/alpine-wget:latest
+    - name: busybox:1.35.0
+      image: busybox:1.35.0
   artifacthub.io/operatorCapabilities: Full Lifecycle
   artifacthub.io/crds: |
     - kind: Sonar
@@ -53,6 +57,18 @@ annotations:
       displayName: SonarPermissionTemplate
       description: Sonar Permission template Management
   artifacthub.io/crdsExamples: |
+    - apiVersion: v2.edp.epam.com/v1alpha1
+      kind: Sonar
+      metadata:
+        name: sonar
+      spec:
+        defaultPermissionTemplate: edp-default
+        edpSpec:
+          dnsWildcard: example.com
+        image: sonarqube
+        initImage: busybox:1.35.0
+        type: Sonar
+        version: 8.9.6-community
     - apiVersion: v2.edp.epam.com/v1alpha1
       kind: SonarGroup
       metadata:

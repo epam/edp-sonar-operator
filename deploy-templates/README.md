@@ -54,7 +54,7 @@ A Helm chart for EDP Sonar Operator
 | sonar.ingress.annotations | object | `{}` |  |
 | sonar.ingress.pathType | string | `"Prefix"` |  |
 | sonar.initContainers.resources | object | `{}` |  |
-| sonar.initImage | string | `"busybox"` |  |
+| sonar.initImage | string | `"busybox:1.35.0"` |  |
 | sonar.name | string | `"sonar"` |  |
 | sonar.nodeSelector | object | `{}` |  |
 | sonar.plugins.install[0] | string | `"https://github.com/vaulttec/sonar-auth-oidc/releases/download/v2.0.0/sonar-auth-oidc-plugin-2.0.0.jar"` |  |

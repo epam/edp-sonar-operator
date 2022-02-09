@@ -37,7 +37,7 @@ sonar:
   image: "sonarqube"
   version: "8.9.6-community"
   imagePullPolicy: "IfNotPresent"
-  initImage: "busybox"
+  initImage: "busybox:1.35.0"
   basePath: ""
   imagePullSecrets:
   storage:
