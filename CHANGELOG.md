@@ -2,8 +2,19 @@
 ## [Unreleased]
 
 
+<a name="v2.10.3"></a>
+## [v2.10.3] - 2022-02-08
+### Bug Fixes
+
+- Change ca-certificates in dockerfile [EPMDEDP-8238](https://jiraeu.epam.com/browse/EPMDEDP-8238)
+
+### Routine
+
+- Populate chart with artifacthub tags [EPMDEDP-8049](https://jiraeu.epam.com/browse/EPMDEDP-8049)
+
+
 <a name="v2.10.2"></a>
-## [v2.10.2] - 2021-12-21
+## [v2.10.2] - 2022-01-04
 ### Bug Fixes
 
 - Upgrade SonarQube to the LTS 8.9.6 version [EPMDEDP-8041](https://jiraeu.epam.com/browse/EPMDEDP-8041)
@@ -68,7 +79,8 @@
 <a name="v2.7.0"></a>
 ## [v2.7.0] - 2021-12-03
 
-[Unreleased]: https://github.com/epam/edp-sonar-operator/compare/v2.10.2...HEAD
+[Unreleased]: https://github.com/epam/edp-sonar-operator/compare/v2.10.3...HEAD
+[v2.10.3]: https://github.com/epam/edp-sonar-operator/compare/v2.10.2...v2.10.3
 [v2.10.2]: https://github.com/epam/edp-sonar-operator/compare/v2.10.1...v2.10.2
 [v2.10.1]: https://github.com/epam/edp-sonar-operator/compare/v2.10.0...v2.10.1
 [v2.10.0]: https://github.com/epam/edp-sonar-operator/compare/v2.9.0...v2.10.0

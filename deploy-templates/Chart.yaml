@@ -3,8 +3,8 @@ description: A Helm chart for EDP Sonar Operator
 home: https://epam.github.io/edp-install/
 name: sonar-operator
 type: application
-version: 2.10.2
-appVersion: 2.10.2
+version: 2.10.3
+appVersion: 2.10.3
 icon: https://epam.github.io/edp-install/assets/logo.png
 keywords:
   - edp
