@@ -105,7 +105,7 @@ func (sc Client) WaitForStatusIsUp(retryCount int, timeout time.Duration) error 
 				}
 				err := json.Unmarshal([]byte(response.String()), &systemStatusResponse)
 				if err != nil {
-					return true, err
+					return true, errors.Wrap(err, response.String())
 				}
 				log.Info(fmt.Sprintf("Current Sonar status - %s", systemStatusResponse.Status))
 				if systemStatusResponse.Status == "UP" {
@@ -285,7 +285,7 @@ func (sc Client) createCondition(conditionMap map[string]string) error {
 
 type QualityGatesListResponse struct {
 	QualityGates []QualityGate  `json:"qualitygates"`
-	Default      int            `json:"default"`
+	Default      interface{}    `json:"default"`
 	Actions      QualityActions `json:"actions"`
 }
 
@@ -323,7 +323,7 @@ func (sc Client) checkQualityGateExist(qgName string) (exist bool, qgId string, 
 	var qualityGatesListResponse QualityGatesListResponse
 	err = json.Unmarshal(resp.Body(), &qualityGatesListResponse)
 	if err != nil {
-		return false, "", false, err
+		return false, "", false, errors.Wrap(err, string(resp.Body()))
 	}
 
 	if qualityGatesListResponse.QualityGates == nil || len(qualityGatesListResponse.QualityGates) == 0 {
@@ -449,7 +449,7 @@ func (sc Client) checkProfileExist(requiredProfileName string) (exits bool, prof
 
 	err = json.Unmarshal(resp.Body(), &qualityProfilesSearchResponse)
 	if err != nil {
-		return false, "", false, err
+		return false, "", false, errors.Wrap(err, string(resp.Body()))
 	}
 	if qualityProfilesSearchResponse.Profiles == nil {
 		return false, "", false, nil
@@ -704,7 +704,7 @@ func (sc Client) checkGeneralSetting(key string, valueToCheck string) (bool, err
 	var settingsValuesResponse SettingsValuesResponse
 	err = json.Unmarshal(resp.Body(), &settingsValuesResponse)
 	if err != nil {
-		return false, errors.Wrap(err, "Failed to unmarshal response body!")
+		return false, errors.Wrap(err, string(resp.Body()))
 	}
 
 	for _, v := range settingsValuesResponse.Settings {
