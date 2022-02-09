@@ -64,7 +64,7 @@ kubectl -n <global.edpName> create secret generic sonar-admin-password --from-li
     - sonar.deploy                           # If true Sonarqube CR will be added and Sonarqube instance will be deployed
     - sonar.name                             # Sonar custom resource name
     - sonar.image                            # Sonarqube Docker image name. Default supported is "sonarqube";
-    - sonar.version                          # Sonarqube Docker image tag. Default supported is "8.9.4-community";
+    - sonar.version                          # Sonarqube Docker image tag. Default supported is "8.9.7-community";
     - sonar.initImage                        # Init Docker image for Sonarqube deployment. Default is "busybox";
     - sonar.dbImage                          # Docker image name for Sonarqube Database. Default in "postgres:9.6";
     - sonar.dataVolumeStorageClass           # Storageclass for Sonarqube data volume. Default is "gp2";

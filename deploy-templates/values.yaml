@@ -35,7 +35,7 @@ sonar:
   deploy: true
   name: "sonar"
   image: "sonarqube"
-  version: "8.9.6-community"
+  version: "8.9.7-community"
   imagePullPolicy: "IfNotPresent"
   initImage: "busybox:1.35.0"
   basePath: ""

@@ -31,8 +31,8 @@ annotations:
       image: epamedp/sonar-operator:2.10.0
     - name: sonar-operator:2.9.0
       image: epamedp/sonar-operator:2.9.0
-    - name: sonarqube:8.9.6-community
-      image: sonarqube:8.9.6-community
+    - name: sonarqube:8.9.7-community
+      image: sonarqube:8.9.7-community
     - name: postgres:9.6
       image: postgres:9.6
     - name: rjkernick/alpine-wget:latest
@@ -68,7 +68,7 @@ annotations:
         image: sonarqube
         initImage: busybox:1.35.0
         type: Sonar
-        version: 8.9.6-community
+        version: 8.9.7-community
     - apiVersion: v2.edp.epam.com/v1alpha1
       kind: SonarGroup
       metadata:

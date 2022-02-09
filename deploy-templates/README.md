@@ -73,7 +73,7 @@ A Helm chart for EDP Sonar Operator
 | sonar.storage.database.class | string | `"gp2"` |  |
 | sonar.storage.database.size | string | `"1Gi"` |  |
 | sonar.tolerations | list | `[]` |  |
-| sonar.version | string | `"8.9.6-community"` |  |
+| sonar.version | string | `"8.9.7-community"` |  |
 | tolerations | list | `[]` |  |
 
 ----------------------------------------------
