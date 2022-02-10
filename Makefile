@@ -52,7 +52,11 @@ clean:  ## clean up
 # use https://github.com/git-chglog/git-chglog/
 .PHONY: changelog
 changelog: ## generate changelog
+ifneq (${NEXT_RELEASE_TAG},)
+	@git-chglog --next-tag v${NEXT_RELEASE_TAG} -o CHANGELOG.md v2.7.0..
+else
 	@git-chglog -o CHANGELOG.md v2.7.0..
+endif
 
 .PHONY: gen-mocks
 gen-mocks: gen-platform-service-mock gen-sonar-client-mock gen-sonar-service-mock gen-k8s-clients-mock gen-openshift-clients-mock
