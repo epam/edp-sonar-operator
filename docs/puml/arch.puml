@@ -33,21 +33,47 @@ package sonar-operator {
         String storageClass
         String capacity
     }
+
+    SonarGroup "1" *-- "1" Sonar: sonarOwner
+    class SonarGroup {
+        String sonarOwner
+        String name
+        String description
+    }
+
+    SonarPermissionTemplate "1" *-- "1" Sonar: sonarOwner
+    class SonarPermissionTemplate {
+        String sonarOwner
+        String name
+        String description
+        String projectKeyPattern
+        GroupPermissions grouppermissions
+    }
+
+    SonarPermissionTemplate "1" --* "1..*" GroupPermissions
+    class GroupPermissions <internal> {
+        String groupName
+        Permissions permissions
+    }
+
+    GroupPermissions -d-> Permissions : permissions
+    enum Permissions {
+        admin
+        codeviewer
+        issueadmin
+        scan
+        securityhotspotadmin
+        user
+    }
 }
 
 class LocalObjectReference {
     String name
 }
-Sonar -l-> LocalObjectReference : imagePullSecrets
+Sonar -d-> LocalObjectReference : imagePullSecrets
 JenkinsServiceAccount <-d- Sonar : creates sonar-ciuser-token
 JenkinsScript <-d- Sonar : creates sonar-jenkins-plugin-config
 EDPComponent <-d- Sonar : creates
 KeycloakClient <-d- Sonar : creates
-
-legend
-|<back:LightGoldenRodYellow>    </back>| Work In Progress |
-|<back:White>    </back>| Implemented |
-|<back:Khaki>    </back>| TBD |
-endlegend
 
 @enduml
