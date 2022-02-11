@@ -58,6 +58,10 @@ else
 	@git-chglog -o CHANGELOG.md v2.7.0..
 endif
 
+.PHONY: api-docs
+api-docs: ## generate CRD docs
+	crdoc --resources deploy-templates/crds --output docs/api.md
+
 .PHONY: gen-mocks
 gen-mocks: gen-platform-service-mock gen-sonar-client-mock gen-sonar-service-mock gen-k8s-clients-mock gen-openshift-clients-mock
 
