@@ -22,7 +22,7 @@ func (sc *Client) SearchGroups(ctx context.Context, groupName string) ([]Group, 
 	rsp, err := sc.startRequest(ctx).SetResult(&groupResponse).
 		Get(fmt.Sprintf("/user_groups/search?q=%s&f=name", groupName))
 
-	if err := sc.checkError(rsp, err); err != nil {
+	if err = sc.checkError(rsp, err); err != nil {
 		return nil, errors.Wrap(err, "unable to search for groups")
 	}
 
@@ -48,17 +48,17 @@ type createGroupResponse struct {
 	Group Group `json:"group"`
 }
 
-func (sc *Client) CreateGroup(ctx context.Context, gr *Group) error {
+func (sc *Client) CreateGroup(ctx context.Context, group *Group) error {
 	var createGroupRsp createGroupResponse
 
 	rsp, err := sc.startRequest(ctx).SetResult(&createGroupRsp).SetFormData(map[string]string{
-		"name":        gr.Name,
-		"description": gr.Description,
+		"name":        group.Name,
+		"description": group.Description,
 	}).Post("/user_groups/create")
-	if err := sc.checkError(rsp, err); err != nil {
+	if err = sc.checkError(rsp, err); err != nil {
 		return errors.Wrap(err, "unable to create user group")
 	}
-	gr.ID = createGroupRsp.Group.ID
+	group.ID = createGroupRsp.Group.ID
 
 	return nil
 }
@@ -85,7 +85,7 @@ func (sc *Client) DeleteGroup(ctx context.Context, groupName string) error {
 	rsp, err := sc.startRequest(ctx).SetFormData(map[string]string{
 		"name": groupName,
 	}).Post("/user_groups/delete")
-	if err := sc.checkError(rsp, err); err != nil {
+	if err = sc.checkError(rsp, err); err != nil {
 		return errors.Wrap(err, "unable to delete group")
 	}
 

@@ -336,7 +336,7 @@ func TestService_Integration_BadBuilder(t *testing.T) {
 			return nil, errors.New("test")
 		},
 	}
-	_, err := service.Integration(ctx, instance)
+	_, err := service.Integration(ctx, &instance)
 	assert.Error(t, err)
 }
 
@@ -355,7 +355,7 @@ func TestService_Integration_getKeycloakRealmErr(t *testing.T) {
 			return &clMock, nil
 		},
 	}
-	_, err := service.Integration(ctx, instance)
+	_, err := service.Integration(ctx, &instance)
 	assert.Error(t, err)
 }
 
@@ -379,7 +379,7 @@ func TestService_Integration_NilRealmAnnotation(t *testing.T) {
 			return &clMock, nil
 		},
 	}
-	_, err := service.Integration(ctx, instance)
+	_, err := service.Integration(ctx, &instance)
 	assert.Error(t, err)
 	assert.True(t, strings.Contains(err.Error(), "realm main does not have required annotations"))
 }
@@ -411,7 +411,7 @@ func TestService_Integration_EmptyAnnotationErr(t *testing.T) {
 			return &clMock, nil
 		},
 	}
-	_, err := service.Integration(ctx, instance)
+	_, err := service.Integration(ctx, &instance)
 	assert.Error(t, err)
 	assert.True(t, strings.Contains(err.Error(), "failed to unmarshal OpenID configuration"))
 }
@@ -447,7 +447,7 @@ func TestService_Integration_ConfigureGeneralSettingsErr(t *testing.T) {
 			return &clMock, nil
 		},
 	}
-	_, err = service.Integration(ctx, instance)
+	_, err = service.Integration(ctx, &instance)
 	assert.Error(t, err)
 	assert.True(t, strings.Contains(err.Error(), "failed to to configure sonar.auth.oidc.issuerUri"))
 	clMock.AssertExpectations(t)
@@ -481,7 +481,7 @@ func TestService_Integration_EmptyAnnotation(t *testing.T) {
 			return &clMock, nil
 		},
 	}
-	_, err = service.Integration(ctx, instance)
+	_, err = service.Integration(ctx, &instance)
 	assert.Error(t, err)
 	assert.True(t, strings.Contains(err.Error(), "issuer field in oidc configuration is empty or configuration is invalid"))
 	clMock.AssertExpectations(t)
@@ -506,7 +506,7 @@ func TestService_Integration_GetExternalEndpointErr(t *testing.T) {
 			return &clMock, nil
 		},
 	}
-	_, err := service.Integration(ctx, instance)
+	_, err := service.Integration(ctx, &instance)
 	assert.Equal(t, errTest, err)
 	plMock.AssertExpectations(t)
 	clMock.AssertExpectations(t)
@@ -532,7 +532,7 @@ func TestService_Integration_ConfigureGeneralSettingsErr2(t *testing.T) {
 			return &clMock, nil
 		},
 	}
-	_, err := service.Integration(ctx, instance)
+	_, err := service.Integration(ctx, &instance)
 	assert.Error(t, err)
 	assert.True(t, strings.Contains(err.Error(), "Failed to configure sonar.core.serverBaseURL!"))
 	plMock.AssertExpectations(t)
@@ -558,7 +558,7 @@ func TestService_Integration_getKeycloakClientErr(t *testing.T) {
 			return &clMock, nil
 		},
 	}
-	_, err := service.Integration(ctx, instance)
+	_, err := service.Integration(ctx, &instance)
 	assert.Error(t, err)
 	plMock.AssertExpectations(t)
 	clMock.AssertExpectations(t)
@@ -585,7 +585,7 @@ func TestService_Integration_ConfigureGeneralSettingsErr3(t *testing.T) {
 			return &clMock, nil
 		},
 	}
-	_, err := service.Integration(ctx, instance)
+	_, err := service.Integration(ctx, &instance)
 	assert.Error(t, err)
 	assert.True(t, strings.Contains(err.Error(), "Failed to configure sonar.auth.oidc.clientId.secured!"))
 	plMock.AssertExpectations(t)
@@ -614,7 +614,7 @@ func TestService_Integration_ConfigureGeneralSettingsErr4(t *testing.T) {
 			return &clMock, nil
 		},
 	}
-	_, err := service.Integration(ctx, instance)
+	_, err := service.Integration(ctx, &instance)
 	assert.Error(t, err)
 	assert.True(t, strings.Contains(err.Error(), "Failed to configure sonar.auth.oidc.groupsSync.claimName!"))
 	plMock.AssertExpectations(t)
@@ -644,7 +644,7 @@ func TestService_Integration_ConfigureGeneralSettingsErr5(t *testing.T) {
 			return &clMock, nil
 		},
 	}
-	_, err := service.Integration(ctx, instance)
+	_, err := service.Integration(ctx, &instance)
 	assert.Error(t, err)
 	assert.True(t, strings.Contains(err.Error(), "Failed to configure sonar.auth.oidc.groupsSync!"))
 	plMock.AssertExpectations(t)
@@ -675,7 +675,7 @@ func TestService_Integration_ConfigureGeneralSettingsErr6(t *testing.T) {
 			return &clMock, nil
 		},
 	}
-	_, err := service.Integration(ctx, instance)
+	_, err := service.Integration(ctx, &instance)
 	assert.Error(t, err)
 	assert.True(t, strings.Contains(err.Error(), "Failed to configure sonar.auth.oidc.enabled!"))
 	plMock.AssertExpectations(t)
@@ -707,7 +707,7 @@ func TestService_Integration_SetProjectsDefaultVisibilityErr(t *testing.T) {
 			return &clMock, nil
 		},
 	}
-	_, err := service.Integration(ctx, instance)
+	_, err := service.Integration(ctx, &instance)
 	assert.Error(t, err)
 	assert.True(t, strings.Contains(err.Error(), "couldn't set default"))
 	plMock.AssertExpectations(t)
@@ -738,7 +738,7 @@ func TestService_Integration(t *testing.T) {
 			return &clMock, nil
 		},
 	}
-	_, err := service.Integration(ctx, instance)
+	_, err := service.Integration(ctx, &instance)
 	assert.NoError(t, err)
 	plMock.AssertExpectations(t)
 	clMock.AssertExpectations(t)

@@ -28,6 +28,7 @@ const (
 	StatusIntegrationStart = "integration started"
 	StatusReady            = "ready"
 	DefaultRequeueTime     = 30
+	ShortRequeueTime       = 10
 )
 
 func NewReconcileSonar(client client.Client, scheme *runtime.Scheme, log logr.Logger, platformType string) (*ReconcileSonar, error) {
@@ -96,8 +97,8 @@ func (r *ReconcileSonar) Reconcile(ctx context.Context, request reconcile.Reques
 		return reconcile.Result{RequeueAfter: DefaultRequeueTime * time.Second}, err
 	}
 
-	if dcIsReady, err := r.service.IsDeploymentReady(instance); err != nil {
-		return reconcile.Result{RequeueAfter: DefaultRequeueTime * time.Second}, errors.Wrapf(err, "Checking if Deployment configs is ready has been failed")
+	if dcIsReady, errIsReady := r.service.IsDeploymentReady(instance); errIsReady != nil {
+		return reconcile.Result{RequeueAfter: DefaultRequeueTime * time.Second}, errors.Wrapf(errIsReady, "Checking if Deployment configs is ready has been failed")
 	} else if !dcIsReady {
 		log.Info("Deployment config is not ready for configuration yet")
 		return reconcile.Result{RequeueAfter: DefaultRequeueTime * time.Second}, nil
@@ -121,7 +122,7 @@ func (r *ReconcileSonar) Reconcile(ctx context.Context, request reconcile.Reques
 		log.Info("Configuration has finished")
 		err = r.updateStatus(ctx, instance, StatusConfigured)
 		if err != nil {
-			return reconcile.Result{RequeueAfter: 10 * time.Second}, err
+			return reconcile.Result{RequeueAfter: ShortRequeueTime * time.Second}, err
 		}
 	}
 
@@ -129,20 +130,20 @@ func (r *ReconcileSonar) Reconcile(ctx context.Context, request reconcile.Reques
 		log.Info("Exposing configuration has started")
 		err = r.updateStatus(ctx, instance, StatusExposeStart)
 		if err != nil {
-			return reconcile.Result{RequeueAfter: 10 * time.Second}, err
+			return reconcile.Result{RequeueAfter: ShortRequeueTime * time.Second}, err
 		}
 	}
 
 	err = r.service.ExposeConfiguration(ctx, instance)
 	if err != nil {
-		return reconcile.Result{RequeueAfter: 10 * time.Second}, errors.Wrapf(err, "Exposing configuration failed")
+		return reconcile.Result{RequeueAfter: ShortRequeueTime * time.Second}, errors.Wrapf(err, "Exposing configuration failed")
 	}
 
 	if instance.Status.Status == StatusExposeStart {
 		log.Info("Exposing configuration has finished")
 		err = r.updateStatus(ctx, instance, StatusExposeFinish)
 		if err != nil {
-			return reconcile.Result{RequeueAfter: 10 * time.Second}, err
+			return reconcile.Result{RequeueAfter: ShortRequeueTime * time.Second}, err
 		}
 	}
 
@@ -150,27 +151,27 @@ func (r *ReconcileSonar) Reconcile(ctx context.Context, request reconcile.Reques
 		log.Info("Integration has started")
 		err = r.updateStatus(ctx, instance, StatusIntegrationStart)
 		if err != nil {
-			return reconcile.Result{RequeueAfter: 10 * time.Second}, err
+			return reconcile.Result{RequeueAfter: ShortRequeueTime * time.Second}, err
 		}
 	}
 
-	instance, err = r.service.Integration(ctx, *instance)
+	instance, err = r.service.Integration(ctx, instance)
 	if err != nil {
-		return reconcile.Result{RequeueAfter: 10 * time.Second}, errors.Wrapf(err, "Integration failed")
+		return reconcile.Result{RequeueAfter: ShortRequeueTime * time.Second}, errors.Wrapf(err, "Integration failed")
 	}
 
 	if instance.Status.Status == StatusIntegrationStart {
 		log.Info("Integration has finished")
 		err = r.updateStatus(ctx, instance, StatusReady)
 		if err != nil {
-			return reconcile.Result{RequeueAfter: 10 * time.Second}, err
+			return reconcile.Result{RequeueAfter: ShortRequeueTime * time.Second}, err
 		}
 	}
 
 	err = r.updateAvailableStatus(ctx, instance, true)
 	if err != nil {
 		log.Info("Failed to update availability status")
-		return reconcile.Result{RequeueAfter: 30 * time.Second}, err
+		return reconcile.Result{RequeueAfter: DefaultRequeueTime * time.Second}, err
 	}
 
 	log.Info("Reconciling Sonar component has been finished", "namespace", request.Namespace, "name", request.Name)

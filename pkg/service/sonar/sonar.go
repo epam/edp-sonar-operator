@@ -54,12 +54,14 @@ const (
 	annotation                       = "openid-configuration"
 	admin                            = "admin"
 	tokenType                        = "token"
+	failMsgTemplate                  = "Failed to set owner reference for secret %v"
+	failInitSonarMsg                 = "Failed to initialize Sonar Client!"
 )
 
 type ServiceInterface interface {
 	Configure(ctx context.Context, instance *v1alpha1.Sonar) error
 	ExposeConfiguration(ctx context.Context, instance *v1alpha1.Sonar) error
-	Integration(ctx context.Context, instance v1alpha1.Sonar) (*v1alpha1.Sonar, error)
+	Integration(ctx context.Context, instance *v1alpha1.Sonar) (*v1alpha1.Sonar, error)
 	IsDeploymentReady(instance *v1alpha1.Sonar) (bool, error)
 	ClientForChild(ctx context.Context, instance ChildInstance) (ClientInterface, error)
 	DeleteResource(ctx context.Context, instance Deletable, finalizer string,
@@ -173,32 +175,33 @@ func (s Service) initSonarClient(ctx context.Context, instance *v1alpha1.Sonar, 
 	return sonarClient.InitNewRestClient(fmt.Sprintf("%s/api", u), admin, password), nil
 }
 
-func (s Service) Integration(ctx context.Context, instance v1alpha1.Sonar) (*v1alpha1.Sonar, error) {
-	sc, err := s.sonarClientBuilder(ctx, &instance, false)
+func (s Service) Integration(ctx context.Context, instance *v1alpha1.Sonar) (*v1alpha1.Sonar, error) {
+	valueType := "value"
+	sc, err := s.sonarClientBuilder(ctx, instance, false)
 	if err != nil {
-		return &instance, errors.Wrap(err, "Failed to initialize Sonar Client!")
+		return instance, errors.Wrap(err, failInitSonarMsg)
 	}
 	realm, err := s.getKeycloakRealm(instance)
 	if err != nil {
-		return &instance, err
+		return instance, err
 	}
 	if realm != nil {
 		if realm.Annotations == nil {
-			return &instance, errors.New("realm main does not have required annotations")
+			return instance, errors.New("realm main does not have required annotations")
 		}
 		openIdConfiguration := realm.Annotations[annotation]
 		var c map[string]interface{}
 		err = json.Unmarshal([]byte(openIdConfiguration), &c)
 		if err != nil {
-			return &instance, errors.Wrap(err, "failed to unmarshal OpenID configuration")
+			return instance, errors.Wrap(err, "failed to unmarshal OpenID configuration")
 		}
 		if len(c["issuer"].(string)) > 0 {
-			err = sc.ConfigureGeneralSettings("value", "sonar.auth.oidc.issuerUri", c["issuer"].(string))
+			err = sc.ConfigureGeneralSettings(valueType, "sonar.auth.oidc.issuerUri", c["issuer"].(string))
 			if err != nil {
-				return &instance, errors.Wrap(err, "failed to to configure sonar.auth.oidc.issuerUri")
+				return instance, errors.Wrap(err, "failed to to configure sonar.auth.oidc.issuerUri")
 			}
 		} else {
-			return &instance, errors.New("issuer field in oidc configuration is empty or configuration is invalid")
+			return instance, errors.New("issuer field in oidc configuration is empty or configuration is invalid")
 		}
 	}
 
@@ -206,13 +209,13 @@ func (s Service) Integration(ctx context.Context, instance v1alpha1.Sonar) (*v1a
 	if err != nil {
 		return nil, err
 	}
-	err = sc.ConfigureGeneralSettings("value", "sonar.core.serverBaseURL", url)
+	err = sc.ConfigureGeneralSettings(valueType, "sonar.core.serverBaseURL", url)
 	if err != nil {
-		return &instance, errors.Wrap(err, "Failed to configure sonar.core.serverBaseURL!")
+		return instance, errors.Wrap(err, "Failed to configure sonar.core.serverBaseURL!")
 	}
 	cl, err := s.getKeycloakClient(instance)
 	if err != nil {
-		return &instance, err
+		return instance, err
 	}
 
 	if cl == nil {
@@ -220,27 +223,27 @@ func (s Service) Integration(ctx context.Context, instance v1alpha1.Sonar) (*v1a
 	}
 
 	if err != nil {
-		return &instance, err
+		return instance, err
 	}
 
-	err = sc.ConfigureGeneralSettings("value", "sonar.auth.oidc.clientId.secured", instance.Name)
+	err = sc.ConfigureGeneralSettings(valueType, "sonar.auth.oidc.clientId.secured", instance.Name)
 	if err != nil {
-		return &instance, errors.Wrap(err, "Failed to configure sonar.auth.oidc.clientId.secured!")
+		return instance, errors.Wrap(err, "Failed to configure sonar.auth.oidc.clientId.secured!")
 	}
 
-	err = sc.ConfigureGeneralSettings("value", "sonar.auth.oidc.groupsSync.claimName", claimName)
+	err = sc.ConfigureGeneralSettings(valueType, "sonar.auth.oidc.groupsSync.claimName", claimName)
 	if err != nil {
-		return &instance, errors.Wrap(err, "Failed to configure sonar.auth.oidc.groupsSync.claimName!")
+		return instance, errors.Wrap(err, "Failed to configure sonar.auth.oidc.groupsSync.claimName!")
 	}
 
-	err = sc.ConfigureGeneralSettings("value", "sonar.auth.oidc.groupsSync", "true")
+	err = sc.ConfigureGeneralSettings(valueType, "sonar.auth.oidc.groupsSync", "true")
 	if err != nil {
-		return &instance, errors.Wrap(err, "Failed to configure sonar.auth.oidc.groupsSync!")
+		return instance, errors.Wrap(err, "Failed to configure sonar.auth.oidc.groupsSync!")
 	}
 
-	err = sc.ConfigureGeneralSettings("value", "sonar.auth.oidc.enabled", "true")
+	err = sc.ConfigureGeneralSettings(valueType, "sonar.auth.oidc.enabled", "true")
 	if err != nil {
-		return &instance, errors.Wrap(err, "Failed to configure sonar.auth.oidc.enabled!")
+		return instance, errors.Wrap(err, "Failed to configure sonar.auth.oidc.enabled!")
 	}
 
 	dv := "private"
@@ -249,10 +252,10 @@ func (s Service) Integration(ctx context.Context, instance v1alpha1.Sonar) (*v1a
 		return nil, errors.Wrapf(err, "couldn't set default %v visibility for projects", dv)
 	}
 
-	return &instance, nil
+	return instance, nil
 }
 
-func (s Service) getKeycloakRealm(instance v1alpha1.Sonar) (*keycloakApi.KeycloakRealm, error) {
+func (s *Service) getKeycloakRealm(instance *v1alpha1.Sonar) (*keycloakApi.KeycloakRealm, error) {
 	realm := &keycloakApi.KeycloakRealm{}
 	err := s.k8sClient.Get(context.TODO(), types.NamespacedName{
 		Name:      main,
@@ -267,7 +270,7 @@ func (s Service) getKeycloakRealm(instance v1alpha1.Sonar) (*keycloakApi.Keycloa
 	return realm, nil
 }
 
-func (s Service) getKeycloakClient(instance v1alpha1.Sonar) (*keycloakApi.KeycloakClient, error) {
+func (s *Service) getKeycloakClient(instance *v1alpha1.Sonar) (*keycloakApi.KeycloakClient, error) {
 	cl := &keycloakApi.KeycloakClient{}
 	err := s.k8sClient.Get(context.TODO(), types.NamespacedName{
 		Name:      instance.Name,
@@ -282,7 +285,8 @@ func (s Service) getKeycloakClient(instance v1alpha1.Sonar) (*keycloakApi.Keyclo
 	return cl, nil
 }
 
-func (s Service) createKeycloakClient(instance v1alpha1.Sonar, baseUrl string) error {
+func (s *Service) createKeycloakClient(instance *v1alpha1.Sonar, baseUrl string) error {
+	trueStr := "true"
 	cl := &keycloakApi.KeycloakClient{
 		ObjectMeta: v1.ObjectMeta{
 			Name:      instance.Name,
@@ -311,10 +315,10 @@ func (s Service) createKeycloakClient(instance v1alpha1.Sonar, baseUrl string) e
 					Config: map[string]string{
 						"access.token.claim":   "false",
 						"claim.name":           "roles",
-						"id.token.claim":       "true",
+						"id.token.claim":       trueStr,
 						"jsonType.label":       "String",
-						"multivalued":          "true",
-						"userinfo.token.claim": "true",
+						"multivalued":          trueStr,
+						"userinfo.token.claim": trueStr,
 					},
 				},
 			},
@@ -326,7 +330,7 @@ func (s Service) createKeycloakClient(instance v1alpha1.Sonar, baseUrl string) e
 func (s Service) ExposeConfiguration(ctx context.Context, instance *v1alpha1.Sonar) error {
 	sc, err := s.sonarClientBuilder(ctx, instance, false)
 	if err != nil {
-		return errors.Wrap(err, "Failed to initialize Sonar Client!")
+		return errors.Wrap(err, failInitSonarMsg)
 	}
 
 	_, err = sc.GetUser(ctx, jenkinsLogin)
@@ -353,9 +357,9 @@ func (s Service) ExposeConfiguration(ctx context.Context, instance *v1alpha1.Son
 	ciUserName := fmt.Sprintf("%v-ciuser-token", instance.Name)
 	_, err = sc.GetUserToken(ctx, jenkinsLogin, strings.Title(jenkinsLogin))
 	if sonarClient.IsErrNotFound(err) {
-		ciToken, err := sc.GenerateUserToken(jenkinsLogin)
-		if err != nil {
-			return errors.Wrapf(err, "Failed to generate token for %v user", jenkinsLogin)
+		ciToken, errGen := sc.GenerateUserToken(jenkinsLogin)
+		if errGen != nil {
+			return errors.Wrapf(errGen, "Failed to generate token for %v user", jenkinsLogin)
 		}
 
 		if ciToken != nil {
@@ -364,12 +368,12 @@ func (s Service) ExposeConfiguration(ctx context.Context, instance *v1alpha1.Son
 				"secret":   []byte(*ciToken),
 			}
 
-			secret, err := s.platformService.CreateSecret(instance.Name, instance.Namespace, ciUserName, ciSecret)
-			if err != nil {
-				return errors.Wrapf(err, "Failed to create secret for  %v user", ciUserName)
+			secret, errCreateSecret := s.platformService.CreateSecret(instance.Name, instance.Namespace, ciUserName, ciSecret)
+			if errCreateSecret != nil {
+				return errors.Wrapf(errCreateSecret, "Failed to create secret for  %v user", ciUserName)
 			}
-			if err = s.platformService.SetOwnerReference(instance, secret); err != nil {
-				return errors.Wrapf(err, "Failed to set owner reference for secret %v", secret)
+			if errCreateSecret = s.platformService.SetOwnerReference(instance, secret); errCreateSecret != nil {
+				return errors.Wrapf(errCreateSecret, failMsgTemplate, secret)
 			}
 		}
 	} else if err != nil {
@@ -413,7 +417,7 @@ func (s Service) ExposeConfiguration(ctx context.Context, instance *v1alpha1.Son
 	if sonarClient.IsErrNotFound(err) {
 		sonarUser := sonarClient.User{
 			Login: readUserLogin, Name: readUserUsername, Password: uniuri.New()}
-		if err := sc.CreateUser(ctx, &sonarUser); err != nil {
+		if err = sc.CreateUser(ctx, &sonarUser); err != nil {
 			return errors.Wrapf(err, "Failed to create user %v in Sonar", readUserLogin)
 		}
 	} else if err != nil {
@@ -422,9 +426,9 @@ func (s Service) ExposeConfiguration(ctx context.Context, instance *v1alpha1.Son
 	readUserSecretName := fmt.Sprintf("%v-readuser-token", instance.Name)
 	_, err = sc.GetUserToken(ctx, readUserLogin, strings.Title(readUserLogin))
 	if sonarClient.IsErrNotFound(err) {
-		readToken, err := sc.GenerateUserToken(readUserLogin)
-		if err != nil {
-			return errors.Wrapf(err, "Failed to generate token for %s user", readUserLogin)
+		readToken, errGenToken := sc.GenerateUserToken(readUserLogin)
+		if errGenToken != nil {
+			return errors.Wrapf(errGenToken, "Failed to generate token for %s user", readUserLogin)
 		}
 
 		if readToken != nil {
@@ -433,12 +437,12 @@ func (s Service) ExposeConfiguration(ctx context.Context, instance *v1alpha1.Son
 				tokenType:  []byte(*readToken),
 			}
 
-			secret, err := s.platformService.CreateSecret(instance.Name, instance.Namespace, readUserSecretName, readSecret)
-			if err != nil {
-				return errors.Wrapf(err, "Failed to create secret for  %v user", readUserSecretName)
+			secret, errCreateSecret := s.platformService.CreateSecret(instance.Name, instance.Namespace, readUserSecretName, readSecret)
+			if errCreateSecret != nil {
+				return errors.Wrapf(errCreateSecret, "Failed to create secret for  %v user", readUserSecretName)
 			}
-			if err := s.platformService.SetOwnerReference(instance, secret); err != nil {
-				return errors.Wrapf(err, "Failed to set owner reference for secret %v", secret)
+			if err = s.platformService.SetOwnerReference(instance, secret); err != nil {
+				return errors.Wrapf(err, failMsgTemplate, secret)
 			}
 		}
 	} else if err != nil {
@@ -461,8 +465,8 @@ func (s Service) ExposeConfiguration(ctx context.Context, instance *v1alpha1.Son
 	if err != nil {
 		return errors.Wrapf(err, "Failed to create secret for  %v Keycloak client!", readUserSecretName)
 	}
-	if err := s.platformService.SetOwnerReference(instance, secret); err != nil {
-		return errors.Wrapf(err, "Failed to set owner reference for secret %v", secret)
+	if err = s.platformService.SetOwnerReference(instance, secret); err != nil {
+		return errors.Wrapf(err, failMsgTemplate, secret)
 	}
 
 	err = s.createEDPComponent(ctx, instance)
@@ -511,7 +515,7 @@ func (s Service) Configure(ctx context.Context, instance *v1alpha1.Sonar) error 
 
 	sc, err := s.sonarClientBuilder(ctx, instance, false)
 	if err != nil {
-		return errors.Wrap(err, "Failed to initialize Sonar Client!")
+		return errors.Wrap(err, failInitSonarMsg)
 	}
 
 	if err = installPlugins(sc); err != nil {
@@ -565,7 +569,7 @@ func (s *Service) configurePassword(ctx context.Context, instance *v1alpha1.Sona
 
 	sc, err := s.sonarClientBuilder(ctx, instance, true)
 	if err != nil {
-		return errors.Wrap(err, "Failed to initialize Sonar Client!")
+		return errors.Wrap(err, failInitSonarMsg)
 	}
 
 	err = sc.ChangePassword(ctx, admin, defaultPassword, string(credentials["password"]))
@@ -593,7 +597,7 @@ func setupGroups(ctx context.Context, sc ClientInterface) error {
 	groups := []string{nonInteractiveGroupName, sonarDevelopersGroupName}
 	for _, g := range groups {
 		if _, err := sc.GetGroup(ctx, g); sonar.IsErrNotFound(err) {
-			if err := sc.CreateGroup(ctx, &sonar.Group{Name: g}); err != nil {
+			if err = sc.CreateGroup(ctx, &sonar.Group{Name: g}); err != nil {
 				return errors.Wrapf(err, "Failed to create %s group!", g)
 			}
 		} else if err != nil {
@@ -623,13 +627,18 @@ func uploadProfile(sc ClientInterface, isRunningInCluster func() bool) error {
 }
 
 func createQualityGate(sc ClientInterface) error {
+	gt := "GT"
+	errorStr := "error"
+	metric := "metric"
+	zero := "0"
+	op := "op"
 	if _, err := sc.CreateQualityGate("EDP way", []map[string]string{
-		{"error": "80", "metric": "new_coverage", "op": "LT", "period": "1"},
-		{"error": "0", "metric": "test_errors", "op": "GT"},
-		{"error": "3", "metric": "new_duplicated_lines_density", "op": "GT", "period": "1"},
-		{"error": "0", "metric": "test_failures", "op": "GT"},
-		{"error": "0", "metric": "blocker_violations", "op": "GT"},
-		{"error": "0", "metric": "critical_violations", "op": "GT"},
+		{errorStr: "80", metric: "new_coverage", op: "LT", "period": "1"},
+		{errorStr: zero, metric: "test_errors", op: gt},
+		{errorStr: "3", metric: "new_duplicated_lines_density", op: gt, "period": "1"},
+		{errorStr: zero, metric: "test_failures", op: gt},
+		{errorStr: zero, metric: "blocker_violations", op: gt},
+		{errorStr: zero, metric: "critical_violations", op: gt},
 	}); err != nil {
 		return errors.Wrap(err, "Failed to configure EDP way quality gate!")
 	}
@@ -673,7 +682,7 @@ func (s Service) createAdminSecret(instance *v1alpha1.Sonar) (map[string][]byte,
 	}
 
 	if err = s.platformService.SetOwnerReference(instance, secret); err != nil {
-		return nil, errors.Wrapf(err, "Failed to set owner reference for secret %v", secret)
+		return nil, errors.Wrapf(err, failMsgTemplate, secret)
 	}
 
 	return secret.Data, nil

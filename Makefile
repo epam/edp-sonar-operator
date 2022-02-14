@@ -44,7 +44,7 @@ vet:  ## Run go vet
 	go vet ./...
 
 lint: ## Run go lint
-	golangci-lint run
+	golangci-lint run -c .golangci.new.yaml
 
 .PHONY: build
 build: clean ## build operator's binary

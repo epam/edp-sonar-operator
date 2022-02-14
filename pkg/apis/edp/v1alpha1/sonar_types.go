@@ -64,7 +64,7 @@ type Sonar struct {
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 
-// SonarList contains a list of Sonar
+// SonarList contains a list of Sonar.
 type SonarList struct {
 	metav1.TypeMeta `json:",inline"`
 	metav1.ListMeta `json:"metadata,omitempty"`

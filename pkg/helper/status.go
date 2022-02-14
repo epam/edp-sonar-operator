@@ -7,6 +7,7 @@ import (
 
 const (
 	StatusOK = "OK"
+	TimeOut  = 10 * time.Second
 )
 
 type FailureCountable interface {
@@ -26,7 +27,7 @@ type StatusValueFailureCountable interface {
 
 func SetFailureCount(fc FailureCountable) time.Duration {
 	failures := fc.GetFailureCount()
-	timeout := getTimeout(failures, 10*time.Second)
+	timeout := getTimeout(failures, TimeOut)
 	failures += 1
 	fc.SetFailureCount(failures)
 

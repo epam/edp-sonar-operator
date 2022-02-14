@@ -28,6 +28,8 @@ import (
 
 var log = ctrl.Log.WithName("platform")
 
+const namespaceField = "namespace"
+
 // K8SClusterClient is client for k8s cluster
 type K8SClusterClient interface {
 	coreV1Client.CoreV1Interface
@@ -77,7 +79,7 @@ func (s *K8SService) Init(config *rest.Config, scheme *runtime.Scheme, client cl
 func (s K8SService) GetSecretData(namespace string, name string) (map[string][]byte, error) {
 	sonarSecret, err := s.k8sClusterClient.Secrets(namespace).Get(context.Background(), name, metav1.GetOptions{})
 	if err != nil && k8serr.IsNotFound(err) {
-		log.Info("Secret in namespace not found", "secret name", name, "namespace", namespace)
+		log.Info("Secret in namespace not found", "secret name", name, namespaceField, namespace)
 		var emptyMap map[string][]byte
 		return emptyMap, nil
 	} else if err != nil {
@@ -104,12 +106,12 @@ func (s K8SService) CreateSecret(sonarName, namespace, secretName string, data m
 
 	if err != nil {
 		if k8serr.IsNotFound(err) {
-			log.V(1).Info("Creating a new Secret for Sonar", "namespace", sonarSecretObject.Namespace, "secret name", sonarSecretObject.Name, "sonar name", sonarName)
-			sonarSecret, err := s.k8sClusterClient.Secrets(sonarSecretObject.Namespace).Create(context.Background(), sonarSecretObject, metav1.CreateOptions{})
-			if err != nil {
-				return nil, err
+			log.V(1).Info("Creating a new Secret for Sonar", namespace, sonarSecretObject.Namespace, "secret name", sonarSecretObject.Name, "sonar name", sonarName)
+			sonarSecret, errCreateSecret := s.k8sClusterClient.Secrets(sonarSecretObject.Namespace).Create(context.Background(), sonarSecretObject, metav1.CreateOptions{})
+			if errCreateSecret != nil {
+				return nil, errCreateSecret
 			}
-			log.Info("Secret has been created", "namespace", sonarSecret.Namespace, "secret name", sonarSecret.Name)
+			log.Info("Secret has been created", namespace, sonarSecret.Namespace, "secret name", sonarSecret.Name)
 			return sonarSecretObject, nil
 		}
 		return nil, err
@@ -145,11 +147,11 @@ func (s K8SService) CreateConfigMap(instance *v1alpha1.Sonar, configMapName stri
 	_, err := s.k8sClusterClient.ConfigMaps(instance.Namespace).Get(context.Background(), configMapObject.Name, metav1.GetOptions{})
 	if err != nil {
 		if k8serr.IsNotFound(err) {
-			cm, err := s.k8sClusterClient.ConfigMaps(configMapObject.Namespace).Create(context.Background(), configMapObject, metav1.CreateOptions{})
-			if err != nil {
-				return errors.Wrapf(err, "Couldn't create Config Map %v object", configMapObject.Name)
+			cm, errCreateConfigMap := s.k8sClusterClient.ConfigMaps(configMapObject.Namespace).Create(context.Background(), configMapObject, metav1.CreateOptions{})
+			if errCreateConfigMap != nil {
+				return errors.Wrapf(errCreateConfigMap, "Couldn't create Config Map %v object", configMapObject.Name)
 			}
-			log.Info("ConfigMap has been created", "namespace", cm.Namespace, "config map name", cm.Name)
+			log.Info("ConfigMap has been created", namespaceField, cm.Namespace, "config map name", cm.Name)
 			return nil
 		}
 		return errors.Wrapf(err, "Couldn't get ConfigMap %v object", configMapObject.Name)
@@ -172,7 +174,7 @@ func (s K8SService) CreateJenkinsScript(namespace string, configMap string) erro
 				},
 			}
 
-			if err := s.client.Create(context.TODO(), js); err != nil {
+			if err = s.client.Create(context.TODO(), js); err != nil {
 				return err
 			}
 			return nil

@@ -92,11 +92,11 @@ func (_m *ServiceInterface) ExposeConfiguration(ctx context.Context, instance *v
 }
 
 // Integration provides a mock function with given fields: ctx, instance
-func (_m *ServiceInterface) Integration(ctx context.Context, instance v1alpha1.Sonar) (*v1alpha1.Sonar, error) {
+func (_m *ServiceInterface) Integration(ctx context.Context, instance *v1alpha1.Sonar) (*v1alpha1.Sonar, error) {
 	ret := _m.Called(ctx, instance)
 
 	var r0 *v1alpha1.Sonar
-	if rf, ok := ret.Get(0).(func(context.Context, v1alpha1.Sonar) *v1alpha1.Sonar); ok {
+	if rf, ok := ret.Get(0).(func(context.Context, *v1alpha1.Sonar) *v1alpha1.Sonar); ok {
 		r0 = rf(ctx, instance)
 	} else {
 		if ret.Get(0) != nil {
@@ -105,7 +105,7 @@ func (_m *ServiceInterface) Integration(ctx context.Context, instance v1alpha1.S
 	}
 
 	var r1 error
-	if rf, ok := ret.Get(1).(func(context.Context, v1alpha1.Sonar) error); ok {
+	if rf, ok := ret.Get(1).(func(context.Context, *v1alpha1.Sonar) error); ok {
 		r1 = rf(ctx, instance)
 	} else {
 		r1 = ret.Error(1)

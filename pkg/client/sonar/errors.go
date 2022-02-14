@@ -1,9 +1,8 @@
 package sonar
 
 import (
+	"errors"
 	"fmt"
-
-	"github.com/pkg/errors"
 )
 
 type ErrNotFound string
@@ -13,7 +12,8 @@ func (e ErrNotFound) Error() string {
 }
 
 func IsErrNotFound(err error) bool {
-	_, ok := errors.Cause(err).(ErrNotFound)
+	errNotFound := ErrNotFound("")
+	ok := errors.As(err, &errNotFound)
 	return ok
 }
 
@@ -27,7 +27,8 @@ func (e HTTPError) Error() string {
 }
 
 func IsHTTPErrorCode(err error, code int) bool {
-	httpError, ok := errors.Cause(err).(HTTPError)
+	var httpError HTTPError
+	ok := errors.As(err, &httpError)
 	if !ok {
 		return false
 	}

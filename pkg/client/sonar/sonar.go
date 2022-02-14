@@ -15,6 +15,16 @@ import (
 	sonarClientHelper "github.com/epam/edp-sonar-operator/v2/pkg/client/helper"
 )
 
+const (
+	cantUnmarshalMsg = "cant unmarshal %s"
+	nameField        = "name"
+	loginField       = "login"
+	jsonContentType  = "application/json"
+	contentTypeField = "Content-Type"
+	retryCount       = 60
+	timeOut          = 10
+)
+
 var log = ctrl.Log.WithName("sonar_client")
 
 type Client struct {
@@ -27,10 +37,14 @@ func InitNewRestClient(url string, user string, password string) *Client {
 	}
 }
 
+func (sc *Client) jsonTypeRequest() *resty.Request {
+	return sc.resty.R().SetHeader(contentTypeField, jsonContentType)
+}
+
 func (sc *Client) startRequest(ctx context.Context) *resty.Request {
 	return sc.resty.R().SetHeaders(map[string]string{
-		"Content-Type": "application/x-www-form-urlencoded",
-		"Accept":       "application/json",
+		contentTypeField: "application/x-www-form-urlencoded",
+		"Accept":         jsonContentType,
 	}).SetContext(ctx)
 }
 
@@ -56,17 +70,17 @@ func (sc *Client) ChangePassword(ctx context.Context, user string, oldPassword s
 		return errors.Wrap(err, "unable check sonar health")
 	}
 
-	if err := sc.checkError(resp, err); err != nil {
+	if err = sc.checkError(resp, err); err != nil {
 		return errors.Wrap(err, "unable to check sonar health")
 	}
 
 	resp, err = sc.startRequest(ctx).SetFormData(map[string]string{
-		"login":            user,
+		loginField:         user,
 		"password":         newPassword,
 		"previousPassword": oldPassword,
 	}).Post("/users/change_password")
 
-	if err := sc.checkError(resp, err); err != nil {
+	if err = sc.checkError(resp, err); err != nil {
 		return errors.Wrap(err, "unable to change password")
 	}
 
@@ -136,15 +150,17 @@ func (sc Client) InstallPlugins(plugins []string) error {
 
 	needReboot := false
 	for _, plugin := range plugins {
-		if !sonarClientHelper.CheckPluginInstalled(installedPlugins, plugin) {
+		if sonarClientHelper.CheckPluginInstalled(installedPlugins, plugin) {
+			continue
+		} else {
 			needReboot = true
-			resp, err := sc.resty.R().
+			resp, errPost := sc.resty.R().
 				SetBody(fmt.Sprintf("key=%s", plugin)).
-				SetHeader("Content-Type", "application/x-www-form-urlencoded").
+				SetHeader(contentTypeField, "application/x-www-form-urlencoded").
 				Post("/plugins/install")
 
-			if err != nil {
-				return errors.Wrapf(err, "Failed to send plugin installation request for %s", plugin)
+			if errPost != nil {
+				return errors.Wrapf(errPost, "Failed to send plugin installation request for %s", plugin)
 			}
 			if resp.IsError() {
 				errMsg := fmt.Sprintf("Installation of plugin %s failed. Response - %s", plugin, resp.Status())
@@ -158,7 +174,7 @@ func (sc Client) InstallPlugins(plugins []string) error {
 		if err = sc.Reboot(); err != nil {
 			return err
 		}
-		if err = sc.WaitForStatusIsUp(60, 10); err != nil {
+		if err = sc.WaitForStatusIsUp(retryCount, timeOut); err != nil {
 			return err
 		}
 	}
@@ -197,12 +213,12 @@ func (sc Client) GetInstalledPlugins() ([]string, error) {
 	var installedPluginsResponse InstalledPluginsResponse
 	err = json.Unmarshal(resp.Body(), &installedPluginsResponse)
 	if err != nil {
-		return nil, errors.Wrapf(err, "cant unmarshal %s", resp.Body())
+		return nil, errors.Wrapf(err, cantUnmarshalMsg, resp.Body())
 	}
 
 	var installedPlugins []string
-	for _, v := range installedPluginsResponse.Plugins {
-		installedPlugins = append(installedPlugins, v.Key)
+	for index := range installedPluginsResponse.Plugins {
+		installedPlugins = append(installedPlugins, installedPluginsResponse.Plugins[index].Key)
 	}
 
 	return installedPlugins, nil
@@ -232,9 +248,8 @@ func (sc Client) CreateQualityGate(qgName string, conditions []map[string]string
 	}
 
 	log.Info(fmt.Sprintf("Creating quality gate %s", qgName))
-	resp, err := sc.resty.R().
-		SetHeader("Content-Type", "application/json").
-		SetQueryParams(map[string]string{"name": qgName}).
+	resp, err := sc.jsonTypeRequest().
+		SetQueryParams(map[string]string{nameField: qgName}).
 		Post("/qualitygates/create")
 	if err != nil {
 		return "", errors.Wrap(err, "Failed to send request to create quality gates!")
@@ -247,7 +262,7 @@ func (sc Client) CreateQualityGate(qgName string, conditions []map[string]string
 	var qualityGate QualityGatesCreateResponse
 	err = json.Unmarshal(resp.Body(), &qualityGate)
 	if err != nil {
-		return "", errors.Wrapf(err, "cant unmarshal %s", resp.Body())
+		return "", errors.Wrapf(err, cantUnmarshalMsg, resp.Body())
 	}
 	qgId = fmt.Sprintf("%v", qualityGate.ID)
 
@@ -269,8 +284,7 @@ func (sc Client) CreateQualityGate(qgName string, conditions []map[string]string
 }
 
 func (sc Client) createCondition(conditionMap map[string]string) error {
-	resp, err := sc.resty.R().
-		SetHeader("Content-Type", "application/json").
+	resp, err := sc.jsonTypeRequest().
 		SetQueryParams(conditionMap).
 		Post("/qualitygates/create_condition")
 	if err != nil {
@@ -339,8 +353,7 @@ func (sc Client) checkQualityGateExist(qgName string) (exist bool, qgId string, 
 }
 
 func (sc Client) setDefaultQualityGate(qgId string) error {
-	resp, err := sc.resty.R().
-		SetHeader("Content-Type", "application/json").
+	resp, err := sc.jsonTypeRequest().
 		SetQueryParams(map[string]string{"id": qgId}).
 		Post("/qualitygates/set_as_default")
 	if err != nil {
@@ -377,7 +390,7 @@ func (sc Client) UploadProfile(profileName string, profilePath string) (string, 
 
 	log.Info(fmt.Sprintf("Uploading profile %s from path %s", profileName, profilePath))
 	resp, err := sc.resty.R().
-		SetHeader("Content-Type", "multipart/form-data").
+		SetHeader(contentTypeField, "multipart/form-data").
 		SetFile("backup", profilePath).
 		Post("/qualityprofiles/restore")
 	if err != nil {
@@ -436,7 +449,7 @@ type ProfileActions struct {
 
 func (sc Client) checkProfileExist(requiredProfileName string) (exits bool, profileId string, isDefault bool, error error) {
 	resp, err := sc.resty.R().
-		Get(fmt.Sprintf("/qualityprofiles/search?qualityProfile=%v", strings.Replace(requiredProfileName, " ", "+", -1)))
+		Get(fmt.Sprintf("/qualityprofiles/search?qualityProfile=%v", strings.ReplaceAll(requiredProfileName, " ", "+")))
 	if err != nil {
 		return false, "", false, errors.Wrap(err, "Failed to get default quality profile!")
 	}
@@ -455,9 +468,9 @@ func (sc Client) checkProfileExist(requiredProfileName string) (exits bool, prof
 		return false, "", false, nil
 	}
 	profiles := qualityProfilesSearchResponse.Profiles
-	for _, profile := range profiles {
-		if profile.Name == requiredProfileName {
-			return true, profile.Key, profile.IsDefault, nil
+	for index := range profiles {
+		if profiles[index].Name == requiredProfileName {
+			return true, profiles[index].Key, profiles[index].IsDefault, nil
 		}
 	}
 
@@ -465,8 +478,7 @@ func (sc Client) checkProfileExist(requiredProfileName string) (exits bool, prof
 }
 
 func (sc Client) setDefaultProfile(language string, profileName string) error {
-	resp, err := sc.resty.R().
-		SetHeader("Content-Type", "application/json").
+	resp, err := sc.jsonTypeRequest().
 		SetQueryParams(map[string]string{
 			"qualityProfile": profileName,
 			"language":       language}).
@@ -483,11 +495,10 @@ func (sc Client) setDefaultProfile(language string, profileName string) error {
 
 func (sc Client) AddUserToGroup(groupName string, user string) error {
 	log.Info(fmt.Sprintf("Start adding user %v to group %v in Sonar", user, groupName))
-	resp, err := sc.resty.R().
-		SetHeader("Content-Type", "application/json").
+	resp, err := sc.jsonTypeRequest().
 		SetQueryParams(map[string]string{
-			"name":  groupName,
-			"login": user}).
+			nameField:  groupName,
+			loginField: user}).
 		Post("/user_groups/add_user")
 
 	if err != nil {
@@ -505,10 +516,9 @@ func (sc Client) AddUserToGroup(groupName string, user string) error {
 
 func (sc Client) AddPermissionsToUser(user string, permissions string) error {
 	log.Info(fmt.Sprintf("Start adding permissions %v to user %v", permissions, user))
-	resp, err := sc.resty.R().
-		SetHeader("Content-Type", "application/json").
+	resp, err := sc.jsonTypeRequest().
 		SetQueryParams(map[string]string{
-			"login":      user,
+			loginField:   user,
 			"permission": permissions}).
 		Post("/permissions/add_user")
 	if err != nil {
@@ -526,8 +536,7 @@ func (sc Client) AddPermissionsToUser(user string, permissions string) error {
 
 func (sc Client) AddPermissionsToGroup(groupName string, permissions string) error {
 	log.Info(fmt.Sprintf("Start adding permissions %v to group %v", permissions, groupName))
-	resp, err := sc.resty.R().
-		SetHeader("Content-Type", "application/json").
+	resp, err := sc.jsonTypeRequest().
 		SetQueryParams(map[string]string{
 			"groupName":  groupName,
 			"permission": permissions}).
@@ -555,11 +564,10 @@ func (sc Client) GenerateUserToken(userName string) (*string, error) {
 	emptyString := ""
 
 	log.Info(fmt.Sprintf("Start generating token for user %v in Sonar", userName))
-	resp, err := sc.resty.R().
-		SetHeader("Content-Type", "application/json").
+	resp, err := sc.jsonTypeRequest().
 		SetQueryParams(map[string]string{
-			"login": userName,
-			"name":  strings.Title(userName)}).
+			loginField: userName,
+			nameField:  strings.Title(userName)}).
 		Post("/user_tokens/generate")
 
 	if err != nil {
@@ -574,7 +582,7 @@ func (sc Client) GenerateUserToken(userName string) (*string, error) {
 	var userTokensGenerateResponse UserTokensGenerateResponse
 	err = json.Unmarshal(resp.Body(), &userTokensGenerateResponse)
 	if err != nil {
-		return nil, errors.Wrapf(err, "cant unmarshal %s", resp.Body())
+		return nil, errors.Wrapf(err, cantUnmarshalMsg, resp.Body())
 	}
 	token := userTokensGenerateResponse.Token
 
@@ -592,11 +600,10 @@ func (sc Client) AddWebhook(webhookName string, webhookUrl string) error {
 	}
 
 	log.Info(fmt.Sprintf("Start creating webhook %v in Sonar", webhookName))
-	resp, err := sc.resty.R().
-		SetHeader("Content-Type", "application/json").
+	resp, err := sc.jsonTypeRequest().
 		SetQueryParams(map[string]string{
-			"name": webhookName,
-			"url":  webhookUrl}).
+			nameField: webhookName,
+			"url":     webhookUrl}).
 		Post("/webhooks/create")
 	if err != nil {
 		return errors.Wrap(err, "Failed to send request to add webhook!")
@@ -635,7 +642,7 @@ func (sc Client) checkWebhookExist(webhookName string) (bool, error) {
 	var raw WebhooksListResponse
 	err = json.Unmarshal(resp.Body(), &raw)
 	if err != nil {
-		return false, errors.Wrapf(err, "cant unmarshal %s", resp.Body())
+		return false, errors.Wrapf(err, cantUnmarshalMsg, resp.Body())
 	}
 
 	for _, v := range raw.Webhooks {
@@ -647,7 +654,7 @@ func (sc Client) checkWebhookExist(webhookName string) (bool, error) {
 	return false, nil
 }
 
-//TODO(Serhii Shydlovskyi): Current implementation works ONLY for single value setting. Requires effort to generalize it and use for several values simultaneously.
+// TODO(Serhii Shydlovskyi): Current implementation works ONLY for single value setting. Requires effort to generalize it and use for several values simultaneously.
 func (sc Client) ConfigureGeneralSettings(valueType string, key string, value string) error {
 	generalSettingsExist, err := sc.checkGeneralSetting(key, value)
 	if err != nil {
@@ -658,8 +665,7 @@ func (sc Client) ConfigureGeneralSettings(valueType string, key string, value st
 		return nil
 	}
 
-	resp, err := sc.resty.R().
-		SetHeader("Content-Type", "application/json").
+	resp, err := sc.jsonTypeRequest().
 		SetQueryParams(
 			map[string]string{
 				"key":     key,
@@ -745,7 +751,7 @@ func checkValue(value interface{}, valueToCheck string) bool {
 func (sc Client) SetProjectsDefaultVisibility(visibility string) error {
 	resp, err := sc.resty.R().
 		SetBody(fmt.Sprintf("organization=default-organization&projectVisibility=%v", visibility)).
-		SetHeader("Content-Type", "application/x-www-form-urlencoded").
+		SetHeader(contentTypeField, "application/x-www-form-urlencoded").
 		Post("/projects/update_default_visibility")
 	if err != nil {
 		return err

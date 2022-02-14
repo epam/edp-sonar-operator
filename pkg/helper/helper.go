@@ -26,7 +26,7 @@ func GetExecutableFilePath() string {
 	return filepath.Dir(executableFilePath)
 }
 
-// GenerateLabels returns map with labels for k8s objects
+// GenerateLabels returns map with labels for k8s objects.
 func GenerateLabels(name string) map[string]string {
 	return map[string]string{
 		"app": name,
@@ -37,7 +37,7 @@ func GetPlatformTypeEnv() string {
 	return os.Getenv(platformType)
 }
 
-// GetWatchNamespace returns the namespace the operator should be watching for changes
+// GetWatchNamespace returns the namespace the operator should be watching for changes.
 func GetWatchNamespace() (string, error) {
 	ns, found := os.LookupEnv(watchNamespaceEnvVar)
 	if !found {
@@ -46,7 +46,7 @@ func GetWatchNamespace() (string, error) {
 	return ns, nil
 }
 
-// GetDebugMode returns the debug mode value
+// GetDebugMode returns the debug mode value.
 func GetDebugMode() (bool, error) {
 	mode, found := os.LookupEnv(debugModeEnvVar)
 	if !found {
@@ -60,7 +60,7 @@ func GetDebugMode() (bool, error) {
 	return b, nil
 }
 
-// Check whether the operator is running in cluster or locally
+// RunningInCluster Check whether the operator is running in cluster or locally.
 func RunningInCluster() bool {
 	_, err := os.Stat(inClusterNamespacePath)
 	return !os.IsNotExist(err)

@@ -36,7 +36,7 @@ type SonarPermissionTemplateList struct {
 	Items           []SonarPermissionTemplate `json:"items"`
 }
 
-func (in SonarPermissionTemplate) GetFailureCount() int64 {
+func (in *SonarPermissionTemplate) GetFailureCount() int64 {
 	return in.Status.FailureCount
 }
 
@@ -44,7 +44,7 @@ func (in *SonarPermissionTemplate) SetFailureCount(count int64) {
 	in.Status.FailureCount = count
 }
 
-func (in SonarPermissionTemplate) GetStatus() string {
+func (in *SonarPermissionTemplate) GetStatus() string {
 	return in.Status.Value
 }
 

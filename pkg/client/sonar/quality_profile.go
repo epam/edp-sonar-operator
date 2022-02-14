@@ -22,8 +22,8 @@ func (sc Client) GetQualityProfile(ctx context.Context, name string) (*QualityPr
 	var searchRsp qProfileSearchResponse
 	rsp, err := sc.startRequest(ctx).SetResult(&searchRsp).
 		Get(fmt.Sprintf("/qualityprofiles/search?qualityProfile=%s",
-			strings.Replace(name, " ", "+", -1)))
-	if err := sc.checkError(rsp, err); err != nil {
+			strings.ReplaceAll(name, " ", "+")))
+	if err = sc.checkError(rsp, err); err != nil {
 		return nil, errors.Wrap(err, "unable to get quality profile")
 	}
 

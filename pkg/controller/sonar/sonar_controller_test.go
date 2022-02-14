@@ -312,7 +312,7 @@ func TestReconcileSonar_Reconcile_IntegrationErr(t *testing.T) {
 		return sonar.Name == name && sonar.Namespace == namespace
 	})).Return(nil)
 
-	service.On("Integration", ctx, tMock.MatchedBy(func(sonar v1alpha1.Sonar) bool {
+	service.On("Integration", ctx, tMock.MatchedBy(func(sonar *v1alpha1.Sonar) bool {
 		return sonar.Name == name && sonar.Namespace == namespace
 	})).Return(nil, errTest)
 
@@ -357,7 +357,7 @@ func TestReconcileSonar_Reconcile_updateAvailableStatusErr(t *testing.T) {
 		return sonar.Name == name && sonar.Namespace == namespace
 	})).Return(nil)
 
-	service.On("Integration", ctx, tMock.MatchedBy(func(sonar v1alpha1.Sonar) bool {
+	service.On("Integration", ctx, tMock.MatchedBy(func(sonar *v1alpha1.Sonar) bool {
 		return sonar.Name == name && sonar.Namespace == namespace
 	})).Return(instance, nil)
 
@@ -403,7 +403,7 @@ func TestReconcileSonar_Reconcile(t *testing.T) {
 	})).Return(nil)
 
 	instance2 := instance.DeepCopy()
-	service.On("Integration", ctx, tMock.MatchedBy(func(sonar v1alpha1.Sonar) bool {
+	service.On("Integration", ctx, tMock.MatchedBy(func(sonar *v1alpha1.Sonar) bool {
 		// hack. this is done in order not to monitor the state of the instance
 		instance2.ObjectMeta = sonar.ObjectMeta
 		return sonar.Name == name && sonar.Namespace == namespace

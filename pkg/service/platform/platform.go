@@ -58,7 +58,7 @@ func NewService(platformType string, scheme *runtime.Scheme, client client.Clien
 		if err != nil {
 			return nil, errors.Wrap(err, "Failed to initialize OpenShift platform service!")
 		}
-		return s, nil
+		return &s, nil
 	default:
 		err = fmt.Errorf("platform %s is not supported", platformType)
 		return nil, err

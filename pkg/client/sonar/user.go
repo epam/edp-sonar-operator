@@ -37,7 +37,7 @@ func (sc *Client) SearchUsers(ctx context.Context, userName string) ([]User, err
 	rsp, err := sc.startRequest(ctx).SetResult(&userResponse).
 		Get(fmt.Sprintf("/users/search?q=%s", userName))
 
-	if err := sc.checkError(rsp, err); err != nil {
+	if err = sc.checkError(rsp, err); err != nil {
 		return nil, errors.Wrap(err, "unable to search for users")
 	}
 
@@ -59,15 +59,15 @@ func (sc Client) GetUser(ctx context.Context, userName string) (*User, error) {
 	return nil, ErrNotFound("user not found")
 }
 
-func (sc *Client) CreateUser(ctx context.Context, u *User) error {
+func (sc *Client) CreateUser(ctx context.Context, user *User) error {
 	var createUserRsp createUserResponse
 
 	rsp, err := sc.startRequest(ctx).SetResult(&createUserRsp).SetFormData(map[string]string{
-		"login":    u.Login,
-		"name":     u.Name,
-		"password": u.Password,
+		"login":    user.Login,
+		"name":     user.Name,
+		"password": user.Password,
 	}).Post("/users/create")
-	if err := sc.checkError(rsp, err); err != nil {
+	if err = sc.checkError(rsp, err); err != nil {
 		return errors.Wrap(err, "unable to create user user")
 	}
 
@@ -79,7 +79,7 @@ func (sc *Client) SearchUserTokens(ctx context.Context, userLogin string) ([]Use
 	rsp, err := sc.startRequest(ctx).SetResult(&userTokenResponse).
 		Get(fmt.Sprintf("/user_tokens/search?login=%s", userLogin))
 
-	if err := sc.checkError(rsp, err); err != nil {
+	if err = sc.checkError(rsp, err); err != nil {
 		return nil, errors.Wrap(err, "unable to search for user tokens")
 	}
 

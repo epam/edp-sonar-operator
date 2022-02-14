@@ -36,7 +36,10 @@ var (
 	setupLog = ctrl.Log.WithName("setup")
 )
 
-const sonarOperatorLock = "edp-sonar-operator-lock"
+const (
+	sonarOperatorLock = "edp-sonar-operator-lock"
+	DefaultPort       = 9443
+)
 
 func init() {
 	utilruntime.Must(clientgoscheme.AddToScheme(scheme))
@@ -100,7 +103,7 @@ func main() {
 		Scheme:                 scheme,
 		MetricsBindAddress:     metricsAddr,
 		HealthProbeBindAddress: probeAddr,
-		Port:                   9443,
+		Port:                   DefaultPort,
 		LeaderElection:         enableLeaderElection,
 		LeaderElectionID:       sonarOperatorLock,
 		MapperProvider: func(c *rest.Config) (meta.RESTMapper, error) {
@@ -118,50 +121,50 @@ func main() {
 	sonarCtrl, err := sonar.NewReconcileSonar(mgr.GetClient(), mgr.GetScheme(), ctrlLog,
 		helper.GetPlatformTypeEnv())
 	if err != nil {
-		setupLog.Error(err, "unable to create controller", "controller", "sonar")
+		setupLog.Error(err, "failed to create sonar reconcile")
 		os.Exit(1)
 	}
 
-	if err := sonarCtrl.SetupWithManager(mgr); err != nil {
-		setupLog.Error(err, "unable to create controller", "controller", "sonar")
+	if err = sonarCtrl.SetupWithManager(mgr); err != nil {
+		setupLog.Error(err, "failed to setup sonar reconcile")
 		os.Exit(1)
 	}
 
 	permTplCtrl, err := permission_template.NewReconcile(mgr.GetClient(), mgr.GetScheme(), ctrlLog,
 		helper.GetPlatformTypeEnv())
 	if err != nil {
-		setupLog.Error(err, "unable to create controller", "controller", "permission-template")
+		setupLog.Error(err, "failed to create permission template reconcile")
 		os.Exit(1)
 	}
 
-	if err := permTplCtrl.SetupWithManager(mgr); err != nil {
-		setupLog.Error(err, "unable to create controller", "controller", "permission-template")
+	if err = permTplCtrl.SetupWithManager(mgr); err != nil {
+		setupLog.Error(err, "failed to setup permission template reconcile")
 		os.Exit(1)
 	}
 
 	groupCtrl, err := group.NewReconcile(mgr.GetClient(), mgr.GetScheme(), ctrlLog, helper.GetPlatformTypeEnv())
 	if err != nil {
-		setupLog.Error(err, "unable to create controller", "controller", "sonar-group")
+		setupLog.Error(err, "failed to create sonar group reconcile")
 		os.Exit(1)
 	}
 
-	if err := groupCtrl.SetupWithManager(mgr); err != nil {
-		setupLog.Error(err, "unable to create controller", "controller", "sonar-group")
+	if err = groupCtrl.SetupWithManager(mgr); err != nil {
+		setupLog.Error(err, "failed to setup sonar group reconcile")
 		os.Exit(1)
 	}
 
-	if err := mgr.AddHealthzCheck("healthz", healthz.Ping); err != nil {
+	if err = mgr.AddHealthzCheck("healthz", healthz.Ping); err != nil {
 		setupLog.Error(err, "unable to set up health check")
 		os.Exit(1)
 	}
 
-	if err := mgr.AddReadyzCheck("readyz", healthz.Ping); err != nil {
+	if err = mgr.AddReadyzCheck("readyz", healthz.Ping); err != nil {
 		setupLog.Error(err, "unable to set up ready check")
 		os.Exit(1)
 	}
 
 	setupLog.Info("starting manager")
-	if err := mgr.Start(ctrl.SetupSignalHandler()); err != nil {
+	if err = mgr.Start(ctrl.SetupSignalHandler()); err != nil {
 		setupLog.Error(err, "problem running manager")
 		os.Exit(1)
 	}

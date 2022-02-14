@@ -29,7 +29,7 @@ type SonarGroupList struct {
 	Items           []SonarGroup `json:"items"`
 }
 
-func (in SonarGroup) GetFailureCount() int64 {
+func (in *SonarGroup) GetFailureCount() int64 {
 	return in.Status.FailureCount
 }
 
@@ -37,7 +37,7 @@ func (in *SonarGroup) SetFailureCount(count int64) {
 	in.Status.FailureCount = count
 }
 
-func (in SonarGroup) GetStatus() string {
+func (in *SonarGroup) GetStatus() string {
 	return in.Status.Value
 }
 

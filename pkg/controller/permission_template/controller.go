@@ -98,14 +98,16 @@ func (r *Reconcile) tryReconcile(ctx context.Context, instance *sonarApi.SonarPe
 	}
 
 	_, err = sClient.GetPermissionTemplate(ctx, instance.Spec.Name)
-	if sonarClient.IsErrNotFound(err) {
-		templateID, createErr := createPermissionTemplate(ctx, instance, sClient, r.service.K8sClient(), r.log)
-		if createErr != nil {
-			return errors.Wrap(createErr, "unable to create sonar permission template")
+	if err != nil {
+		if sonarClient.IsErrNotFound(err) {
+			templateID, createErr := createPermissionTemplate(ctx, instance, sClient, r.service.K8sClient(), r.log)
+			if createErr != nil {
+				return errors.Wrap(createErr, "unable to create sonar permission template")
+			}
+			instance.Status.ID = templateID
+		} else {
+			return errors.Wrap(err, "unexpected error during get sonar permission template")
 		}
-		instance.Status.ID = templateID
-	} else if err != nil {
-		return errors.Wrap(err, "unexpected error during get sonar permission template")
 	} else {
 		if instance.Status.ID == "" {
 			return errors.New("permission template already exists in sonar")
@@ -134,10 +136,10 @@ func (r *Reconcile) tryReconcile(ctx context.Context, instance *sonarApi.SonarPe
 	return nil
 }
 
-func specToClientTemplate(spec *sonarApi.SonarPermissionTemplateSpec, ID string) *sonarClient.PermissionTemplate {
+func specToClientTemplate(spec *sonarApi.SonarPermissionTemplateSpec, id string) *sonarClient.PermissionTemplate {
 	templateData := specToClientTemplateData(spec)
 	return &sonarClient.PermissionTemplate{
-		ID:                     ID,
+		ID:                     id,
 		PermissionTemplateData: *templateData,
 	}
 }

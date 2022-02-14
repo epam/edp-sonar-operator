@@ -99,7 +99,7 @@ func (service *OpenshiftService) Init(config *rest.Config, scheme *runtime.Schem
 }
 
 // GetExternalEndpoint returns scheme and host name from Openshift
-func (service OpenshiftService) GetExternalEndpoint(ctx context.Context, namespace string, name string) (string, error) {
+func (service *OpenshiftService) GetExternalEndpoint(ctx context.Context, namespace string, name string) (string, error) {
 	r, err := service.routeClient.Routes(namespace).Get(ctx, name, metav1.GetOptions{})
 	if err != nil && k8serrors.IsNotFound(err) {
 		return "", errors.Wrapf(err, "Route %v in namespace %v not found", name, namespace)
@@ -115,7 +115,7 @@ func (service OpenshiftService) GetExternalEndpoint(ctx context.Context, namespa
 		routeScheme, r.Spec.Host, strings.TrimRight(r.Spec.Path, platformHelper.UrlCutset)), nil
 }
 
-func (service OpenshiftService) GetAvailableDeploymentReplicas(instance *v1alpha1.Sonar) (*int, error) {
+func (service *OpenshiftService) GetAvailableDeploymentReplicas(instance *v1alpha1.Sonar) (*int, error) {
 	if os.Getenv(deploymentTypeEnvName) == deploymentConfigsDeploymentType {
 		c, err := service.appClient.DeploymentConfigs(instance.Namespace).Get(context.Background(), instance.Name, metav1.GetOptions{})
 		if err != nil {
