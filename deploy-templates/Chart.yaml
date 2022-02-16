@@ -35,8 +35,8 @@ annotations:
       image: sonarqube:8.9.7-community
     - name: postgres:9.6
       image: postgres:9.6
-    - name: rjkernick/alpine-wget:latest
-      image: rjkernick/alpine-wget:latest
+    - name: epamedp/alpine-wget:1.0.0
+      image: epamedp/alpine-wget:1.0.0
     - name: busybox:1.35.0
       image: busybox:1.35.0
   artifacthub.io/operatorCapabilities: Full Lifecycle
