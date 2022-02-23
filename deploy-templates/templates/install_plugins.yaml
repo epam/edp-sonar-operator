@@ -8,7 +8,7 @@ metadata:
 data:
   install_plugins.sh: |-
     {{- if .Values.sonar.plugins.httpProxy }}
-    export http_proxy={{ .Values.plugins.httpProxy }}
+    export http_proxy={{ .Values.sonar.plugins.httpProxy }}
     {{- end }}
     {{- if .Values.sonar.plugins.httpsProxy }}
     export https_proxy={{ .Values.sonar.plugins.httpsProxy }}
