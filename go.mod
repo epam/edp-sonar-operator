@@ -84,7 +84,6 @@ require (
 	golang.org/x/oauth2 v0.0.0-20200107190931-bf48bf16ab8d // indirect
 	golang.org/x/sys v0.0.0-20210615035016-665e8c7367d1 // indirect
 	golang.org/x/term v0.0.0-20210220032956-6a3ed077a48d // indirect
-	golang.org/x/text v0.3.6 // indirect
 	golang.org/x/time v0.0.0-20210220033141-f8bda1e9f3ba // indirect
 	gomodules.xyz/jsonpatch/v2 v2.1.0 // indirect
 	google.golang.org/appengine v1.6.6 // indirect
@@ -104,4 +103,5 @@ require (
 require (
 	github.com/jarcoal/httpmock v1.0.8
 	github.com/stretchr/testify v1.7.0
+	golang.org/x/text v0.3.6
 )

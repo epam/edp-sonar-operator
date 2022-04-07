@@ -9,7 +9,6 @@ import (
 	"log"
 	"net/http"
 	"os"
-	"strings"
 
 	"github.com/dchest/uniuri"
 	jenkinsApi "github.com/epam/edp-jenkins-operator/v2/pkg/apis/v2/v1alpha1"
@@ -17,6 +16,8 @@ import (
 	keycloakApi "github.com/epam/edp-keycloak-operator/pkg/apis/v1/v1alpha1"
 	"github.com/epam/edp-keycloak-operator/pkg/controller/helper"
 	"github.com/pkg/errors"
+	"golang.org/x/text/cases"
+	"golang.org/x/text/language"
 	k8sErr "k8s.io/apimachinery/pkg/api/errors"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -355,7 +356,7 @@ func (s Service) ExposeConfiguration(ctx context.Context, instance *v1alpha1.Son
 	}
 
 	ciUserName := fmt.Sprintf("%v-ciuser-token", instance.Name)
-	_, err = sc.GetUserToken(ctx, jenkinsLogin, strings.Title(jenkinsLogin))
+	_, err = sc.GetUserToken(ctx, jenkinsLogin, cases.Title(language.English).String(jenkinsLogin))
 	if sonarClient.IsErrNotFound(err) {
 		ciToken, errGen := sc.GenerateUserToken(jenkinsLogin)
 		if errGen != nil {
@@ -424,7 +425,7 @@ func (s Service) ExposeConfiguration(ctx context.Context, instance *v1alpha1.Son
 		return errors.Wrapf(err, "unexpected error during get user %s", readUserLogin)
 	}
 	readUserSecretName := fmt.Sprintf("%v-readuser-token", instance.Name)
-	_, err = sc.GetUserToken(ctx, readUserLogin, strings.Title(readUserLogin))
+	_, err = sc.GetUserToken(ctx, readUserLogin, cases.Title(language.English).String(readUserLogin))
 	if sonarClient.IsErrNotFound(err) {
 		readToken, errGenToken := sc.GenerateUserToken(readUserLogin)
 		if errGenToken != nil {

@@ -14,7 +14,7 @@ import (
 	v1 "k8s.io/api/admission/v1"
 	appsV1 "k8s.io/api/apps/v1"
 	coreV1Api "k8s.io/api/core/v1"
-	"k8s.io/api/extensions/v1beta1"
+	networkingV1 "k8s.io/api/networking/v1"
 	k8errors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -193,31 +193,31 @@ func TestK8SService_CreateSecret(t *testing.T) {
 func TestK8SService_GetExternalEndpoint_Err(t *testing.T) {
 	errTest := errors.New("test")
 	ctx := context.Background()
-	extensionClient := kMock.ExtensionClient{}
+	networkingClient := kMock.NetworkingClient{}
 	ingresses := &kMock.Ingress{}
-	extensionClient.On("Ingresses", namespace).Return(ingresses)
+	networkingClient.On("Ingresses", namespace).Return(ingresses)
 	ingresses.On("Get", ctx, name, metav1.GetOptions{}).Return(nil, errTest)
 
 	service := K8SService{
-		ExtensionsV1Client: &extensionClient,
+		NetworkingV1Client: &networkingClient,
 	}
 	endpoint, err := service.GetExternalEndpoint(ctx, namespace, name)
 	assert.Equal(t, errTest, err)
 	assert.Empty(t, endpoint)
 
-	extensionClient.AssertExpectations(t)
+	networkingClient.AssertExpectations(t)
 	ingresses.AssertExpectations(t)
 }
 
 func TestK8SService_GetExternalEndpoint(t *testing.T) {
-	ingressCR := v1beta1.Ingress{
-		Spec: v1beta1.IngressSpec{
-			Rules: []v1beta1.IngressRule{
+	ingressCR := networkingV1.Ingress{
+		Spec: networkingV1.IngressSpec{
+			Rules: []networkingV1.IngressRule{
 				{
 					Host: host,
-					IngressRuleValue: v1beta1.IngressRuleValue{
-						HTTP: &v1beta1.HTTPIngressRuleValue{
-							Paths: []v1beta1.HTTPIngressPath{
+					IngressRuleValue: networkingV1.IngressRuleValue{
+						HTTP: &networkingV1.HTTPIngressRuleValue{
+							Paths: []networkingV1.HTTPIngressPath{
 								{Path: path},
 							},
 						},
@@ -227,19 +227,19 @@ func TestK8SService_GetExternalEndpoint(t *testing.T) {
 		},
 	}
 	ctx := context.Background()
-	extensionClient := kMock.ExtensionClient{}
+	networkingClient := kMock.NetworkingClient{}
 	ingresses := &kMock.Ingress{}
-	extensionClient.On("Ingresses", namespace).Return(ingresses)
+	networkingClient.On("Ingresses", namespace).Return(ingresses)
 	ingresses.On("Get", ctx, name, metav1.GetOptions{}).Return(&ingressCR, nil)
 
 	service := K8SService{
-		ExtensionsV1Client: &extensionClient,
+		NetworkingV1Client: &networkingClient,
 	}
 	endpoint, err := service.GetExternalEndpoint(ctx, namespace, name)
 	assert.NoError(t, err)
 	assert.Equal(t, "https://domain/path", endpoint)
 
-	extensionClient.AssertExpectations(t)
+	networkingClient.AssertExpectations(t)
 	ingresses.AssertExpectations(t)
 }
 

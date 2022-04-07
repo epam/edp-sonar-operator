@@ -15,7 +15,7 @@ import (
 	"k8s.io/apimachinery/pkg/types"
 	appsV1Client "k8s.io/client-go/kubernetes/typed/apps/v1"
 	coreV1Client "k8s.io/client-go/kubernetes/typed/core/v1"
-	extensionsV1Client "k8s.io/client-go/kubernetes/typed/extensions/v1beta1"
+	networkingV1Client "k8s.io/client-go/kubernetes/typed/networking/v1"
 	"k8s.io/client-go/rest"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -40,8 +40,8 @@ type PodsStateClient interface {
 	appsV1Client.AppsV1Interface
 }
 
-type ExtensionClient interface {
-	extensionsV1Client.ExtensionsV1beta1Interface
+type NetworkingClient interface {
+	networkingV1Client.NetworkingV1Interface
 }
 
 type K8SService struct {
@@ -49,7 +49,7 @@ type K8SService struct {
 	client             client.Client
 	k8sClusterClient   K8SClusterClient
 	AppsClient         PodsStateClient
-	ExtensionsV1Client ExtensionClient
+	NetworkingV1Client NetworkingClient
 }
 
 func (s *K8SService) Init(config *rest.Config, scheme *runtime.Scheme, client client.Client) error {
@@ -63,14 +63,14 @@ func (s *K8SService) Init(config *rest.Config, scheme *runtime.Scheme, client cl
 		return errors.New("appsV1 client initialization failed!")
 	}
 
-	ecl, err := extensionsV1Client.NewForConfig(config)
+	ecl, err := networkingV1Client.NewForConfig(config)
 	if err != nil {
-		return errors.New("extensionsV1 client initialization failed!")
+		return errors.New("networkingV1 client initialization failed!")
 	}
 
 	s.client = client
 	s.k8sClusterClient = coreClient
-	s.ExtensionsV1Client = ecl
+	s.NetworkingV1Client = ecl
 	s.AppsClient = acl
 	s.Scheme = scheme
 	return nil
@@ -121,7 +121,7 @@ func (s K8SService) CreateSecret(sonarName, namespace, secretName string, data m
 }
 
 func (s K8SService) GetExternalEndpoint(ctx context.Context, namespace string, name string) (string, error) {
-	r, err := s.ExtensionsV1Client.Ingresses(namespace).Get(ctx, name, metav1.GetOptions{})
+	r, err := s.NetworkingV1Client.Ingresses(namespace).Get(ctx, name, metav1.GetOptions{})
 	if err != nil {
 		return "", err
 	}

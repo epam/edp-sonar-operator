@@ -9,6 +9,8 @@ import (
 	"time"
 
 	"github.com/pkg/errors"
+	"golang.org/x/text/cases"
+	"golang.org/x/text/language"
 	"gopkg.in/resty.v1"
 	ctrl "sigs.k8s.io/controller-runtime"
 
@@ -567,7 +569,7 @@ func (sc Client) GenerateUserToken(userName string) (*string, error) {
 	resp, err := sc.jsonTypeRequest().
 		SetQueryParams(map[string]string{
 			loginField: userName,
-			nameField:  strings.Title(userName)}).
+			nameField:  cases.Title(language.English).String(userName)}).
 		Post("/user_tokens/generate")
 
 	if err != nil {
