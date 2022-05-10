@@ -7,17 +7,26 @@
 - implement SonarGroup custom resource [EPMDEDP-7391](https://jiraeu.epam.com/browse/EPMDEDP-7391)
 - Use sonar-developers role for OIDC integration [EPMDEDP-7506](https://jiraeu.epam.com/browse/EPMDEDP-7506)
 - implment default permission template for sonar CR [EPMDEDP-7633](https://jiraeu.epam.com/browse/EPMDEDP-7633)
+- add .golangci-lint config [EPMDEDP-8066](https://jiraeu.epam.com/browse/EPMDEDP-8066)
+- Update Makefile changelog target [EPMDEDP-8218](https://jiraeu.epam.com/browse/EPMDEDP-8218)
+- Implement validation steps for api/helm docs [EPMDEDP-8329](https://jiraeu.epam.com/browse/EPMDEDP-8329)
+- Add ingress tls certificate option when using ingress controller [EPMDEDP-8377](https://jiraeu.epam.com/browse/EPMDEDP-8377)
+- Add CRD API documentation [EPMDEDP-8385](https://jiraeu.epam.com/browse/EPMDEDP-8385)
 
 ### Bug Fixes
 
-- restry retry count [EPMDEDP-7390](https://jiraeu.epam.com/browse/EPMDEDP-7390)
 - permission template id in sync groups [EPMDEDP-7390](https://jiraeu.epam.com/browse/EPMDEDP-7390)
+- restry retry count [EPMDEDP-7390](https://jiraeu.epam.com/browse/EPMDEDP-7390)
 - Ensure CI user has browse permissions [EPMDEDP-7506](https://jiraeu.epam.com/browse/EPMDEDP-7506)
 - sonar secrets generation [EPMDEDP-7633](https://jiraeu.epam.com/browse/EPMDEDP-7633)
 - Changelog links [EPMDEDP-7847](https://jiraeu.epam.com/browse/EPMDEDP-7847)
 - Upgrade SonarQube to the LTS 8.9.4 version [EPMDEDP-8041](https://jiraeu.epam.com/browse/EPMDEDP-8041)
 - Upgrade SonarQube to the LTS 8.9.6 version [EPMDEDP-8041](https://jiraeu.epam.com/browse/EPMDEDP-8041)
 - save template ID in k8s, immediately after creation in sonar [EPMDEDP-8055](https://jiraeu.epam.com/browse/EPMDEDP-8055)
+- QualityGatesListResponse unmarshalling bugfix [EPMDEDP-8224](https://jiraeu.epam.com/browse/EPMDEDP-8224)
+- Change ca-certificates in dockerfile [EPMDEDP-8238](https://jiraeu.epam.com/browse/EPMDEDP-8238)
+- Fix sonar.plugins.proxy definition [EPMDEDP-8374](https://jiraeu.epam.com/browse/EPMDEDP-8374)
+- Fix changelog generation in GH Release Action [EPMDEDP-8468](https://jiraeu.epam.com/browse/EPMDEDP-8468)
 
 ### Code Refactoring
 
@@ -26,18 +35,48 @@
 - Provision developers group in sonar controller [EPMDEDP-7506](https://jiraeu.epam.com/browse/EPMDEDP-7506)
 - Address golangci-lint issues [EPMDEDP-7945](https://jiraeu.epam.com/browse/EPMDEDP-7945)
 - Refactor User and Token management [EPMDEDP-8006](https://jiraeu.epam.com/browse/EPMDEDP-8006)
+- refactor json unmarshalling [EPMDEDP-8224](https://jiraeu.epam.com/browse/EPMDEDP-8224)
 
 ### Testing
 
 - Align CI flow for GH Actions [EPMDEDP-7391](https://jiraeu.epam.com/browse/EPMDEDP-7391)
 - Add fake kubeconfig to fix unit tests [EPMDEDP-7391](https://jiraeu.epam.com/browse/EPMDEDP-7391)
 - Add tests [EPMDEDP-7994](https://jiraeu.epam.com/browse/EPMDEDP-7994)
+- Add tests [EPMDEDP-7994](https://jiraeu.epam.com/browse/EPMDEDP-7994)
+- Add tests [EPMDEDP-7994](https://jiraeu.epam.com/browse/EPMDEDP-7994)
+- Add tests [EPMDEDP-7994](https://jiraeu.epam.com/browse/EPMDEDP-7994)
+- tests refactoring [EPMDEDP-7994](https://jiraeu.epam.com/browse/EPMDEDP-7994)
+- Add tests [EPMDEDP-7994](https://jiraeu.epam.com/browse/EPMDEDP-7994)
 
 ### Routine
 
 - Add mocks to sonar exlcusion list [EPMDEDP-7096](https://jiraeu.epam.com/browse/EPMDEDP-7096)
 - Update sonar exclusion list [EPMDEDP-7390](https://jiraeu.epam.com/browse/EPMDEDP-7390)
+- Update Ingress resources to the newest API version [EPMDEDP-7476](https://jiraeu.epam.com/browse/EPMDEDP-7476)
 - Update release CI pipelines [EPMDEDP-7847](https://jiraeu.epam.com/browse/EPMDEDP-7847)
+- Populate chart with artifacthub tags [EPMDEDP-8049](https://jiraeu.epam.com/browse/EPMDEDP-8049)
+- Update artifacthub tags [EPMDEDP-8049](https://jiraeu.epam.com/browse/EPMDEDP-8049)
+- Update changelog [EPMDEDP-8227](https://jiraeu.epam.com/browse/EPMDEDP-8227)
+- Update alpine-wget image [EPMDEDP-8331](https://jiraeu.epam.com/browse/EPMDEDP-8331)
+- Upgrade SonarQube to version 8.9.7 [EPMDEDP-8332](https://jiraeu.epam.com/browse/EPMDEDP-8332)
+- Update base docker image to alpine 3.15.4 [EPMDEDP-8853](https://jiraeu.epam.com/browse/EPMDEDP-8853)
+- Upgrade Sonarqube to the latest LTS 8.9.8 [EPMDEDP-8922](https://jiraeu.epam.com/browse/EPMDEDP-8922)
+
+### Documentation
+
+- Update Arch schema [EPMDEDP-8385](https://jiraeu.epam.com/browse/EPMDEDP-8385)
+- Update documentation section [EPMDEDP-8385](https://jiraeu.epam.com/browse/EPMDEDP-8385)
+
+
+<a name="v2.10.3"></a>
+## [v2.10.3] - 2022-02-09
+### Bug Fixes
+
+- Change ca-certificates in dockerfile [EPMDEDP-8238](https://jiraeu.epam.com/browse/EPMDEDP-8238)
+
+### Routine
+
+- Populate chart with artifacthub tags [EPMDEDP-8049](https://jiraeu.epam.com/browse/EPMDEDP-8049)
 
 
 <a name="v2.10.2"></a>
@@ -106,7 +145,8 @@
 <a name="v2.7.0"></a>
 ## [v2.7.0] - 2021-12-03
 
-[Unreleased]: https://github.com/epam/edp-sonar-operator/compare/v2.10.2...HEAD
+[Unreleased]: https://github.com/epam/edp-sonar-operator/compare/v2.10.3...HEAD
+[v2.10.3]: https://github.com/epam/edp-sonar-operator/compare/v2.10.2...v2.10.3
 [v2.10.2]: https://github.com/epam/edp-sonar-operator/compare/v2.10.1...v2.10.2
 [v2.10.1]: https://github.com/epam/edp-sonar-operator/compare/v2.10.0...v2.10.1
 [v2.10.0]: https://github.com/epam/edp-sonar-operator/compare/v2.9.0...v2.10.0
