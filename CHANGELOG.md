@@ -54,13 +54,14 @@
 - Update sonar exclusion list [EPMDEDP-7390](https://jiraeu.epam.com/browse/EPMDEDP-7390)
 - Update Ingress resources to the newest API version [EPMDEDP-7476](https://jiraeu.epam.com/browse/EPMDEDP-7476)
 - Update release CI pipelines [EPMDEDP-7847](https://jiraeu.epam.com/browse/EPMDEDP-7847)
-- Populate chart with artifacthub tags [EPMDEDP-8049](https://jiraeu.epam.com/browse/EPMDEDP-8049)
 - Update artifacthub tags [EPMDEDP-8049](https://jiraeu.epam.com/browse/EPMDEDP-8049)
+- Populate chart with artifacthub tags [EPMDEDP-8049](https://jiraeu.epam.com/browse/EPMDEDP-8049)
 - Update changelog [EPMDEDP-8227](https://jiraeu.epam.com/browse/EPMDEDP-8227)
 - Update alpine-wget image [EPMDEDP-8331](https://jiraeu.epam.com/browse/EPMDEDP-8331)
 - Upgrade SonarQube to version 8.9.7 [EPMDEDP-8332](https://jiraeu.epam.com/browse/EPMDEDP-8332)
 - Update base docker image to alpine 3.15.4 [EPMDEDP-8853](https://jiraeu.epam.com/browse/EPMDEDP-8853)
 - Upgrade Sonarqube to the latest LTS 8.9.8 [EPMDEDP-8922](https://jiraeu.epam.com/browse/EPMDEDP-8922)
+- Update changelog [EPMDEDP-9185](https://jiraeu.epam.com/browse/EPMDEDP-9185)
 
 ### Documentation
 
