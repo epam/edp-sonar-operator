@@ -10,12 +10,13 @@ import (
 	"github.com/pkg/errors"
 	coreV1Api "k8s.io/api/core/v1"
 	k8sErrors "k8s.io/apimachinery/pkg/api/errors"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 
-	sonarApi "github.com/epam/edp-sonar-operator/v2/pkg/apis/edp/v1alpha1"
+	sonarApi "github.com/epam/edp-sonar-operator/v2/pkg/apis/edp/v1"
 	"github.com/epam/edp-sonar-operator/v2/pkg/service/platform"
 	"github.com/epam/edp-sonar-operator/v2/pkg/service/sonar"
 )
@@ -183,7 +184,7 @@ func (r *ReconcileSonar) updateStatus(ctx context.Context, instance *sonarApi.So
 		WithName("status_update")
 	currentStatus := instance.Status.Status
 	instance.Status.Status = newStatus
-	instance.Status.LastTimeUpdated = time.Now()
+	instance.Status.LastTimeUpdated = metav1.Now()
 	if err := r.client.Status().Update(ctx, instance); err != nil {
 		if err := r.client.Update(ctx, instance); err != nil {
 			return errors.Wrapf(err, "Couldn't update status from '%v' to '%v'", currentStatus, newStatus)
@@ -199,7 +200,7 @@ func (r ReconcileSonar) updateAvailableStatus(ctx context.Context, instance *son
 		WithName("status_update")
 	if instance.Status.Available != value {
 		instance.Status.Available = value
-		instance.Status.LastTimeUpdated = time.Now()
+		instance.Status.LastTimeUpdated = metav1.Now()
 		if err := r.client.Status().Update(ctx, instance); err != nil {
 			if err = r.client.Update(ctx, instance); err != nil {
 				return errors.Wrapf(err, "Couldn't update availability status to %v", value)

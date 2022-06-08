@@ -21,7 +21,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 
-	"github.com/epam/edp-sonar-operator/v2/pkg/apis/edp/v1alpha1"
+	sonarApi "github.com/epam/edp-sonar-operator/v2/pkg/apis/edp/v1"
 	"github.com/epam/edp-sonar-operator/v2/pkg/service/platform/helper"
 	platformHelper "github.com/epam/edp-sonar-operator/v2/pkg/service/platform/helper"
 )
@@ -130,7 +130,7 @@ func (s K8SService) GetExternalEndpoint(ctx context.Context, namespace string, n
 		strings.TrimRight(r.Spec.Rules[0].HTTP.Paths[0].Path, platformHelper.UrlCutset)), nil
 }
 
-func (s K8SService) CreateConfigMap(instance *v1alpha1.Sonar, configMapName string, configMapData map[string]string) error {
+func (s K8SService) CreateConfigMap(instance *sonarApi.Sonar, configMapName string, configMapData map[string]string) error {
 	labels := platformHelper.GenerateLabels(instance.Name)
 	configMapObject := &coreV1Api.ConfigMap{
 		ObjectMeta: metav1.ObjectMeta{
@@ -235,7 +235,7 @@ func (s K8SService) getJenkinsServiceAccount(name, namespace string) (*jenkinsV1
 	return jsa, nil
 }
 
-func (s K8SService) GetAvailableDeploymentReplicas(instance *v1alpha1.Sonar) (*int, error) {
+func (s K8SService) GetAvailableDeploymentReplicas(instance *sonarApi.Sonar) (*int, error) {
 	c, err := s.AppsClient.Deployments(instance.Namespace).Get(context.Background(), instance.Name, metav1.GetOptions{})
 	if err != nil {
 		return nil, err
@@ -246,7 +246,7 @@ func (s K8SService) GetAvailableDeploymentReplicas(instance *v1alpha1.Sonar) (*i
 	return &r, nil
 }
 
-func (s K8SService) CreateEDPComponentIfNotExist(sonar *v1alpha1.Sonar, url string, icon string) error {
+func (s K8SService) CreateEDPComponentIfNotExist(sonar *sonarApi.Sonar, url string, icon string) error {
 	_, err := s.getEDPComponent(sonar.Name, sonar.Namespace)
 	if err != nil {
 		if k8serr.IsNotFound(err) {
@@ -269,7 +269,7 @@ func (s K8SService) getEDPComponent(name, namespace string) (*edpCompApi.EDPComp
 	return c, nil
 }
 
-func (s K8SService) createEDPComponent(sonar *v1alpha1.Sonar, url string, icon string) error {
+func (s K8SService) createEDPComponent(sonar *sonarApi.Sonar, url string, icon string) error {
 	obj := &edpCompApi.EDPComponent{
 		ObjectMeta: metav1.ObjectMeta{
 			Namespace: sonar.Namespace,
@@ -288,7 +288,7 @@ func (s K8SService) createEDPComponent(sonar *v1alpha1.Sonar, url string, icon s
 	return s.client.Create(context.TODO(), obj)
 }
 
-func (s K8SService) SetOwnerReference(sonar *v1alpha1.Sonar, object client.Object) error {
+func (s K8SService) SetOwnerReference(sonar *sonarApi.Sonar, object client.Object) error {
 	err := controllerutil.SetControllerReference(sonar, object, s.Scheme)
 	return err
 }

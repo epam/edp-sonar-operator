@@ -3,11 +3,13 @@ package helper
 import (
 	"bytes"
 	"fmt"
-	sonarClientHelper "github.com/epam/edp-sonar-operator/v2/pkg/client/helper"
+	"text/template"
+
 	"github.com/epam/edp-sonar-operator/v2/pkg/helper"
 	"github.com/epam/edp-sonar-operator/v2/pkg/service/sonar/spec"
 	"github.com/pkg/errors"
-	"text/template"
+
+	sonarClientHelper "github.com/epam/edp-sonar-operator/v2/pkg/client/helper"
 )
 
 const (

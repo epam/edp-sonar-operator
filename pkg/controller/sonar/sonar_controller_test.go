@@ -21,7 +21,7 @@ import (
 
 	pMock "github.com/epam/edp-sonar-operator/v2/mocks/platform"
 	sMock "github.com/epam/edp-sonar-operator/v2/mocks/service"
-	"github.com/epam/edp-sonar-operator/v2/pkg/apis/edp/v1alpha1"
+	sonarApi "github.com/epam/edp-sonar-operator/v2/pkg/apis/edp/v1"
 )
 
 const (
@@ -48,8 +48,8 @@ func createSecret() v1.Secret {
 	}
 }
 
-func createInstance() *v1alpha1.Sonar {
-	return &v1alpha1.Sonar{
+func createInstance() *sonarApi.Sonar {
+	return &sonarApi.Sonar{
 		TypeMeta: metav1.TypeMeta{
 			Kind:       "Sonar",
 			APIVersion: "v1",
@@ -59,13 +59,13 @@ func createInstance() *v1alpha1.Sonar {
 }
 
 func TestReconcileSonar_Reconcile_ShouldFailToCreateDBSecret(t *testing.T) {
-	sn := v1alpha1.Sonar{
+	sn := sonarApi.Sonar{
 		ObjectMeta: metav1.ObjectMeta{Name: "sonar", Namespace: "fake"},
-		TypeMeta:   metav1.TypeMeta{Kind: "Sonar", APIVersion: "v2.edp.epam.com/v1alpha1"},
-		Spec:       v1alpha1.SonarSpec{BasePath: "path"},
+		TypeMeta:   metav1.TypeMeta{Kind: "Sonar", APIVersion: "v2.edp.epam.com/v1"},
+		Spec:       sonarApi.SonarSpec{BasePath: "path"},
 	}
 	scheme := runtime.NewScheme()
-	if err := v1alpha1.AddToScheme(scheme); err != nil {
+	if err := sonarApi.AddToScheme(scheme); err != nil {
 		t.Fatal(err)
 	}
 
@@ -103,7 +103,7 @@ func TestReconcileSonar_Reconcile_BadClient(t *testing.T) {
 func TestReconcileSonar_Reconcile_NotFound(t *testing.T) {
 	ctx := context.Background()
 	scheme := runtime.NewScheme()
-	scheme.AddKnownTypes(v1.SchemeGroupVersion, &v1alpha1.Sonar{})
+	scheme.AddKnownTypes(v1.SchemeGroupVersion, &sonarApi.Sonar{})
 	client := fake.NewClientBuilder().WithScheme(scheme).Build()
 	controller := ReconcileSonar{
 		client: client,
@@ -121,7 +121,7 @@ func TestReconcileSonar_Reconcile_SetOwnerReferenceErr(t *testing.T) {
 	ctx := context.Background()
 	instance := createInstance()
 	scheme := runtime.NewScheme()
-	scheme.AddKnownTypes(v1.SchemeGroupVersion, &v1alpha1.Sonar{})
+	scheme.AddKnownTypes(v1.SchemeGroupVersion, &sonarApi.Sonar{})
 	client := fake.NewClientBuilder().WithScheme(scheme).WithObjects(instance).Build()
 	errTest := errors.New("test")
 
@@ -148,7 +148,7 @@ func TestReconcileSonar_Reconcile_IsDeploymentReadyErr(t *testing.T) {
 	ctx := context.Background()
 	instance := createInstance()
 	scheme := runtime.NewScheme()
-	scheme.AddKnownTypes(v1.SchemeGroupVersion, &v1alpha1.Sonar{})
+	scheme.AddKnownTypes(v1.SchemeGroupVersion, &sonarApi.Sonar{})
 	client := fake.NewClientBuilder().WithScheme(scheme).WithObjects(instance).Build()
 	errTest := errors.New("test")
 
@@ -181,7 +181,7 @@ func TestReconcileSonar_Reconcile_IsDeploymentReadyFalse(t *testing.T) {
 	ctx := context.Background()
 	instance := createInstance()
 	scheme := runtime.NewScheme()
-	scheme.AddKnownTypes(v1.SchemeGroupVersion, &v1alpha1.Sonar{})
+	scheme.AddKnownTypes(v1.SchemeGroupVersion, &sonarApi.Sonar{})
 	client := fake.NewClientBuilder().WithScheme(scheme).WithObjects(instance).Build()
 
 	service := sMock.ServiceInterface{}
@@ -212,7 +212,7 @@ func TestReconcileSonar_Reconcile_ConfigureErr(t *testing.T) {
 	ctx := context.Background()
 	instance := createInstance()
 	scheme := runtime.NewScheme()
-	scheme.AddKnownTypes(v1.SchemeGroupVersion, &v1alpha1.Sonar{})
+	scheme.AddKnownTypes(v1.SchemeGroupVersion, &sonarApi.Sonar{})
 	client := fake.NewClientBuilder().WithScheme(scheme).WithObjects(instance).Build()
 	errTest := errors.New("test")
 
@@ -224,7 +224,7 @@ func TestReconcileSonar_Reconcile_ConfigureErr(t *testing.T) {
 	platform.On("SetOwnerReference", instance, &secret).Return(nil)
 	service.On("IsDeploymentReady", instance).Return(true, nil)
 	service.On("Configure", ctx,
-		tMock.MatchedBy(func(sonar *v1alpha1.Sonar) bool {
+		tMock.MatchedBy(func(sonar *sonarApi.Sonar) bool {
 			return sonar.Name == name && sonar.Namespace == namespace
 		})).Return(errTest)
 
@@ -249,7 +249,7 @@ func TestReconcileSonar_Reconcile_ExposeConfigurationErr(t *testing.T) {
 	ctx := context.Background()
 	instance := createInstance()
 	scheme := runtime.NewScheme()
-	scheme.AddKnownTypes(v1.SchemeGroupVersion, &v1alpha1.Sonar{})
+	scheme.AddKnownTypes(v1.SchemeGroupVersion, &sonarApi.Sonar{})
 	client := fake.NewClientBuilder().WithScheme(scheme).WithObjects(instance).Build()
 	errTest := errors.New("test")
 
@@ -262,11 +262,11 @@ func TestReconcileSonar_Reconcile_ExposeConfigurationErr(t *testing.T) {
 	service.On("IsDeploymentReady", instance).Return(true, nil)
 
 	service.On("Configure", ctx,
-		tMock.MatchedBy(func(sonar *v1alpha1.Sonar) bool {
+		tMock.MatchedBy(func(sonar *sonarApi.Sonar) bool {
 			return sonar.Name == name && sonar.Namespace == namespace
 		})).Return(nil)
 
-	service.On("ExposeConfiguration", ctx, tMock.MatchedBy(func(sonar *v1alpha1.Sonar) bool {
+	service.On("ExposeConfiguration", ctx, tMock.MatchedBy(func(sonar *sonarApi.Sonar) bool {
 		return sonar.Name == name && sonar.Namespace == namespace
 	})).Return(errTest)
 
@@ -291,7 +291,7 @@ func TestReconcileSonar_Reconcile_IntegrationErr(t *testing.T) {
 	ctx := context.Background()
 	instance := createInstance()
 	scheme := runtime.NewScheme()
-	scheme.AddKnownTypes(v1.SchemeGroupVersion, &v1alpha1.Sonar{})
+	scheme.AddKnownTypes(v1.SchemeGroupVersion, &sonarApi.Sonar{})
 	client := fake.NewClientBuilder().WithScheme(scheme).WithObjects(instance).Build()
 	errTest := errors.New("test")
 
@@ -304,15 +304,15 @@ func TestReconcileSonar_Reconcile_IntegrationErr(t *testing.T) {
 	service.On("IsDeploymentReady", instance).Return(true, nil)
 
 	service.On("Configure", ctx,
-		tMock.MatchedBy(func(sonar *v1alpha1.Sonar) bool {
+		tMock.MatchedBy(func(sonar *sonarApi.Sonar) bool {
 			return sonar.Name == name && sonar.Namespace == namespace
 		})).Return(nil)
 
-	service.On("ExposeConfiguration", ctx, tMock.MatchedBy(func(sonar *v1alpha1.Sonar) bool {
+	service.On("ExposeConfiguration", ctx, tMock.MatchedBy(func(sonar *sonarApi.Sonar) bool {
 		return sonar.Name == name && sonar.Namespace == namespace
 	})).Return(nil)
 
-	service.On("Integration", ctx, tMock.MatchedBy(func(sonar *v1alpha1.Sonar) bool {
+	service.On("Integration", ctx, tMock.MatchedBy(func(sonar *sonarApi.Sonar) bool {
 		return sonar.Name == name && sonar.Namespace == namespace
 	})).Return(nil, errTest)
 
@@ -337,7 +337,7 @@ func TestReconcileSonar_Reconcile_updateAvailableStatusErr(t *testing.T) {
 	ctx := context.Background()
 	instance := createInstance()
 	scheme := runtime.NewScheme()
-	scheme.AddKnownTypes(v1.SchemeGroupVersion, &v1alpha1.Sonar{})
+	scheme.AddKnownTypes(v1.SchemeGroupVersion, &sonarApi.Sonar{})
 	client := fake.NewClientBuilder().WithScheme(scheme).WithObjects(instance).Build()
 
 	service := sMock.ServiceInterface{}
@@ -349,15 +349,15 @@ func TestReconcileSonar_Reconcile_updateAvailableStatusErr(t *testing.T) {
 	service.On("IsDeploymentReady", instance).Return(true, nil)
 
 	service.On("Configure", ctx,
-		tMock.MatchedBy(func(sonar *v1alpha1.Sonar) bool {
+		tMock.MatchedBy(func(sonar *sonarApi.Sonar) bool {
 			return sonar.Name == name && sonar.Namespace == namespace
 		})).Return(nil)
 
-	service.On("ExposeConfiguration", ctx, tMock.MatchedBy(func(sonar *v1alpha1.Sonar) bool {
+	service.On("ExposeConfiguration", ctx, tMock.MatchedBy(func(sonar *sonarApi.Sonar) bool {
 		return sonar.Name == name && sonar.Namespace == namespace
 	})).Return(nil)
 
-	service.On("Integration", ctx, tMock.MatchedBy(func(sonar *v1alpha1.Sonar) bool {
+	service.On("Integration", ctx, tMock.MatchedBy(func(sonar *sonarApi.Sonar) bool {
 		return sonar.Name == name && sonar.Namespace == namespace
 	})).Return(instance, nil)
 
@@ -382,7 +382,7 @@ func TestReconcileSonar_Reconcile(t *testing.T) {
 	ctx := context.Background()
 	instance := createInstance()
 	scheme := runtime.NewScheme()
-	scheme.AddKnownTypes(v1.SchemeGroupVersion, &v1alpha1.Sonar{})
+	scheme.AddKnownTypes(v1.SchemeGroupVersion, &sonarApi.Sonar{})
 	client := fake.NewClientBuilder().WithScheme(scheme).WithObjects(instance).Build()
 
 	service := sMock.ServiceInterface{}
@@ -394,16 +394,16 @@ func TestReconcileSonar_Reconcile(t *testing.T) {
 	service.On("IsDeploymentReady", instance).Return(true, nil)
 
 	service.On("Configure", ctx,
-		tMock.MatchedBy(func(sonar *v1alpha1.Sonar) bool {
+		tMock.MatchedBy(func(sonar *sonarApi.Sonar) bool {
 			return sonar.Name == name && sonar.Namespace == namespace
 		})).Return(nil)
 
-	service.On("ExposeConfiguration", ctx, tMock.MatchedBy(func(sonar *v1alpha1.Sonar) bool {
+	service.On("ExposeConfiguration", ctx, tMock.MatchedBy(func(sonar *sonarApi.Sonar) bool {
 		return sonar.Name == name && sonar.Namespace == namespace
 	})).Return(nil)
 
 	instance2 := instance.DeepCopy()
-	service.On("Integration", ctx, tMock.MatchedBy(func(sonar *v1alpha1.Sonar) bool {
+	service.On("Integration", ctx, tMock.MatchedBy(func(sonar *sonarApi.Sonar) bool {
 		// hack. this is done in order not to monitor the state of the instance
 		instance2.ObjectMeta = sonar.ObjectMeta
 		return sonar.Name == name && sonar.Namespace == namespace

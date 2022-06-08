@@ -14,7 +14,8 @@ import (
 	clientgoscheme "k8s.io/client-go/kubernetes/scheme"
 	"k8s.io/client-go/rest"
 
-	sonarApi "github.com/epam/edp-sonar-operator/v2/pkg/apis/edp/v1alpha1"
+	sonarApiv1 "github.com/epam/edp-sonar-operator/v2/pkg/apis/edp/v1"
+	sonarApiv1alpha1 "github.com/epam/edp-sonar-operator/v2/pkg/apis/edp/v1alpha1"
 	"github.com/epam/edp-sonar-operator/v2/pkg/controller/group"
 	"github.com/epam/edp-sonar-operator/v2/pkg/controller/permission_template"
 	"github.com/epam/edp-sonar-operator/v2/pkg/controller/sonar"
@@ -44,7 +45,9 @@ const (
 func init() {
 	utilruntime.Must(clientgoscheme.AddToScheme(scheme))
 
-	utilruntime.Must(sonarApi.AddToScheme(scheme))
+	utilruntime.Must(sonarApiv1.AddToScheme(scheme))
+
+	utilruntime.Must(sonarApiv1alpha1.AddToScheme(scheme))
 
 	utilruntime.Must(edpCompApi.AddToScheme(scheme))
 

@@ -1,22 +1,11 @@
-package v1alpha1
+package v1
 
 import (
 	coreV1Api "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-// EDIT THIS FILE!  THIS IS SCAFFOLDING FOR YOU TO OWN!
-// NOTE: json tags are required.  Any new fields you add must have json tags for the fields to be serialized.
-
-// SonarSpec defines the desired state of Sonar
-type SonarVolumes struct {
-	Name     string `json:"name"`
-	Capacity string `json:"capacity"`
-
-	// +optional
-	StorageClass string `json:"storage_class,omitempty"`
-}
-
+// SonarSpec defines the desired state of Sonar.
 type SonarSpec struct {
 	Version   string  `json:"version"`
 	Image     string  `json:"image"`
@@ -39,11 +28,19 @@ type SonarSpec struct {
 	DefaultPermissionTemplate string `json:"defaultPermissionTemplate,omitempty"`
 }
 
+type SonarVolumes struct {
+	Name     string `json:"name"`
+	Capacity string `json:"capacity"`
+
+	// +optional
+	StorageClass string `json:"storage_class,omitempty"`
+}
+
 type EdpSpec struct {
 	DnsWildcard string `json:"dnsWildcard"`
 }
 
-// SonarStatus defines the observed state of Sonar
+// SonarStatus defines the observed state of Sonar.
 type SonarStatus struct {
 	// +optional
 	Available bool `json:"available,omitempty"`
@@ -60,7 +57,7 @@ type SonarStatus struct {
 
 // +kubebuilder:object:root=true
 // +kubebuilder:subresource:status
-// +kubebuilder:deprecatedversion
+// +kubebuilder:storageversion
 
 // Sonar is the Schema for the sonars API.
 type Sonar struct {
@@ -82,6 +79,5 @@ type SonarList struct {
 }
 
 func init() {
-	SchemeBuilder.Register(&Sonar{}, &SonarList{}, &SonarGroup{}, &SonarGroupList{}, &SonarPermissionTemplate{},
-		&SonarPermissionTemplateList{})
+	SchemeBuilder.Register(&Sonar{}, &SonarList{})
 }

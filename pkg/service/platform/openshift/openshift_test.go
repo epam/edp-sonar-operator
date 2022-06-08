@@ -17,7 +17,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client/fake"
 
 	oMock "github.com/epam/edp-sonar-operator/v2/mocks/openshift"
-	"github.com/epam/edp-sonar-operator/v2/pkg/apis/edp/v1alpha1"
+	sonarApi "github.com/epam/edp-sonar-operator/v2/pkg/apis/edp/v1"
 )
 
 const (
@@ -100,7 +100,7 @@ func TestOpenshiftService_GetAvailableDeploymentReplicas_GetErr(t *testing.T) {
 	appClient := oMock.OpenshiftPodsStateClient{}
 	deploymentClient := &oMock.DeploymentConfig{}
 	errTest := errors.New("test")
-	sonarCR := v1alpha1.Sonar{
+	sonarCR := sonarApi.Sonar{
 		ObjectMeta: metav1.ObjectMeta{
 			Name: name, Namespace: namespace,
 		},
@@ -131,7 +131,7 @@ func TestOpenshiftService_GetAvailableDeploymentReplicas(t *testing.T) {
 	configCR := appsV1.DeploymentConfig{Status: appsV1.DeploymentConfigStatus{AvailableReplicas: int32(expectedReplicasCount)}}
 	appClient := oMock.OpenshiftPodsStateClient{}
 	deploymentClient := &oMock.DeploymentConfig{}
-	sonarCR := v1alpha1.Sonar{
+	sonarCR := sonarApi.Sonar{
 		ObjectMeta: metav1.ObjectMeta{
 			Name: name, Namespace: namespace,
 		},

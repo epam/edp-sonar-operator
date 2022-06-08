@@ -1,4 +1,4 @@
-apiVersion: v2.edp.epam.com/v1alpha1
+apiVersion: v2.edp.epam.com/v1
 kind: SonarPermissionTemplate
 metadata:
   name: edp-default

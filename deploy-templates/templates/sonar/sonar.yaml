@@ -1,5 +1,5 @@
 {{- if .Values.sonar.deploy -}}
-apiVersion: v2.edp.epam.com/v1alpha1
+apiVersion: v2.edp.epam.com/v1
 kind: Sonar
 metadata:
   name: sonar

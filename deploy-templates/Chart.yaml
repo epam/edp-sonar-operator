@@ -38,22 +38,22 @@ annotations:
   artifacthub.io/operatorCapabilities: Full Lifecycle
   artifacthub.io/crds: |
     - kind: Sonar
-      version: v2.edp.epam.com/v1alpha1
+      version: v2.edp.epam.com/v1
       name: sonar
       displayName: Sonar
       description: Sonar configuraion with predefined Quility Gates, CI users and Groups
     - kind: SonarGroup
-      version: v2.edp.epam.com/v1alpha1
+      version: v2.edp.epam.com/v1
       name: sonargroup
       displayName: SonarGroup
       description: Sonar Group Management
     - kind: SonarPermissionTemplate
-      version: v2.edp.epam.com/v1alpha1
+      version: v2.edp.epam.com/v1
       name: sonarpermissiontemplate
       displayName: SonarPermissionTemplate
       description: Sonar Permission template Management
   artifacthub.io/crdsExamples: |
-    - apiVersion: v2.edp.epam.com/v1alpha1
+    - apiVersion: v2.edp.epam.com/v1
       kind: Sonar
       metadata:
         name: sonar
@@ -74,7 +74,7 @@ annotations:
           - capacity: 1Gi
             name: db
             storage_class: gp2
-    - apiVersion: v2.edp.epam.com/v1alpha1
+    - apiVersion: v2.edp.epam.com/v1
       kind: SonarGroup
       metadata:
         name: sonar-developers
@@ -82,7 +82,7 @@ annotations:
         sonarOwner: sonar
         name: sonar-developers
         description: "Developers"
-    - apiVersion: v2.edp.epam.com/v1alpha1
+    - apiVersion: v2.edp.epam.com/v1
       kind: SonarPermissionTemplate
       metadata:
         name: edp-default

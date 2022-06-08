@@ -25,7 +25,7 @@ import (
 	"k8s.io/apimachinery/pkg/util/json"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
-	"github.com/epam/edp-sonar-operator/v2/pkg/apis/edp/v1alpha1"
+	sonarApi "github.com/epam/edp-sonar-operator/v2/pkg/apis/edp/v1"
 	"github.com/epam/edp-sonar-operator/v2/pkg/client/sonar"
 	sonarClient "github.com/epam/edp-sonar-operator/v2/pkg/client/sonar"
 	pkgHelper "github.com/epam/edp-sonar-operator/v2/pkg/helper"
@@ -60,10 +60,10 @@ const (
 )
 
 type ServiceInterface interface {
-	Configure(ctx context.Context, instance *v1alpha1.Sonar) error
-	ExposeConfiguration(ctx context.Context, instance *v1alpha1.Sonar) error
-	Integration(ctx context.Context, instance *v1alpha1.Sonar) (*v1alpha1.Sonar, error)
-	IsDeploymentReady(instance *v1alpha1.Sonar) (bool, error)
+	Configure(ctx context.Context, instance *sonarApi.Sonar) error
+	ExposeConfiguration(ctx context.Context, instance *sonarApi.Sonar) error
+	Integration(ctx context.Context, instance *sonarApi.Sonar) (*sonarApi.Sonar, error)
+	IsDeploymentReady(instance *sonarApi.Sonar) (bool, error)
 	ClientForChild(ctx context.Context, instance ChildInstance) (ClientInterface, error)
 	DeleteResource(ctx context.Context, instance Deletable, finalizer string,
 		deleteFunc func() error) (bool, error)
@@ -98,7 +98,7 @@ type Service struct {
 	platformService      platform.Service
 	k8sClient            client.Client
 	k8sScheme            *runtime.Scheme
-	sonarClientBuilder   func(ctx context.Context, instance *v1alpha1.Sonar, useDefaultPassword bool) (ClientInterface, error)
+	sonarClientBuilder   func(ctx context.Context, instance *sonarApi.Sonar, useDefaultPassword bool) (ClientInterface, error)
 	runningInClusterFunc func() bool
 }
 
@@ -107,7 +107,7 @@ func (s Service) K8sClient() client.Client {
 }
 
 func (s Service) ClientForChild(ctx context.Context, instance ChildInstance) (ClientInterface, error) {
-	var rootSonar v1alpha1.Sonar
+	var rootSonar sonarApi.Sonar
 	if err := s.k8sClient.Get(ctx, types.NamespacedName{Namespace: instance.GetNamespace(), Name: instance.SonarOwner()},
 		&rootSonar); err != nil {
 		return nil, errors.Wrap(err, "unable to get root sonar instance")
@@ -154,7 +154,7 @@ func (s Service) DeleteResource(ctx context.Context, instance Deletable, finaliz
 	return true, nil
 }
 
-func (s Service) initSonarClient(ctx context.Context, instance *v1alpha1.Sonar, useDefaultPassword bool) (ClientInterface, error) {
+func (s Service) initSonarClient(ctx context.Context, instance *sonarApi.Sonar, useDefaultPassword bool) (ClientInterface, error) {
 	password := defaultPassword
 	if !useDefaultPassword {
 		adminSecretName := fmt.Sprintf("%v-admin-password", instance.Name)
@@ -176,7 +176,7 @@ func (s Service) initSonarClient(ctx context.Context, instance *v1alpha1.Sonar, 
 	return sonarClient.InitNewRestClient(fmt.Sprintf("%s/api", u), admin, password), nil
 }
 
-func (s Service) Integration(ctx context.Context, instance *v1alpha1.Sonar) (*v1alpha1.Sonar, error) {
+func (s Service) Integration(ctx context.Context, instance *sonarApi.Sonar) (*sonarApi.Sonar, error) {
 	valueType := "value"
 	sc, err := s.sonarClientBuilder(ctx, instance, false)
 	if err != nil {
@@ -256,7 +256,7 @@ func (s Service) Integration(ctx context.Context, instance *v1alpha1.Sonar) (*v1
 	return instance, nil
 }
 
-func (s *Service) getKeycloakRealm(instance *v1alpha1.Sonar) (*keycloakApi.KeycloakRealm, error) {
+func (s *Service) getKeycloakRealm(instance *sonarApi.Sonar) (*keycloakApi.KeycloakRealm, error) {
 	realm := &keycloakApi.KeycloakRealm{}
 	err := s.k8sClient.Get(context.TODO(), types.NamespacedName{
 		Name:      main,
@@ -271,7 +271,7 @@ func (s *Service) getKeycloakRealm(instance *v1alpha1.Sonar) (*keycloakApi.Keycl
 	return realm, nil
 }
 
-func (s *Service) getKeycloakClient(instance *v1alpha1.Sonar) (*keycloakApi.KeycloakClient, error) {
+func (s *Service) getKeycloakClient(instance *sonarApi.Sonar) (*keycloakApi.KeycloakClient, error) {
 	cl := &keycloakApi.KeycloakClient{}
 	err := s.k8sClient.Get(context.TODO(), types.NamespacedName{
 		Name:      instance.Name,
@@ -286,7 +286,7 @@ func (s *Service) getKeycloakClient(instance *v1alpha1.Sonar) (*keycloakApi.Keyc
 	return cl, nil
 }
 
-func (s *Service) createKeycloakClient(instance *v1alpha1.Sonar, baseUrl string) error {
+func (s *Service) createKeycloakClient(instance *sonarApi.Sonar, baseUrl string) error {
 	trueStr := "true"
 	cl := &keycloakApi.KeycloakClient{
 		ObjectMeta: v1.ObjectMeta{
@@ -328,7 +328,7 @@ func (s *Service) createKeycloakClient(instance *v1alpha1.Sonar, baseUrl string)
 	return s.k8sClient.Create(context.TODO(), cl)
 }
 
-func (s Service) ExposeConfiguration(ctx context.Context, instance *v1alpha1.Sonar) error {
+func (s Service) ExposeConfiguration(ctx context.Context, instance *sonarApi.Sonar) error {
 	sc, err := s.sonarClientBuilder(ctx, instance, false)
 	if err != nil {
 		return errors.Wrap(err, failInitSonarMsg)
@@ -475,7 +475,7 @@ func (s Service) ExposeConfiguration(ctx context.Context, instance *v1alpha1.Son
 	return err
 }
 
-func (s Service) createEDPComponent(ctx context.Context, sonar *v1alpha1.Sonar) error {
+func (s Service) createEDPComponent(ctx context.Context, sonar *sonarApi.Sonar) error {
 	url, err := s.platformService.GetExternalEndpoint(ctx, sonar.Namespace, sonar.Name)
 	if err != nil {
 		return err
@@ -506,7 +506,7 @@ func getIcon() (*string, error) {
 	return &encoded, nil
 }
 
-func (s Service) Configure(ctx context.Context, instance *v1alpha1.Sonar) error {
+func (s Service) Configure(ctx context.Context, instance *sonarApi.Sonar) error {
 	if s.runningInClusterFunc == nil {
 		return errors.New("missing runningInClusterFunc")
 	}
@@ -562,7 +562,7 @@ func (s *Service) setupWebhook(ctx context.Context, sc ClientInterface, instance
 	return nil
 }
 
-func (s *Service) configurePassword(ctx context.Context, instance *v1alpha1.Sonar) error {
+func (s *Service) configurePassword(ctx context.Context, instance *sonarApi.Sonar) error {
 	credentials, err := s.createAdminSecret(instance)
 	if err != nil {
 		return errors.Wrap(err, "unable to create admin secret")
@@ -672,7 +672,7 @@ func configureGeneralSettings(sc ClientInterface) error {
 	return nil
 }
 
-func (s Service) createAdminSecret(instance *v1alpha1.Sonar) (map[string][]byte, error) {
+func (s Service) createAdminSecret(instance *sonarApi.Sonar) (map[string][]byte, error) {
 	secret, err := s.platformService.CreateSecret(instance.Name, instance.Namespace,
 		fmt.Sprintf("%s-admin-password", instance.Name), map[string][]byte{
 			"user":     []byte(admin),
@@ -689,7 +689,7 @@ func (s Service) createAdminSecret(instance *v1alpha1.Sonar) (map[string][]byte,
 	return secret.Data, nil
 }
 
-func (s Service) IsDeploymentReady(instance *v1alpha1.Sonar) (bool, error) {
+func (s Service) IsDeploymentReady(instance *sonarApi.Sonar) (bool, error) {
 	r, err := s.platformService.GetAvailableDeploymentReplicas(instance)
 	if err != nil {
 		return false, err

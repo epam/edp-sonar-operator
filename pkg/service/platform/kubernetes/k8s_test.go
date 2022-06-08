@@ -23,7 +23,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client/fake"
 
 	kMock "github.com/epam/edp-sonar-operator/v2/mocks/k8s"
-	"github.com/epam/edp-sonar-operator/v2/pkg/apis/edp/v1alpha1"
+	sonarApi "github.com/epam/edp-sonar-operator/v2/pkg/apis/edp/v1"
 	"github.com/epam/edp-sonar-operator/v2/pkg/helper"
 )
 
@@ -246,7 +246,7 @@ func TestK8SService_GetExternalEndpoint(t *testing.T) {
 func TestK8SService_CreateConfigMap_BadScheme(t *testing.T) {
 	scheme := runtime.NewScheme()
 	configMapData := map[string]string{}
-	sonarCR := v1alpha1.Sonar{ObjectMeta: metav1.ObjectMeta{Name: name}}
+	sonarCR := sonarApi.Sonar{ObjectMeta: metav1.ObjectMeta{Name: name}}
 	coreClient := kMock.K8SClusterClient{}
 	configMapClient := &kMock.ConfigMapInterface{}
 
@@ -263,10 +263,10 @@ func TestK8SService_CreateConfigMap_BadScheme(t *testing.T) {
 
 func TestK8SService_CreateConfigMap_GetErr(t *testing.T) {
 	scheme := runtime.NewScheme()
-	scheme.AddKnownTypes(v1.SchemeGroupVersion, &v1alpha1.Sonar{})
+	scheme.AddKnownTypes(v1.SchemeGroupVersion, &sonarApi.Sonar{})
 	errTest := errors.New("test")
 	configMapData := map[string]string{}
-	sonarCR := v1alpha1.Sonar{ObjectMeta: metav1.ObjectMeta{Name: name}}
+	sonarCR := sonarApi.Sonar{ObjectMeta: metav1.ObjectMeta{Name: name}}
 	coreClient := kMock.K8SClusterClient{}
 	configMapClient := &kMock.ConfigMapInterface{}
 	coreClient.On("ConfigMaps", "").Return(configMapClient)
@@ -285,9 +285,9 @@ func TestK8SService_CreateConfigMap_GetErr(t *testing.T) {
 
 func TestK8SService_CreateConfigMap_AlreadyExist(t *testing.T) {
 	scheme := runtime.NewScheme()
-	scheme.AddKnownTypes(v1.SchemeGroupVersion, &v1alpha1.Sonar{})
+	scheme.AddKnownTypes(v1.SchemeGroupVersion, &sonarApi.Sonar{})
 	configMapData := map[string]string{}
-	sonarCR := v1alpha1.Sonar{ObjectMeta: metav1.ObjectMeta{Name: name}}
+	sonarCR := sonarApi.Sonar{ObjectMeta: metav1.ObjectMeta{Name: name}}
 	coreClient := kMock.K8SClusterClient{}
 	configMapClient := &kMock.ConfigMapInterface{}
 	coreClient.On("ConfigMaps", "").Return(configMapClient)
@@ -308,9 +308,9 @@ func TestK8SService_CreateConfigMap_CreateErr(t *testing.T) {
 	configMapData := map[string]string{}
 	configMapObject := &coreV1Api.ConfigMap{}
 	scheme := runtime.NewScheme()
-	scheme.AddKnownTypes(v1.SchemeGroupVersion, &v1alpha1.Sonar{})
+	scheme.AddKnownTypes(v1.SchemeGroupVersion, &sonarApi.Sonar{})
 
-	sonarCR := v1alpha1.Sonar{ObjectMeta: metav1.ObjectMeta{Name: name}}
+	sonarCR := sonarApi.Sonar{ObjectMeta: metav1.ObjectMeta{Name: name}}
 	coreClient := kMock.K8SClusterClient{}
 	configMapClient := &kMock.ConfigMapInterface{}
 	coreClient.On("ConfigMaps", "").Return(configMapClient)
@@ -334,9 +334,9 @@ func TestK8SService_CreateConfigMap(t *testing.T) {
 	configMapData := map[string]string{}
 	configMapObject := &coreV1Api.ConfigMap{ObjectMeta: createObjectMeta()}
 	scheme := runtime.NewScheme()
-	scheme.AddKnownTypes(v1.SchemeGroupVersion, &v1alpha1.Sonar{})
+	scheme.AddKnownTypes(v1.SchemeGroupVersion, &sonarApi.Sonar{})
 
-	sonarCR := v1alpha1.Sonar{ObjectMeta: metav1.ObjectMeta{Name: name}}
+	sonarCR := sonarApi.Sonar{ObjectMeta: metav1.ObjectMeta{Name: name}}
 	coreClient := kMock.K8SClusterClient{}
 	configMapClient := &kMock.ConfigMapInterface{}
 	coreClient.On("ConfigMaps", "").Return(configMapClient)
@@ -439,9 +439,9 @@ func TestK8SService_CreateJenkinsServiceAccount(t *testing.T) {
 
 func TestK8SService_CreateEDPComponentIfNotExist_GetErr(t *testing.T) {
 	scheme := runtime.NewScheme()
-	scheme.AddKnownTypes(v1.SchemeGroupVersion, &v1alpha1.Sonar{})
+	scheme.AddKnownTypes(v1.SchemeGroupVersion, &sonarApi.Sonar{})
 	client := fake.NewClientBuilder().WithScheme(scheme).WithRuntimeObjects().Build()
-	sonarCR := v1alpha1.Sonar{ObjectMeta: createObjectMeta()}
+	sonarCR := sonarApi.Sonar{ObjectMeta: createObjectMeta()}
 
 	service := K8SService{
 		Scheme: scheme,
@@ -455,10 +455,10 @@ func TestK8SService_CreateEDPComponentIfNotExist_GetErr(t *testing.T) {
 
 func TestK8SService_CreateEDPComponentIfNotExist_AlreadyExist(t *testing.T) {
 	scheme := runtime.NewScheme()
-	scheme.AddKnownTypes(v1.SchemeGroupVersion, &edpCompApi.EDPComponent{}, &v1alpha1.Sonar{})
+	scheme.AddKnownTypes(v1.SchemeGroupVersion, &edpCompApi.EDPComponent{}, &sonarApi.Sonar{})
 	edpComponentCR := edpCompApi.EDPComponent{ObjectMeta: createObjectMeta()}
 	client := fake.NewClientBuilder().WithScheme(scheme).WithRuntimeObjects(&edpComponentCR).Build()
-	sonarCR := v1alpha1.Sonar{ObjectMeta: createObjectMeta()}
+	sonarCR := sonarApi.Sonar{ObjectMeta: createObjectMeta()}
 
 	service := K8SService{
 		Scheme: scheme,
@@ -470,9 +470,9 @@ func TestK8SService_CreateEDPComponentIfNotExist_AlreadyExist(t *testing.T) {
 
 func TestK8SService_CreateEDPComponentIfNotExist(t *testing.T) {
 	scheme := runtime.NewScheme()
-	scheme.AddKnownTypes(v1.SchemeGroupVersion, &edpCompApi.EDPComponent{}, &v1alpha1.Sonar{})
+	scheme.AddKnownTypes(v1.SchemeGroupVersion, &edpCompApi.EDPComponent{}, &sonarApi.Sonar{})
 	client := fake.NewClientBuilder().WithScheme(scheme).Build()
-	sonarCR := v1alpha1.Sonar{ObjectMeta: createObjectMeta()}
+	sonarCR := sonarApi.Sonar{ObjectMeta: createObjectMeta()}
 
 	service := K8SService{
 		Scheme: scheme,
@@ -483,7 +483,7 @@ func TestK8SService_CreateEDPComponentIfNotExist(t *testing.T) {
 }
 
 func TestK8SService_GetAvailableDeploymentReplicas_GetErr(t *testing.T) {
-	sonarCR := v1alpha1.Sonar{ObjectMeta: createObjectMeta()}
+	sonarCR := sonarApi.Sonar{ObjectMeta: createObjectMeta()}
 	appClient := kMock.PodsStateClient{}
 	deploymentClient := &kMock.Deployment{}
 	errTest := errors.New("test")
@@ -500,7 +500,7 @@ func TestK8SService_GetAvailableDeploymentReplicas_GetErr(t *testing.T) {
 }
 
 func TestK8SService_GetAvailableDeploymentReplicas(t *testing.T) {
-	sonarCR := v1alpha1.Sonar{ObjectMeta: createObjectMeta()}
+	sonarCR := sonarApi.Sonar{ObjectMeta: createObjectMeta()}
 	appClient := kMock.PodsStateClient{}
 	deploymentClient := &kMock.Deployment{}
 	deploymentCR := appsV1.Deployment{Status: appsV1.DeploymentStatus{
@@ -519,9 +519,9 @@ func TestK8SService_GetAvailableDeploymentReplicas(t *testing.T) {
 
 func TestK8SService_SetOwnerReference(t *testing.T) {
 	scheme := runtime.NewScheme()
-	scheme.AddKnownTypes(v1.SchemeGroupVersion, &edpCompApi.EDPComponent{}, &v1alpha1.Sonar{})
+	scheme.AddKnownTypes(v1.SchemeGroupVersion, &edpCompApi.EDPComponent{}, &sonarApi.Sonar{})
 	edpComponentCR := edpCompApi.EDPComponent{ObjectMeta: createObjectMeta()}
-	sonarCR := v1alpha1.Sonar{ObjectMeta: createObjectMeta()}
+	sonarCR := sonarApi.Sonar{ObjectMeta: createObjectMeta()}
 
 	service := K8SService{
 		Scheme: scheme,

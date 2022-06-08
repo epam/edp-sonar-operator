@@ -18,14 +18,14 @@ import (
 
 	cMock "github.com/epam/edp-sonar-operator/v2/mocks/client"
 	sMock "github.com/epam/edp-sonar-operator/v2/mocks/service"
-	"github.com/epam/edp-sonar-operator/v2/pkg/apis/edp/v1alpha1"
+	sonarApi "github.com/epam/edp-sonar-operator/v2/pkg/apis/edp/v1"
 	sonarClient "github.com/epam/edp-sonar-operator/v2/pkg/client/sonar"
 	"github.com/epam/edp-sonar-operator/v2/pkg/service/platform"
 )
 
 func TestNewReconcile_NotFound(t *testing.T) {
 	scheme := runtime.NewScheme()
-	if err := v1alpha1.AddToScheme(scheme); err != nil {
+	if err := sonarApi.AddToScheme(scheme); err != nil {
 		t.Fatal(err)
 	}
 	rq := reconcile.Request{NamespacedName: types.NamespacedName{Namespace: "ns", Name: "name"}}
@@ -45,7 +45,7 @@ func TestNewReconcile_NotFound(t *testing.T) {
 	}
 
 	k8sMock := k8sMockClient.Client{}
-	k8sMock.On("Get", rq.NamespacedName, &v1alpha1.SonarPermissionTemplate{}).
+	k8sMock.On("Get", rq.NamespacedName, &sonarApi.SonarPermissionTemplate{}).
 		Return(errors.New("get fatal"))
 	rec.client = &k8sMock
 
@@ -75,38 +75,38 @@ func ObjectMeta() metav1.ObjectMeta {
 
 func TestNewReconcile(t *testing.T) {
 	ctx := context.Background()
-	sampleTemplate := v1alpha1.SonarPermissionTemplate{
+	sampleTemplate := sonarApi.SonarPermissionTemplate{
 		TypeMeta: metav1.TypeMeta{
 			Kind:       "SonarPermissionTemplate",
-			APIVersion: "v2.edp.epam.com/v1alpha1",
+			APIVersion: "v2.edp.epam.com/v1",
 		},
 		ObjectMeta: ObjectMeta(),
-		Spec: v1alpha1.SonarPermissionTemplateSpec{
+		Spec: sonarApi.SonarPermissionTemplateSpec{
 			Name:              objectMetaName,
 			ProjectKeyPattern: ".+",
 			SonarOwner:        "sonar",
 			Description:       "desc",
-			GroupPermissions: []v1alpha1.GroupPermission{
+			GroupPermissions: []sonarApi.GroupPermission{
 				{
 					GroupName:   "gr1",
 					Permissions: []string{"admin", "user"},
 				},
 			},
 		},
-		Status: v1alpha1.SonarPermissionTemplateStatus{
+		Status: sonarApi.SonarPermissionTemplateStatus{
 			Value:        "",
 			FailureCount: 0,
 			ID:           "",
 		},
 	}
-	sn := v1alpha1.Sonar{
+	sn := sonarApi.Sonar{
 		ObjectMeta: metav1.ObjectMeta{Name: "sonar", Namespace: objectMetaNamespace},
-		TypeMeta:   metav1.TypeMeta{Kind: "Sonar", APIVersion: "v2.edp.epam.com/v1alpha1"},
-		Spec:       v1alpha1.SonarSpec{BasePath: "path"},
+		TypeMeta:   metav1.TypeMeta{Kind: "Sonar", APIVersion: "v2.edp.epam.com/v1"},
+		Spec:       sonarApi.SonarSpec{BasePath: "path"},
 	}
 
 	scheme := runtime.NewScheme()
-	if err := v1alpha1.AddToScheme(scheme); err != nil {
+	if err := sonarApi.AddToScheme(scheme); err != nil {
 		t.Fatal(err)
 	}
 	permissionTemplate1 := sampleTemplate.DeepCopy()
@@ -122,7 +122,7 @@ func TestNewReconcile(t *testing.T) {
 	rec.service = &serviceMock
 	clientMock := &cMock.ClientInterface{}
 
-	serviceMock.On("ClientForChild", ctx, tMock.AnythingOfType("*v1alpha1.SonarPermissionTemplate")).Return(clientMock, nil)
+	serviceMock.On("ClientForChild", ctx, tMock.AnythingOfType("*v1.SonarPermissionTemplate")).Return(clientMock, nil)
 	serviceMock.On("K8sClient").Return(fakeCl)
 	clientMock.On("GetPermissionTemplate", ctx, permissionTemplate1.Spec.Name).Return(nil,
 		sonarClient.ErrNotFound("not found")).Once()
@@ -142,7 +142,7 @@ func TestNewReconcile(t *testing.T) {
 	serviceMock.
 		On("DeleteResource",
 			ctx,
-			tMock.AnythingOfType("*v1alpha1.SonarPermissionTemplate"),
+			tMock.AnythingOfType("*v1.SonarPermissionTemplate"),
 			finalizer,
 			tMock.AnythingOfType("func() error"),
 		).
@@ -184,8 +184,8 @@ func TestNewReconcile(t *testing.T) {
 }
 
 func TestSpecIsUpdated(t *testing.T) {
-	if isSpecUpdated(event.UpdateEvent{ObjectNew: &v1alpha1.SonarPermissionTemplate{},
-		ObjectOld: &v1alpha1.SonarPermissionTemplate{}}) {
+	if isSpecUpdated(event.UpdateEvent{ObjectNew: &sonarApi.SonarPermissionTemplate{},
+		ObjectOld: &sonarApi.SonarPermissionTemplate{}}) {
 		t.Fatal("spec is updated")
 	}
 }

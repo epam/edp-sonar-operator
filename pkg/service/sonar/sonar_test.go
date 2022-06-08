@@ -22,7 +22,7 @@ import (
 
 	cMock "github.com/epam/edp-sonar-operator/v2/mocks/client"
 	pMock "github.com/epam/edp-sonar-operator/v2/mocks/platform"
-	"github.com/epam/edp-sonar-operator/v2/pkg/apis/edp/v1alpha1"
+	sonarApi "github.com/epam/edp-sonar-operator/v2/pkg/apis/edp/v1"
 	sonarClient "github.com/epam/edp-sonar-operator/v2/pkg/client/sonar"
 )
 
@@ -35,13 +35,13 @@ const (
 	template  = "EDP default"
 )
 
-func createSonarInstance() v1alpha1.Sonar {
-	return v1alpha1.Sonar{
+func createSonarInstance() sonarApi.Sonar {
+	return sonarApi.Sonar{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      main,
 			Namespace: namespace,
 		},
-		Spec: v1alpha1.SonarSpec{
+		Spec: sonarApi.SonarSpec{
 			DefaultPermissionTemplate: template,
 		},
 	}
@@ -93,7 +93,7 @@ func TestSonarServiceImpl_DeleteResource(t *testing.T) {
 func TestServiceMock_Configure(t *testing.T) {
 	ctx := context.Background()
 	sch := runtime.NewScheme()
-	if err := v1alpha1.AddToScheme(sch); err != nil {
+	if err := sonarApi.AddToScheme(sch); err != nil {
 		t.Fatal(err)
 	}
 	if err := coreV1Api.AddToScheme(sch); err != nil {
@@ -103,9 +103,9 @@ func TestServiceMock_Configure(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	snr := v1alpha1.Sonar{ObjectMeta: metav1.ObjectMeta{
+	snr := sonarApi.Sonar{ObjectMeta: metav1.ObjectMeta{
 		Namespace: "ns", Name: "snr1",
-	}, Spec: v1alpha1.SonarSpec{DefaultPermissionTemplate: "tpl123"}}
+	}, Spec: sonarApi.SonarSpec{DefaultPermissionTemplate: "tpl123"}}
 
 	jns := jenkinsV1Api.Jenkins{Spec: jenkinsV1Api.JenkinsSpec{BasePath: "zabagdo"}, ObjectMeta: metav1.ObjectMeta{
 		Name: "js1", Namespace: snr.Namespace,
@@ -116,7 +116,7 @@ func TestServiceMock_Configure(t *testing.T) {
 	s := Service{
 		k8sClient:       fake.NewClientBuilder().WithScheme(sch).WithRuntimeObjects(&jns).Build(),
 		platformService: &plMock,
-		sonarClientBuilder: func(ctx context.Context, instance *v1alpha1.Sonar,
+		sonarClientBuilder: func(ctx context.Context, instance *sonarApi.Sonar,
 			useDefaultPassword bool) (ClientInterface, error) {
 			return &clMock, nil
 		},
@@ -158,7 +158,7 @@ func TestServiceMock_Configure(t *testing.T) {
 func TestServiceMock_Configure_FailGetGroupForCreation(t *testing.T) {
 	ctx := context.Background()
 	sch := runtime.NewScheme()
-	if err := v1alpha1.AddToScheme(sch); err != nil {
+	if err := sonarApi.AddToScheme(sch); err != nil {
 		t.Fatal(err)
 	}
 	if err := coreV1Api.AddToScheme(sch); err != nil {
@@ -168,9 +168,9 @@ func TestServiceMock_Configure_FailGetGroupForCreation(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	snr := v1alpha1.Sonar{ObjectMeta: metav1.ObjectMeta{
+	snr := sonarApi.Sonar{ObjectMeta: metav1.ObjectMeta{
 		Namespace: "ns", Name: "snr1",
-	}, Spec: v1alpha1.SonarSpec{DefaultPermissionTemplate: "tpl123"}}
+	}, Spec: sonarApi.SonarSpec{DefaultPermissionTemplate: "tpl123"}}
 
 	jns := jenkinsV1Api.Jenkins{Spec: jenkinsV1Api.JenkinsSpec{BasePath: "zabagdo"}, ObjectMeta: metav1.ObjectMeta{
 		Name: "js1", Namespace: snr.Namespace,
@@ -181,7 +181,7 @@ func TestServiceMock_Configure_FailGetGroupForCreation(t *testing.T) {
 	s := Service{
 		k8sClient:       fake.NewClientBuilder().WithScheme(sch).WithRuntimeObjects(&jns).Build(),
 		platformService: &plMock,
-		sonarClientBuilder: func(ctx context.Context, instance *v1alpha1.Sonar,
+		sonarClientBuilder: func(ctx context.Context, instance *sonarApi.Sonar,
 			useDefaultPassword bool) (ClientInterface, error) {
 			return &clMock, nil
 		},
@@ -215,7 +215,7 @@ func TestServiceMock_Configure_FailGetGroupForCreation(t *testing.T) {
 func TestServiceMock_Configure_FailCreateGroup(t *testing.T) {
 	ctx := context.Background()
 	sch := runtime.NewScheme()
-	if err := v1alpha1.AddToScheme(sch); err != nil {
+	if err := sonarApi.AddToScheme(sch); err != nil {
 		t.Fatal(err)
 	}
 	if err := coreV1Api.AddToScheme(sch); err != nil {
@@ -225,9 +225,9 @@ func TestServiceMock_Configure_FailCreateGroup(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	snr := v1alpha1.Sonar{ObjectMeta: metav1.ObjectMeta{
+	snr := sonarApi.Sonar{ObjectMeta: metav1.ObjectMeta{
 		Namespace: "ns", Name: "snr1",
-	}, Spec: v1alpha1.SonarSpec{DefaultPermissionTemplate: "tpl123"}}
+	}, Spec: sonarApi.SonarSpec{DefaultPermissionTemplate: "tpl123"}}
 
 	jns := jenkinsV1Api.Jenkins{Spec: jenkinsV1Api.JenkinsSpec{BasePath: "zabagdo"}, ObjectMeta: metav1.ObjectMeta{
 		Name: "js1", Namespace: snr.Namespace,
@@ -238,7 +238,7 @@ func TestServiceMock_Configure_FailCreateGroup(t *testing.T) {
 	s := Service{
 		k8sClient:       fake.NewClientBuilder().WithScheme(sch).WithRuntimeObjects(&jns).Build(),
 		platformService: &plMock,
-		sonarClientBuilder: func(ctx context.Context, instance *v1alpha1.Sonar,
+		sonarClientBuilder: func(ctx context.Context, instance *sonarApi.Sonar,
 			useDefaultPassword bool) (ClientInterface, error) {
 			return &clMock, nil
 		},
@@ -272,7 +272,7 @@ func TestServiceMock_Configure_FailCreateGroup(t *testing.T) {
 func TestServiceMock_Configure_FailAddPermissions(t *testing.T) {
 	ctx := context.Background()
 	sch := runtime.NewScheme()
-	if err := v1alpha1.AddToScheme(sch); err != nil {
+	if err := sonarApi.AddToScheme(sch); err != nil {
 		t.Fatal(err)
 	}
 	if err := coreV1Api.AddToScheme(sch); err != nil {
@@ -282,9 +282,9 @@ func TestServiceMock_Configure_FailAddPermissions(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	snr := v1alpha1.Sonar{ObjectMeta: metav1.ObjectMeta{
+	snr := sonarApi.Sonar{ObjectMeta: metav1.ObjectMeta{
 		Namespace: "ns", Name: "snr1",
-	}, Spec: v1alpha1.SonarSpec{DefaultPermissionTemplate: "tpl123"}}
+	}, Spec: sonarApi.SonarSpec{DefaultPermissionTemplate: "tpl123"}}
 
 	jns := jenkinsV1Api.Jenkins{Spec: jenkinsV1Api.JenkinsSpec{BasePath: "zabagdo"}, ObjectMeta: metav1.ObjectMeta{
 		Name: "js1", Namespace: snr.Namespace,
@@ -295,7 +295,7 @@ func TestServiceMock_Configure_FailAddPermissions(t *testing.T) {
 	s := Service{
 		k8sClient:       fake.NewClientBuilder().WithScheme(sch).WithRuntimeObjects(&jns).Build(),
 		platformService: &plMock,
-		sonarClientBuilder: func(ctx context.Context, instance *v1alpha1.Sonar,
+		sonarClientBuilder: func(ctx context.Context, instance *sonarApi.Sonar,
 			useDefaultPassword bool) (ClientInterface, error) {
 			return &clMock, nil
 		},
@@ -330,9 +330,9 @@ func TestServiceMock_Configure_FailAddPermissions(t *testing.T) {
 
 func TestService_Integration_BadBuilder(t *testing.T) {
 	ctx := context.Background()
-	instance := v1alpha1.Sonar{}
+	instance := sonarApi.Sonar{}
 	service := Service{
-		sonarClientBuilder: func(ctx context.Context, instance *v1alpha1.Sonar, useDefaultPassword bool) (ClientInterface, error) {
+		sonarClientBuilder: func(ctx context.Context, instance *sonarApi.Sonar, useDefaultPassword bool) (ClientInterface, error) {
 			return nil, errors.New("test")
 		},
 	}
@@ -342,7 +342,7 @@ func TestService_Integration_BadBuilder(t *testing.T) {
 
 func TestService_Integration_getKeycloakRealmErr(t *testing.T) {
 	scheme := runtime.NewScheme()
-	scheme.AddKnownTypes(v1.SchemeGroupVersion, &v1alpha1.Sonar{})
+	scheme.AddKnownTypes(v1.SchemeGroupVersion, &sonarApi.Sonar{})
 
 	client := fake.NewClientBuilder().WithScheme(scheme).WithObjects().Build()
 
@@ -351,7 +351,7 @@ func TestService_Integration_getKeycloakRealmErr(t *testing.T) {
 	clMock := cMock.ClientInterface{}
 	service := Service{
 		k8sClient: client,
-		sonarClientBuilder: func(ctx context.Context, instance *v1alpha1.Sonar, useDefaultPassword bool) (ClientInterface, error) {
+		sonarClientBuilder: func(ctx context.Context, instance *sonarApi.Sonar, useDefaultPassword bool) (ClientInterface, error) {
 			return &clMock, nil
 		},
 	}
@@ -361,7 +361,7 @@ func TestService_Integration_getKeycloakRealmErr(t *testing.T) {
 
 func TestService_Integration_NilRealmAnnotation(t *testing.T) {
 	scheme := runtime.NewScheme()
-	scheme.AddKnownTypes(v1.SchemeGroupVersion, &v1alpha1.Sonar{}, &keycloakApi.KeycloakRealm{})
+	scheme.AddKnownTypes(v1.SchemeGroupVersion, &sonarApi.Sonar{}, &keycloakApi.KeycloakRealm{})
 	keycloakRealmInstance := keycloakApi.KeycloakRealm{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      main,
@@ -375,7 +375,7 @@ func TestService_Integration_NilRealmAnnotation(t *testing.T) {
 	clMock := cMock.ClientInterface{}
 	service := Service{
 		k8sClient: client,
-		sonarClientBuilder: func(ctx context.Context, instance *v1alpha1.Sonar, useDefaultPassword bool) (ClientInterface, error) {
+		sonarClientBuilder: func(ctx context.Context, instance *sonarApi.Sonar, useDefaultPassword bool) (ClientInterface, error) {
 			return &clMock, nil
 		},
 	}
@@ -386,7 +386,7 @@ func TestService_Integration_NilRealmAnnotation(t *testing.T) {
 
 func TestService_Integration_EmptyAnnotationErr(t *testing.T) {
 	scheme := runtime.NewScheme()
-	scheme.AddKnownTypes(v1.SchemeGroupVersion, &v1alpha1.Sonar{}, &keycloakApi.KeycloakRealm{})
+	scheme.AddKnownTypes(v1.SchemeGroupVersion, &sonarApi.Sonar{}, &keycloakApi.KeycloakRealm{})
 	keycloakRealmInstance := keycloakApi.KeycloakRealm{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:        main,
@@ -398,7 +398,7 @@ func TestService_Integration_EmptyAnnotationErr(t *testing.T) {
 	client := fake.NewClientBuilder().WithScheme(scheme).WithObjects(&keycloakRealmInstance).Build()
 
 	ctx := context.Background()
-	instance := v1alpha1.Sonar{
+	instance := sonarApi.Sonar{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      main,
 			Namespace: namespace,
@@ -407,7 +407,7 @@ func TestService_Integration_EmptyAnnotationErr(t *testing.T) {
 	clMock := cMock.ClientInterface{}
 	service := Service{
 		k8sClient: client,
-		sonarClientBuilder: func(ctx context.Context, instance *v1alpha1.Sonar, useDefaultPassword bool) (ClientInterface, error) {
+		sonarClientBuilder: func(ctx context.Context, instance *sonarApi.Sonar, useDefaultPassword bool) (ClientInterface, error) {
 			return &clMock, nil
 		},
 	}
@@ -418,7 +418,7 @@ func TestService_Integration_EmptyAnnotationErr(t *testing.T) {
 
 func TestService_Integration_ConfigureGeneralSettingsErr(t *testing.T) {
 	scheme := runtime.NewScheme()
-	scheme.AddKnownTypes(v1.SchemeGroupVersion, &v1alpha1.Sonar{}, &keycloakApi.KeycloakRealm{})
+	scheme.AddKnownTypes(v1.SchemeGroupVersion, &sonarApi.Sonar{}, &keycloakApi.KeycloakRealm{})
 	data := map[string]string{"issuer": name}
 	raw, err := json.Marshal(data)
 	if err != nil {
@@ -443,7 +443,7 @@ func TestService_Integration_ConfigureGeneralSettingsErr(t *testing.T) {
 
 	service := Service{
 		k8sClient: client,
-		sonarClientBuilder: func(ctx context.Context, instance *v1alpha1.Sonar, useDefaultPassword bool) (ClientInterface, error) {
+		sonarClientBuilder: func(ctx context.Context, instance *sonarApi.Sonar, useDefaultPassword bool) (ClientInterface, error) {
 			return &clMock, nil
 		},
 	}
@@ -455,7 +455,7 @@ func TestService_Integration_ConfigureGeneralSettingsErr(t *testing.T) {
 
 func TestService_Integration_EmptyAnnotation(t *testing.T) {
 	scheme := runtime.NewScheme()
-	scheme.AddKnownTypes(v1.SchemeGroupVersion, &v1alpha1.Sonar{}, &keycloakApi.KeycloakRealm{})
+	scheme.AddKnownTypes(v1.SchemeGroupVersion, &sonarApi.Sonar{}, &keycloakApi.KeycloakRealm{})
 	data := map[string]string{"issuer": ""}
 	raw, err := json.Marshal(data)
 	if err != nil {
@@ -477,7 +477,7 @@ func TestService_Integration_EmptyAnnotation(t *testing.T) {
 
 	service := Service{
 		k8sClient: client,
-		sonarClientBuilder: func(ctx context.Context, instance *v1alpha1.Sonar, useDefaultPassword bool) (ClientInterface, error) {
+		sonarClientBuilder: func(ctx context.Context, instance *sonarApi.Sonar, useDefaultPassword bool) (ClientInterface, error) {
 			return &clMock, nil
 		},
 	}
@@ -489,7 +489,7 @@ func TestService_Integration_EmptyAnnotation(t *testing.T) {
 
 func TestService_Integration_GetExternalEndpointErr(t *testing.T) {
 	scheme := runtime.NewScheme()
-	scheme.AddKnownTypes(v1.SchemeGroupVersion, &v1alpha1.Sonar{}, &keycloakApi.KeycloakRealm{})
+	scheme.AddKnownTypes(v1.SchemeGroupVersion, &sonarApi.Sonar{}, &keycloakApi.KeycloakRealm{})
 
 	client := fake.NewClientBuilder().WithScheme(scheme).WithObjects().Build()
 	errTest := errors.New("test")
@@ -502,7 +502,7 @@ func TestService_Integration_GetExternalEndpointErr(t *testing.T) {
 	service := Service{
 		k8sClient:       client,
 		platformService: &plMock,
-		sonarClientBuilder: func(ctx context.Context, instance *v1alpha1.Sonar, useDefaultPassword bool) (ClientInterface, error) {
+		sonarClientBuilder: func(ctx context.Context, instance *sonarApi.Sonar, useDefaultPassword bool) (ClientInterface, error) {
 			return &clMock, nil
 		},
 	}
@@ -514,7 +514,7 @@ func TestService_Integration_GetExternalEndpointErr(t *testing.T) {
 
 func TestService_Integration_ConfigureGeneralSettingsErr2(t *testing.T) {
 	scheme := runtime.NewScheme()
-	scheme.AddKnownTypes(v1.SchemeGroupVersion, &v1alpha1.Sonar{}, &keycloakApi.KeycloakRealm{})
+	scheme.AddKnownTypes(v1.SchemeGroupVersion, &sonarApi.Sonar{}, &keycloakApi.KeycloakRealm{})
 
 	client := fake.NewClientBuilder().WithScheme(scheme).WithObjects().Build()
 	errTest := errors.New("test")
@@ -528,7 +528,7 @@ func TestService_Integration_ConfigureGeneralSettingsErr2(t *testing.T) {
 	service := Service{
 		k8sClient:       client,
 		platformService: &plMock,
-		sonarClientBuilder: func(ctx context.Context, instance *v1alpha1.Sonar, useDefaultPassword bool) (ClientInterface, error) {
+		sonarClientBuilder: func(ctx context.Context, instance *sonarApi.Sonar, useDefaultPassword bool) (ClientInterface, error) {
 			return &clMock, nil
 		},
 	}
@@ -541,7 +541,7 @@ func TestService_Integration_ConfigureGeneralSettingsErr2(t *testing.T) {
 
 func TestService_Integration_getKeycloakClientErr(t *testing.T) {
 	scheme := runtime.NewScheme()
-	scheme.AddKnownTypes(v1.SchemeGroupVersion, &v1alpha1.Sonar{}, &keycloakApi.KeycloakRealm{})
+	scheme.AddKnownTypes(v1.SchemeGroupVersion, &sonarApi.Sonar{}, &keycloakApi.KeycloakRealm{})
 
 	client := fake.NewClientBuilder().WithScheme(scheme).WithObjects().Build()
 
@@ -554,7 +554,7 @@ func TestService_Integration_getKeycloakClientErr(t *testing.T) {
 	service := Service{
 		k8sClient:       client,
 		platformService: &plMock,
-		sonarClientBuilder: func(ctx context.Context, instance *v1alpha1.Sonar, useDefaultPassword bool) (ClientInterface, error) {
+		sonarClientBuilder: func(ctx context.Context, instance *sonarApi.Sonar, useDefaultPassword bool) (ClientInterface, error) {
 			return &clMock, nil
 		},
 	}
@@ -566,7 +566,7 @@ func TestService_Integration_getKeycloakClientErr(t *testing.T) {
 
 func TestService_Integration_ConfigureGeneralSettingsErr3(t *testing.T) {
 	scheme := runtime.NewScheme()
-	scheme.AddKnownTypes(v1.SchemeGroupVersion, &v1alpha1.Sonar{}, &keycloakApi.KeycloakRealm{}, &keycloakApi.KeycloakClient{})
+	scheme.AddKnownTypes(v1.SchemeGroupVersion, &sonarApi.Sonar{}, &keycloakApi.KeycloakRealm{}, &keycloakApi.KeycloakClient{})
 
 	client := fake.NewClientBuilder().WithScheme(scheme).WithObjects().Build()
 
@@ -581,7 +581,7 @@ func TestService_Integration_ConfigureGeneralSettingsErr3(t *testing.T) {
 	service := Service{
 		k8sClient:       client,
 		platformService: &plMock,
-		sonarClientBuilder: func(ctx context.Context, instance *v1alpha1.Sonar, useDefaultPassword bool) (ClientInterface, error) {
+		sonarClientBuilder: func(ctx context.Context, instance *sonarApi.Sonar, useDefaultPassword bool) (ClientInterface, error) {
 			return &clMock, nil
 		},
 	}
@@ -594,7 +594,7 @@ func TestService_Integration_ConfigureGeneralSettingsErr3(t *testing.T) {
 
 func TestService_Integration_ConfigureGeneralSettingsErr4(t *testing.T) {
 	scheme := runtime.NewScheme()
-	scheme.AddKnownTypes(v1.SchemeGroupVersion, &v1alpha1.Sonar{}, &keycloakApi.KeycloakRealm{}, &keycloakApi.KeycloakClient{})
+	scheme.AddKnownTypes(v1.SchemeGroupVersion, &sonarApi.Sonar{}, &keycloakApi.KeycloakRealm{}, &keycloakApi.KeycloakClient{})
 
 	client := fake.NewClientBuilder().WithScheme(scheme).WithObjects().Build()
 
@@ -610,7 +610,7 @@ func TestService_Integration_ConfigureGeneralSettingsErr4(t *testing.T) {
 	service := Service{
 		k8sClient:       client,
 		platformService: &plMock,
-		sonarClientBuilder: func(ctx context.Context, instance *v1alpha1.Sonar, useDefaultPassword bool) (ClientInterface, error) {
+		sonarClientBuilder: func(ctx context.Context, instance *sonarApi.Sonar, useDefaultPassword bool) (ClientInterface, error) {
 			return &clMock, nil
 		},
 	}
@@ -623,7 +623,7 @@ func TestService_Integration_ConfigureGeneralSettingsErr4(t *testing.T) {
 
 func TestService_Integration_ConfigureGeneralSettingsErr5(t *testing.T) {
 	scheme := runtime.NewScheme()
-	scheme.AddKnownTypes(v1.SchemeGroupVersion, &v1alpha1.Sonar{}, &keycloakApi.KeycloakRealm{}, &keycloakApi.KeycloakClient{})
+	scheme.AddKnownTypes(v1.SchemeGroupVersion, &sonarApi.Sonar{}, &keycloakApi.KeycloakRealm{}, &keycloakApi.KeycloakClient{})
 
 	client := fake.NewClientBuilder().WithScheme(scheme).WithObjects().Build()
 
@@ -640,7 +640,7 @@ func TestService_Integration_ConfigureGeneralSettingsErr5(t *testing.T) {
 	service := Service{
 		k8sClient:       client,
 		platformService: &plMock,
-		sonarClientBuilder: func(ctx context.Context, instance *v1alpha1.Sonar, useDefaultPassword bool) (ClientInterface, error) {
+		sonarClientBuilder: func(ctx context.Context, instance *sonarApi.Sonar, useDefaultPassword bool) (ClientInterface, error) {
 			return &clMock, nil
 		},
 	}
@@ -653,7 +653,7 @@ func TestService_Integration_ConfigureGeneralSettingsErr5(t *testing.T) {
 
 func TestService_Integration_ConfigureGeneralSettingsErr6(t *testing.T) {
 	scheme := runtime.NewScheme()
-	scheme.AddKnownTypes(v1.SchemeGroupVersion, &v1alpha1.Sonar{}, &keycloakApi.KeycloakRealm{}, &keycloakApi.KeycloakClient{})
+	scheme.AddKnownTypes(v1.SchemeGroupVersion, &sonarApi.Sonar{}, &keycloakApi.KeycloakRealm{}, &keycloakApi.KeycloakClient{})
 
 	client := fake.NewClientBuilder().WithScheme(scheme).WithObjects().Build()
 
@@ -671,7 +671,7 @@ func TestService_Integration_ConfigureGeneralSettingsErr6(t *testing.T) {
 	service := Service{
 		k8sClient:       client,
 		platformService: &plMock,
-		sonarClientBuilder: func(ctx context.Context, instance *v1alpha1.Sonar, useDefaultPassword bool) (ClientInterface, error) {
+		sonarClientBuilder: func(ctx context.Context, instance *sonarApi.Sonar, useDefaultPassword bool) (ClientInterface, error) {
 			return &clMock, nil
 		},
 	}
@@ -684,7 +684,7 @@ func TestService_Integration_ConfigureGeneralSettingsErr6(t *testing.T) {
 
 func TestService_Integration_SetProjectsDefaultVisibilityErr(t *testing.T) {
 	scheme := runtime.NewScheme()
-	scheme.AddKnownTypes(v1.SchemeGroupVersion, &v1alpha1.Sonar{}, &keycloakApi.KeycloakRealm{}, &keycloakApi.KeycloakClient{})
+	scheme.AddKnownTypes(v1.SchemeGroupVersion, &sonarApi.Sonar{}, &keycloakApi.KeycloakRealm{}, &keycloakApi.KeycloakClient{})
 
 	client := fake.NewClientBuilder().WithScheme(scheme).WithObjects().Build()
 
@@ -703,7 +703,7 @@ func TestService_Integration_SetProjectsDefaultVisibilityErr(t *testing.T) {
 	service := Service{
 		k8sClient:       client,
 		platformService: &plMock,
-		sonarClientBuilder: func(ctx context.Context, instance *v1alpha1.Sonar, useDefaultPassword bool) (ClientInterface, error) {
+		sonarClientBuilder: func(ctx context.Context, instance *sonarApi.Sonar, useDefaultPassword bool) (ClientInterface, error) {
 			return &clMock, nil
 		},
 	}
@@ -716,7 +716,7 @@ func TestService_Integration_SetProjectsDefaultVisibilityErr(t *testing.T) {
 
 func TestService_Integration(t *testing.T) {
 	scheme := runtime.NewScheme()
-	scheme.AddKnownTypes(v1.SchemeGroupVersion, &v1alpha1.Sonar{}, &keycloakApi.KeycloakRealm{}, &keycloakApi.KeycloakClient{})
+	scheme.AddKnownTypes(v1.SchemeGroupVersion, &sonarApi.Sonar{}, &keycloakApi.KeycloakRealm{}, &keycloakApi.KeycloakClient{})
 
 	client := fake.NewClientBuilder().WithScheme(scheme).WithObjects().Build()
 
@@ -734,7 +734,7 @@ func TestService_Integration(t *testing.T) {
 	service := Service{
 		k8sClient:       client,
 		platformService: &plMock,
-		sonarClientBuilder: func(ctx context.Context, instance *v1alpha1.Sonar, useDefaultPassword bool) (ClientInterface, error) {
+		sonarClientBuilder: func(ctx context.Context, instance *sonarApi.Sonar, useDefaultPassword bool) (ClientInterface, error) {
 			return &clMock, nil
 		},
 	}
@@ -791,7 +791,7 @@ func TestService_ExposeConfiguration_BadBuilder(t *testing.T) {
 	instance := createSonarInstance()
 
 	service := Service{
-		sonarClientBuilder: func(ctx context.Context, instance *v1alpha1.Sonar, useDefaultPassword bool) (ClientInterface, error) {
+		sonarClientBuilder: func(ctx context.Context, instance *sonarApi.Sonar, useDefaultPassword bool) (ClientInterface, error) {
 			return nil, errors.New("test")
 		},
 	}
@@ -811,7 +811,7 @@ func TestService_ExposeConfiguration_CreateUserErr(t *testing.T) {
 	})).Return(errTest)
 
 	service := Service{
-		sonarClientBuilder: func(ctx context.Context, instance *v1alpha1.Sonar, useDefaultPassword bool) (ClientInterface, error) {
+		sonarClientBuilder: func(ctx context.Context, instance *sonarApi.Sonar, useDefaultPassword bool) (ClientInterface, error) {
 			return &clMock, nil
 		},
 	}
@@ -829,7 +829,7 @@ func TestService_ExposeConfiguration_GetUserErr(t *testing.T) {
 	clMock.On("GetUser", ctx, jenkinsLogin).Return(nil, errTest)
 
 	service := Service{
-		sonarClientBuilder: func(ctx context.Context, instance *v1alpha1.Sonar, useDefaultPassword bool) (ClientInterface, error) {
+		sonarClientBuilder: func(ctx context.Context, instance *sonarApi.Sonar, useDefaultPassword bool) (ClientInterface, error) {
 			return &clMock, nil
 		},
 	}
@@ -848,7 +848,7 @@ func TestService_ExposeConfiguration_AddUserToGroupErr(t *testing.T) {
 	clMock.On("AddUserToGroup", nonInteractiveGroupName, jenkinsLogin).Return(errTest)
 
 	service := Service{
-		sonarClientBuilder: func(ctx context.Context, instance *v1alpha1.Sonar, useDefaultPassword bool) (ClientInterface, error) {
+		sonarClientBuilder: func(ctx context.Context, instance *sonarApi.Sonar, useDefaultPassword bool) (ClientInterface, error) {
 			return &clMock, nil
 		},
 	}
@@ -868,7 +868,7 @@ func TestService_ExposeConfiguration_AddPermissionsToUserErr(t *testing.T) {
 	clMock.On("AddPermissionsToUser", jenkinsLogin, admin).Return(errTest)
 
 	service := Service{
-		sonarClientBuilder: func(ctx context.Context, instance *v1alpha1.Sonar, useDefaultPassword bool) (ClientInterface, error) {
+		sonarClientBuilder: func(ctx context.Context, instance *sonarApi.Sonar, useDefaultPassword bool) (ClientInterface, error) {
 			return &clMock, nil
 		},
 	}
@@ -889,7 +889,7 @@ func TestService_ExposeConfiguration_GetUserTokenErr(t *testing.T) {
 	clMock.On("GetUserToken", ctx, jenkinsLogin, strings.Title(jenkinsLogin)).Return(nil, errTest)
 
 	service := Service{
-		sonarClientBuilder: func(ctx context.Context, instance *v1alpha1.Sonar, useDefaultPassword bool) (ClientInterface, error) {
+		sonarClientBuilder: func(ctx context.Context, instance *sonarApi.Sonar, useDefaultPassword bool) (ClientInterface, error) {
 			return &clMock, nil
 		},
 	}
@@ -911,7 +911,7 @@ func TestService_ExposeConfiguration_GenerateUserTokenErr(t *testing.T) {
 	clMock.On("GenerateUserToken", jenkinsLogin).Return(nil, errTest)
 
 	service := Service{
-		sonarClientBuilder: func(ctx context.Context, instance *v1alpha1.Sonar, useDefaultPassword bool) (ClientInterface, error) {
+		sonarClientBuilder: func(ctx context.Context, instance *sonarApi.Sonar, useDefaultPassword bool) (ClientInterface, error) {
 			return &clMock, nil
 		},
 	}
@@ -943,7 +943,7 @@ func TestService_ExposeConfiguration_CreateSecretErr(t *testing.T) {
 
 	service := Service{
 		platformService: &plMock,
-		sonarClientBuilder: func(ctx context.Context, instance *v1alpha1.Sonar, useDefaultPassword bool) (ClientInterface, error) {
+		sonarClientBuilder: func(ctx context.Context, instance *sonarApi.Sonar, useDefaultPassword bool) (ClientInterface, error) {
 			return &clMock, nil
 		},
 	}
@@ -978,7 +978,7 @@ func TestService_ExposeConfiguration_SetOwnerReferenceErr(t *testing.T) {
 
 	service := Service{
 		platformService: &plMock,
-		sonarClientBuilder: func(ctx context.Context, instance *v1alpha1.Sonar, useDefaultPassword bool) (ClientInterface, error) {
+		sonarClientBuilder: func(ctx context.Context, instance *sonarApi.Sonar, useDefaultPassword bool) (ClientInterface, error) {
 			return &clMock, nil
 		},
 	}
@@ -1005,7 +1005,7 @@ func TestService_ExposeConfiguration_CreateJenkinsServiceAccountErr(t *testing.T
 	plMock.On("CreateJenkinsServiceAccount", instance.Namespace, ciUserName, tokenType).Return(errTest)
 
 	service := Service{
-		sonarClientBuilder: func(ctx context.Context, instance *v1alpha1.Sonar, useDefaultPassword bool) (ClientInterface, error) {
+		sonarClientBuilder: func(ctx context.Context, instance *sonarApi.Sonar, useDefaultPassword bool) (ClientInterface, error) {
 			return &clMock, nil
 		},
 		platformService: &plMock,
@@ -1031,7 +1031,7 @@ func TestService_ExposeConfiguration_ParseDefaultTemplateErr(t *testing.T) {
 	plMock.On("CreateJenkinsServiceAccount", instance.Namespace, ciUserName, tokenType).Return(nil)
 
 	service := Service{
-		sonarClientBuilder: func(ctx context.Context, instance *v1alpha1.Sonar, useDefaultPassword bool) (ClientInterface, error) {
+		sonarClientBuilder: func(ctx context.Context, instance *sonarApi.Sonar, useDefaultPassword bool) (ClientInterface, error) {
 			return &clMock, nil
 		},
 		platformService: &plMock,
@@ -1076,7 +1076,7 @@ func TestService_Configure_BadBuilder(t *testing.T) {
 
 	service := Service{
 		platformService: &plMock,
-		sonarClientBuilder: func(ctx context.Context, instance *v1alpha1.Sonar, useDefaultPassword bool) (ClientInterface, error) {
+		sonarClientBuilder: func(ctx context.Context, instance *sonarApi.Sonar, useDefaultPassword bool) (ClientInterface, error) {
 			return nil, errors.New("test")
 		},
 		runningInClusterFunc: returnTrue,
@@ -1105,7 +1105,7 @@ func TestService_Configure_installPluginsErr(t *testing.T) {
 
 	service := Service{
 		platformService: &plMock,
-		sonarClientBuilder: func(ctx context.Context, instance *v1alpha1.Sonar, useDefaultPassword bool) (ClientInterface, error) {
+		sonarClientBuilder: func(ctx context.Context, instance *sonarApi.Sonar, useDefaultPassword bool) (ClientInterface, error) {
 			return &clMock, nil
 		},
 		runningInClusterFunc: returnTrue,
@@ -1136,7 +1136,7 @@ func TestService_Configure_uploadProfileErr(t *testing.T) {
 
 	service := Service{
 		platformService: &plMock,
-		sonarClientBuilder: func(ctx context.Context, instance *v1alpha1.Sonar, useDefaultPassword bool) (ClientInterface, error) {
+		sonarClientBuilder: func(ctx context.Context, instance *sonarApi.Sonar, useDefaultPassword bool) (ClientInterface, error) {
 			return &clMock, nil
 		},
 		runningInClusterFunc: returnTrue,
@@ -1168,7 +1168,7 @@ func TestService_Configure_createQualityGateErr(t *testing.T) {
 
 	service := Service{
 		platformService: &plMock,
-		sonarClientBuilder: func(ctx context.Context, instance *v1alpha1.Sonar, useDefaultPassword bool) (ClientInterface, error) {
+		sonarClientBuilder: func(ctx context.Context, instance *sonarApi.Sonar, useDefaultPassword bool) (ClientInterface, error) {
 			return &clMock, nil
 		},
 		runningInClusterFunc: returnTrue,
@@ -1211,7 +1211,7 @@ func TestService_Configure_setupWebhookErr(t *testing.T) {
 
 	service := Service{
 		platformService: &plMock,
-		sonarClientBuilder: func(ctx context.Context, instance *v1alpha1.Sonar, useDefaultPassword bool) (ClientInterface, error) {
+		sonarClientBuilder: func(ctx context.Context, instance *sonarApi.Sonar, useDefaultPassword bool) (ClientInterface, error) {
 			return &clMock, nil
 		},
 		k8sClient:            client,
@@ -1258,7 +1258,7 @@ func TestService_Configure_configureGeneralSettingsErr(t *testing.T) {
 
 	service := Service{
 		platformService: &plMock,
-		sonarClientBuilder: func(ctx context.Context, instance *v1alpha1.Sonar, useDefaultPassword bool) (ClientInterface, error) {
+		sonarClientBuilder: func(ctx context.Context, instance *sonarApi.Sonar, useDefaultPassword bool) (ClientInterface, error) {
 			return &clMock, nil
 		},
 		k8sClient:            client,
@@ -1308,7 +1308,7 @@ func TestService_Configure_setDefaultPermissionTemplateErr(t *testing.T) {
 
 	service := Service{
 		platformService: &plMock,
-		sonarClientBuilder: func(ctx context.Context, instance *v1alpha1.Sonar, useDefaultPassword bool) (ClientInterface, error) {
+		sonarClientBuilder: func(ctx context.Context, instance *sonarApi.Sonar, useDefaultPassword bool) (ClientInterface, error) {
 			return &clMock, nil
 		},
 		k8sClient:            client,

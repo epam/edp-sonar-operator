@@ -18,7 +18,7 @@ import (
 	"k8s.io/client-go/rest"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
-	"github.com/epam/edp-sonar-operator/v2/pkg/apis/edp/v1alpha1"
+	sonarApi "github.com/epam/edp-sonar-operator/v2/pkg/apis/edp/v1"
 	platformHelper "github.com/epam/edp-sonar-operator/v2/pkg/service/platform/helper"
 	"github.com/epam/edp-sonar-operator/v2/pkg/service/platform/kubernetes"
 )
@@ -115,7 +115,7 @@ func (service *OpenshiftService) GetExternalEndpoint(ctx context.Context, namesp
 		routeScheme, r.Spec.Host, strings.TrimRight(r.Spec.Path, platformHelper.UrlCutset)), nil
 }
 
-func (service *OpenshiftService) GetAvailableDeploymentReplicas(instance *v1alpha1.Sonar) (*int, error) {
+func (service *OpenshiftService) GetAvailableDeploymentReplicas(instance *sonarApi.Sonar) (*int, error) {
 	if os.Getenv(deploymentTypeEnvName) == deploymentConfigsDeploymentType {
 		c, err := service.appClient.DeploymentConfigs(instance.Namespace).Get(context.Background(), instance.Name, metav1.GetOptions{})
 		if err != nil {
