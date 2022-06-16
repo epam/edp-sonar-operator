@@ -11,9 +11,9 @@ import (
 	"os"
 
 	"github.com/dchest/uniuri"
-	jenkinsApi "github.com/epam/edp-jenkins-operator/v2/pkg/apis/v2/v1alpha1"
+	jenkinsApi "github.com/epam/edp-jenkins-operator/v2/pkg/apis/v2/v1"
 	platformHelper "github.com/epam/edp-jenkins-operator/v2/pkg/service/platform/helper"
-	keycloakApi "github.com/epam/edp-keycloak-operator/pkg/apis/v1/v1alpha1"
+	keycloakApi "github.com/epam/edp-keycloak-operator/pkg/apis/v1/v1"
 	"github.com/epam/edp-keycloak-operator/pkg/controller/helper"
 	"github.com/pkg/errors"
 	"golang.org/x/text/cases"

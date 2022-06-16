@@ -8,10 +8,10 @@ import (
 	"testing"
 	"time"
 
-	keycloakApi "github.com/epam/edp-keycloak-operator/pkg/apis/v1/v1alpha1"
+	keycloakApi "github.com/epam/edp-keycloak-operator/pkg/apis/v1/v1"
 	v1 "k8s.io/api/admission/v1"
 
-	jenkinsV1Api "github.com/epam/edp-jenkins-operator/v2/pkg/apis/v2/v1alpha1"
+	jenkinsV1Api "github.com/epam/edp-jenkins-operator/v2/pkg/apis/v2/v1"
 	"github.com/pkg/errors"
 	"github.com/stretchr/testify/assert"
 	tMock "github.com/stretchr/testify/mock"
