@@ -3,6 +3,18 @@
 
 ### Features
 
+- Switch CRDs to v1 version [EPMDEDP-9221](https://jiraeu.epam.com/browse/EPMDEDP-9221)
+
+### Routine
+
+- Update chart annotation [EPMDEDP-8832](https://jiraeu.epam.com/browse/EPMDEDP-8832)
+- Update current development version [EPMDEDP-8832](https://jiraeu.epam.com/browse/EPMDEDP-8832)
+
+
+<a name="v2.11.0"></a>
+## [v2.11.0] - 2022-05-25
+### Features
+
 - implement SonarPermissionTemplate custom resource [EPMDEDP-7390](https://jiraeu.epam.com/browse/EPMDEDP-7390)
 - implement SonarGroup custom resource [EPMDEDP-7391](https://jiraeu.epam.com/browse/EPMDEDP-7391)
 - Use sonar-developers role for OIDC integration [EPMDEDP-7506](https://jiraeu.epam.com/browse/EPMDEDP-7506)
@@ -67,6 +79,11 @@
 
 - Update Arch schema [EPMDEDP-8385](https://jiraeu.epam.com/browse/EPMDEDP-8385)
 - Update documentation section [EPMDEDP-8385](https://jiraeu.epam.com/browse/EPMDEDP-8385)
+
+### BREAKING CHANGE:
+
+
+Ensure keycloak role is aligned when migrating from
 
 
 <a name="v2.10.3"></a>
@@ -146,7 +163,8 @@
 <a name="v2.7.0"></a>
 ## [v2.7.0] - 2021-12-03
 
-[Unreleased]: https://github.com/epam/edp-sonar-operator/compare/v2.10.3...HEAD
+[Unreleased]: https://github.com/epam/edp-sonar-operator/compare/v2.11.0...HEAD
+[v2.11.0]: https://github.com/epam/edp-sonar-operator/compare/v2.10.3...v2.11.0
 [v2.10.3]: https://github.com/epam/edp-sonar-operator/compare/v2.10.2...v2.10.3
 [v2.10.2]: https://github.com/epam/edp-sonar-operator/compare/v2.10.1...v2.10.2
 [v2.10.1]: https://github.com/epam/edp-sonar-operator/compare/v2.10.0...v2.10.1
