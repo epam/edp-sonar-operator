@@ -411,36 +411,8 @@ SonarSpec defines the desired state of Sonar.
         </tr>
     </thead>
     <tbody><tr>
-        <td><b>dbImage</b></td>
-        <td>string</td>
-        <td>
-          <br/>
-        </td>
-        <td>true</td>
-      </tr><tr>
         <td><b><a href="#sonarspecedpspec">edpSpec</a></b></td>
         <td>object</td>
-        <td>
-          <br/>
-        </td>
-        <td>true</td>
-      </tr><tr>
-        <td><b>image</b></td>
-        <td>string</td>
-        <td>
-          <br/>
-        </td>
-        <td>true</td>
-      </tr><tr>
-        <td><b>initImage</b></td>
-        <td>string</td>
-        <td>
-          <br/>
-        </td>
-        <td>true</td>
-      </tr><tr>
-        <td><b>version</b></td>
-        <td>string</td>
         <td>
           <br/>
         </td>
@@ -455,20 +427,6 @@ SonarSpec defines the desired state of Sonar.
       </tr><tr>
         <td><b>defaultPermissionTemplate</b></td>
         <td>string</td>
-        <td>
-          <br/>
-        </td>
-        <td>false</td>
-      </tr><tr>
-        <td><b><a href="#sonarspecimagepullsecretsindex">imagePullSecrets</a></b></td>
-        <td>[]object</td>
-        <td>
-          <br/>
-        </td>
-        <td>false</td>
-      </tr><tr>
-        <td><b><a href="#sonarspecvolumesindex">volumes</a></b></td>
-        <td>[]object</td>
         <td>
           <br/>
         </td>
@@ -500,74 +458,6 @@ SonarSpec defines the desired state of Sonar.
           <br/>
         </td>
         <td>true</td>
-      </tr></tbody>
-</table>
-
-
-### Sonar.spec.imagePullSecrets[index]
-<sup><sup>[↩ Parent](#sonarspec)</sup></sup>
-
-
-
-LocalObjectReference contains enough information to let you locate the referenced object inside the same namespace.
-
-<table>
-    <thead>
-        <tr>
-            <th>Name</th>
-            <th>Type</th>
-            <th>Description</th>
-            <th>Required</th>
-        </tr>
-    </thead>
-    <tbody><tr>
-        <td><b>name</b></td>
-        <td>string</td>
-        <td>
-          Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names TODO: Add other useful fields. apiVersion, kind, uid?<br/>
-        </td>
-        <td>false</td>
-      </tr></tbody>
-</table>
-
-
-### Sonar.spec.volumes[index]
-<sup><sup>[↩ Parent](#sonarspec)</sup></sup>
-
-
-
-
-
-<table>
-    <thead>
-        <tr>
-            <th>Name</th>
-            <th>Type</th>
-            <th>Description</th>
-            <th>Required</th>
-        </tr>
-    </thead>
-    <tbody><tr>
-        <td><b>capacity</b></td>
-        <td>string</td>
-        <td>
-          <br/>
-        </td>
-        <td>true</td>
-      </tr><tr>
-        <td><b>name</b></td>
-        <td>string</td>
-        <td>
-          <br/>
-        </td>
-        <td>true</td>
-      </tr><tr>
-        <td><b>storage_class</b></td>
-        <td>string</td>
-        <td>
-          <br/>
-        </td>
-        <td>false</td>
       </tr></tbody>
 </table>
 
@@ -1076,14 +966,14 @@ Sonar is the Schema for the sonars API.
         </td>
         <td>false</td>
       </tr><tr>
-        <td><b><a href="#sonarspecimagepullsecretsindex-1">imagePullSecrets</a></b></td>
+        <td><b><a href="#sonarspecimagepullsecretsindex">imagePullSecrets</a></b></td>
         <td>[]object</td>
         <td>
           <br/>
         </td>
         <td>false</td>
       </tr><tr>
-        <td><b><a href="#sonarspecvolumesindex-1">volumes</a></b></td>
+        <td><b><a href="#sonarspecvolumesindex">volumes</a></b></td>
         <td>[]object</td>
         <td>
           <br/>

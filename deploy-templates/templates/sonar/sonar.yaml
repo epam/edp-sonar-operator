@@ -7,23 +7,5 @@ spec:
   defaultPermissionTemplate: edp-default
   edpSpec:
     dnsWildcard: {{ .Values.global.dnsWildCard }}
-  type: Sonar
-  initImage: {{.Values.sonar.initImage}}
-  dbImage: {{.Values.sonar.db.image}}
-  image: {{.Values.sonar.image}}
-  version: {{.Values.sonar.version}}
   basePath: "{{.Values.sonar.basePath}}"
-  {{- if .Values.sonar.imagePullSecrets}}
-  imagePullSecrets:
-    {{- range .Values.sonar.imagePullSecrets }}
-    - {{. -}}
-    {{- end -}}
-  {{ end }}
-  volumes:
-    - capacity: {{ .Values.sonar.storage.data.size }}
-      name: data
-      storage_class: {{ .Values.sonar.storage.data.class }}
-    - capacity: {{ .Values.sonar.storage.database.size }}
-      name: db
-      storage_class: {{ .Values.sonar.storage.database.class }}
 {{ end }}

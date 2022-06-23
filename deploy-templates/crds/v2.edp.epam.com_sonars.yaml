@@ -37,8 +37,6 @@ spec:
             properties:
               basePath:
                 type: string
-              dbImage:
-                type: string
               defaultPermissionTemplate:
                 type: string
               edpSpec:
@@ -48,45 +46,8 @@ spec:
                 required:
                 - dnsWildcard
                 type: object
-              image:
-                type: string
-              imagePullSecrets:
-                items:
-                  description: LocalObjectReference contains enough information to
-                    let you locate the referenced object inside the same namespace.
-                  properties:
-                    name:
-                      description: 'Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
-                        TODO: Add other useful fields. apiVersion, kind, uid?'
-                      type: string
-                  type: object
-                nullable: true
-                type: array
-              initImage:
-                type: string
-              version:
-                type: string
-              volumes:
-                items:
-                  properties:
-                    capacity:
-                      type: string
-                    name:
-                      type: string
-                    storage_class:
-                      type: string
-                  required:
-                  - capacity
-                  - name
-                  type: object
-                nullable: true
-                type: array
             required:
-            - dbImage
             - edpSpec
-            - image
-            - initImage
-            - version
             type: object
           status:
             description: SonarStatus defines the observed state of Sonar.

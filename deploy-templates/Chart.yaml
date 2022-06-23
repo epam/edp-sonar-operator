@@ -59,21 +59,9 @@ annotations:
         name: sonar
       spec:
         basePath: ''
-        dbImage: postgres:9.6
         defaultPermissionTemplate: edp-default
         edpSpec:
           dnsWildcard: eks-sandbox.com
-        image: sonarqube
-        initImage: busybox:1.35.0
-        type: Sonar
-        version: 8.9.8-community
-        volumes:
-          - capacity: 1Gi
-            name: data
-            storage_class: gp2
-          - capacity: 1Gi
-            name: db
-            storage_class: gp2
     - apiVersion: v2.edp.epam.com/v1
       kind: SonarGroup
       metadata:

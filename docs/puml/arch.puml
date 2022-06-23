@@ -9,12 +9,8 @@ skinparam class {
 package sonar-operator {
     class Sonar {
         -- spec --
-        String image
-        String version
         String basePath
-        []SonarVolumes volumes
         EdpSpec edpSpec
-        []LocalObjectReference imagePullSecrets
         -- status --
         Boolean available
         Date lastTimeUpdated
@@ -25,13 +21,6 @@ package sonar-operator {
     EdpSpec "1" *-- "1" Sonar
     class EdpSpec <internal> {
         String dnsWildcard
-    }
-
-    SonarVolumes "0..*" *-- "1" Sonar
-    class SonarVolumes <internal> {
-        String name
-        String storageClass
-        String capacity
     }
 
     SonarGroup "1" *-- "1" Sonar: sonarOwner
@@ -70,7 +59,6 @@ package sonar-operator {
 class LocalObjectReference {
     String name
 }
-Sonar -d-> LocalObjectReference : imagePullSecrets
 JenkinsServiceAccount <-d- Sonar : creates sonar-ciuser-token
 JenkinsScript <-d- Sonar : creates sonar-jenkins-plugin-config
 EDPComponent <-d- Sonar : creates

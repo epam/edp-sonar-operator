@@ -1,39 +1,18 @@
 package v1
 
 import (
-	coreV1Api "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 // SonarSpec defines the desired state of Sonar.
 type SonarSpec struct {
-	Version   string  `json:"version"`
-	Image     string  `json:"image"`
-	InitImage string  `json:"initImage"`
-	DBImage   string  `json:"dbImage"`
-	EdpSpec   EdpSpec `json:"edpSpec"`
+	EdpSpec EdpSpec `json:"edpSpec"`
 
 	// +optional
 	BasePath string `json:"basePath,omitempty"`
 
 	// +optional
-	// +nullable
-	Volumes []SonarVolumes `json:"volumes,omitempty"`
-
-	// +optional
-	// +nullable
-	ImagePullSecrets []coreV1Api.LocalObjectReference `json:"imagePullSecrets,omitempty"`
-
-	// +optional
 	DefaultPermissionTemplate string `json:"defaultPermissionTemplate,omitempty"`
-}
-
-type SonarVolumes struct {
-	Name     string `json:"name"`
-	Capacity string `json:"capacity"`
-
-	// +optional
-	StorageClass string `json:"storage_class,omitempty"`
 }
 
 type EdpSpec struct {
