@@ -3,7 +3,7 @@ global:
   platform: "openshift"
   dnsWildCard: "example.com"
   openshift:
-    deploymentType: "deploymentConfigs"
+    deploymentType: "deployments"
 
 name: sonar-operator
 annotations: {}
