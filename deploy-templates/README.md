@@ -59,11 +59,11 @@ A Helm chart for EDP Sonar Operator
 | sonar.name | string | `"sonar"` |  |
 | sonar.nodeSelector | object | `{}` |  |
 | sonar.plugins.install[0] | string | `"https://github.com/vaulttec/sonar-auth-oidc/releases/download/v2.0.0/sonar-auth-oidc-plugin-2.0.0.jar"` |  |
-| sonar.plugins.install[1] | string | `"https://github.com/checkstyle/sonar-checkstyle/releases/download/9.0.1/checkstyle-sonar-plugin-9.0.1.jar"` |  |
-| sonar.plugins.install[2] | string | `"https://github.com/spotbugs/sonar-findbugs/releases/download/4.0.4/sonar-findbugs-plugin-4.0.4.jar"` |  |
-| sonar.plugins.install[3] | string | `"https://github.com/jensgerdes/sonar-pmd/releases/download/3.3.1/sonar-pmd-plugin-3.3.1.jar"` |  |
-| sonar.plugins.install[4] | string | `"https://github.com/sbaudoin/sonar-ansible/releases/download/v2.4.0/sonar-ansible-plugin-2.4.0.jar"` |  |
-| sonar.plugins.install[5] | string | `"https://github.com/sbaudoin/sonar-yaml/releases/download/v1.6.0/sonar-yaml-plugin-1.6.0.jar"` |  |
+| sonar.plugins.install[1] | string | `"https://github.com/checkstyle/sonar-checkstyle/releases/download/10.2/checkstyle-sonar-plugin-10.2.jar"` |  |
+| sonar.plugins.install[2] | string | `"https://github.com/spotbugs/sonar-findbugs/releases/download/4.2.0/sonar-findbugs-plugin-4.2.0.jar"` |  |
+| sonar.plugins.install[3] | string | `"https://github.com/jborgers/sonar-pmd/releases/download/3.4.0/sonar-pmd-plugin-3.4.0.jar"` |  |
+| sonar.plugins.install[4] | string | `"https://github.com/sbaudoin/sonar-ansible/releases/download/v2.5.1/sonar-ansible-plugin-2.5.1.jar"` |  |
+| sonar.plugins.install[5] | string | `"https://github.com/sbaudoin/sonar-yaml/releases/download/v1.7.0/sonar-yaml-plugin-1.7.0.jar"` |  |
 | sonar.plugins.install[6] | string | `"https://github.com/Inform-Software/sonar-groovy/releases/download/1.8/sonar-groovy-plugin-1.8.jar"` |  |
 | sonar.resources.limits.memory | string | `"3Gi"` |  |
 | sonar.resources.requests.cpu | string | `"100m"` |  |
@@ -74,6 +74,6 @@ A Helm chart for EDP Sonar Operator
 | sonar.storage.database.class | string | `"gp2"` |  |
 | sonar.storage.database.size | string | `"1Gi"` |  |
 | sonar.tolerations | list | `[]` |  |
-| sonar.version | string | `"8.9.8-community"` |  |
+| sonar.version | string | `"8.9.9-community"` |  |
 | tolerations | list | `[]` |  |
 

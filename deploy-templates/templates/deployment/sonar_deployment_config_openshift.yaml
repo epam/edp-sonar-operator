@@ -99,7 +99,7 @@ spec:
       initContainers:
       {{- if .Values.sonar.plugins.install }}
         - name: install-plugins
-          image: {{ default "epamedp/alpine-wget:1.0.0" .Values.sonar.plugins.image }}
+          image: {{ default "epamedp/alpine-wget:1.0.3" .Values.sonar.plugins.image }}
           imagePullPolicy: {{ .Values.sonar.imagePullPolicy }}
           command: ["sh",
             "-e",
