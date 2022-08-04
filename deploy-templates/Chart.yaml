@@ -25,16 +25,16 @@ annotations:
   artifacthub.io/images: |
     - name: sonar-operator:2.11.0
       image: epamedp/sonar-operator:2.11.0
-    - name: sonarqube:8.9.9-community
-      image: sonarqube:8.9.9-community
+    - name: sonarqube:8.9.8-community
+      image: sonarqube:8.9.8-community
     - name: postgres:9.6
       image: postgres:9.6
-    - name: epamedp/alpine-wget:1.0.3
-      image: epamedp/alpine-wget:1.0.3
+    - name: epamedp/alpine-wget:1.0.0
+      image: epamedp/alpine-wget:1.0.0
     - name: busybox:1.35.0
       image: busybox:1.35.0
-    - name: alpine:3.16.1
-      image: alpine:3.16.1
+    - name: alpine:3.15.4
+      image: alpine:3.15.4
   artifacthub.io/operatorCapabilities: Full Lifecycle
   artifacthub.io/crds: |
     - kind: Sonar
