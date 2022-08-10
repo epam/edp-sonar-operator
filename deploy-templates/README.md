@@ -27,8 +27,8 @@ A Helm chart for EDP Sonar Operator
 | global.edpName | string | `""` |  |
 | global.openshift.deploymentType | string | `"deployments"` |  |
 | global.platform | string | `"openshift"` |  |
-| image.name | string | `"epamedp/sonar-operator"` |  |
-| image.version | string | `nil` |  |
+| image.repository | string | `"epamedp/sonar-operator"` |  |
+| image.tag | string | `nil` |  |
 | imagePullPolicy | string | `"IfNotPresent"` |  |
 | name | string | `"sonar-operator"` |  |
 | nodeSelector | object | `{}` |  |

@@ -11,9 +11,9 @@ nodeSelector: {}
 tolerations: []
 affinity: {}
 image:
-  name: epamedp/sonar-operator
+  repository: epamedp/sonar-operator
   # if not defined then .Chart.AppVersion is used
-  version:
+  tag:
 imagePullPolicy: "IfNotPresent"
 
 resources:
