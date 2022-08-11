@@ -2,12 +2,9 @@ package kubernetes
 
 import (
 	"context"
-	"fmt"
 	"strings"
 	"testing"
 
-	edpCompApi "github.com/epam/edp-component-operator/pkg/apis/v1/v1"
-	jenkinsV1Api "github.com/epam/edp-jenkins-operator/v2/pkg/apis/v2/v1"
 	"github.com/pkg/errors"
 	"github.com/stretchr/testify/assert"
 	tMock "github.com/stretchr/testify/mock"
@@ -21,6 +18,9 @@ import (
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/client-go/rest"
 	"sigs.k8s.io/controller-runtime/pkg/client/fake"
+
+	edpCompApi "github.com/epam/edp-component-operator/pkg/apis/v1/v1"
+	jenkinsV1Api "github.com/epam/edp-jenkins-operator/v2/pkg/apis/v2/v1"
 
 	kMock "github.com/epam/edp-sonar-operator/v2/mocks/k8s"
 	sonarApi "github.com/epam/edp-sonar-operator/v2/pkg/apis/edp/v1"
@@ -118,7 +118,7 @@ func TestK8SService_GetSecretData(t *testing.T) {
 }
 
 func TestK8SService_CreateSecret_GetErr(t *testing.T) {
-	data := map[string][]byte{"data": []byte("data")}
+	data := map[string][]byte{"data": []byte("crazy-random-data for secret")}
 	errTest := errors.New("Test")
 	coreClient := kMock.K8SClusterClient{}
 	secrets := &kMock.SecretInterface{}
@@ -449,7 +449,6 @@ func TestK8SService_CreateEDPComponentIfNotExist_GetErr(t *testing.T) {
 	}
 	err := service.CreateEDPComponentIfNotExist(&sonarCR, host, icon)
 	assert.Error(t, err)
-	fmt.Println(err.Error())
 	assert.True(t, strings.Contains(err.Error(), "failed to get edp component"))
 }
 

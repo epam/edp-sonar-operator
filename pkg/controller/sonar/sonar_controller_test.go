@@ -7,7 +7,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/epam/edp-common/pkg/mock"
 	"github.com/go-logr/logr"
 	"github.com/pkg/errors"
 	"github.com/stretchr/testify/assert"
@@ -18,6 +17,8 @@ import (
 	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/client/fake"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
+
+	"github.com/epam/edp-common/pkg/mock"
 
 	pMock "github.com/epam/edp-sonar-operator/v2/mocks/platform"
 	sMock "github.com/epam/edp-sonar-operator/v2/mocks/service"

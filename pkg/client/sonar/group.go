@@ -41,7 +41,7 @@ func (sc Client) GetGroup(ctx context.Context, groupName string) (*Group, error)
 		}
 	}
 
-	return nil, ErrNotFound("group not found")
+	return nil, NotFoundError("group not found")
 }
 
 type createGroupResponse struct {

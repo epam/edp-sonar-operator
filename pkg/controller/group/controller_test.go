@@ -6,7 +6,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/epam/edp-common/pkg/mock"
 	"github.com/go-logr/logr"
 	"github.com/pkg/errors"
 	"github.com/stretchr/testify/assert"
@@ -17,6 +16,8 @@ import (
 	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/client/fake"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
+
+	"github.com/epam/edp-common/pkg/mock"
 
 	cMock "github.com/epam/edp-sonar-operator/v2/mocks/client"
 	sMock "github.com/epam/edp-sonar-operator/v2/mocks/service"
@@ -229,7 +230,7 @@ func TestReconcile_Reconcile_tryReconcile_CreateGroupErr(t *testing.T) {
 
 	errTest := errors.New("test")
 	service.On("ClientForChild", ctx, &instance).Return(sonarClientMock, nil)
-	sonarClientMock.On("GetGroup", ctx, instance.Spec.Name).Return(nil, sonarClient.ErrNotFound("test"))
+	sonarClientMock.On("GetGroup", ctx, instance.Spec.Name).Return(nil, sonarClient.NotFoundError("test"))
 	sonarClientMock.On("CreateGroup", ctx, &sonarClient.Group{Name: instance.Spec.Name, Description: instance.Spec.Description}).Return(errTest)
 
 	controller := Reconcile{

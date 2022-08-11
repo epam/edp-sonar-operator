@@ -5,8 +5,6 @@ import (
 	"fmt"
 	"strings"
 
-	edpCompApi "github.com/epam/edp-component-operator/pkg/apis/v1/v1"
-	jenkinsV1Api "github.com/epam/edp-jenkins-operator/v2/pkg/apis/v2/v1"
 	"github.com/pkg/errors"
 	coreV1Api "k8s.io/api/core/v1"
 	k8serr "k8s.io/apimachinery/pkg/api/errors"
@@ -20,6 +18,9 @@ import (
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
+
+	edpCompApi "github.com/epam/edp-component-operator/pkg/apis/v1/v1"
+	jenkinsV1Api "github.com/epam/edp-jenkins-operator/v2/pkg/apis/v2/v1"
 
 	sonarApi "github.com/epam/edp-sonar-operator/v2/pkg/apis/edp/v1"
 	"github.com/epam/edp-sonar-operator/v2/pkg/service/platform/helper"

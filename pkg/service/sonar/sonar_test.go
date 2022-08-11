@@ -8,17 +8,19 @@ import (
 	"testing"
 	"time"
 
-	keycloakApi "github.com/epam/edp-keycloak-operator/pkg/apis/v1/v1"
-	v1 "k8s.io/api/admission/v1"
-
-	jenkinsV1Api "github.com/epam/edp-jenkins-operator/v2/pkg/apis/v2/v1"
 	"github.com/pkg/errors"
 	"github.com/stretchr/testify/assert"
 	tMock "github.com/stretchr/testify/mock"
+	"golang.org/x/text/cases"
+	"golang.org/x/text/language"
+	admissionV1 "k8s.io/api/admission/v1"
 	coreV1Api "k8s.io/api/core/v1"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	metaV1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client/fake"
+
+	jenkinsV1Api "github.com/epam/edp-jenkins-operator/v2/pkg/apis/v2/v1"
+	keycloakApi "github.com/epam/edp-keycloak-operator/pkg/apis/v1/v1"
 
 	cMock "github.com/epam/edp-sonar-operator/v2/mocks/client"
 	pMock "github.com/epam/edp-sonar-operator/v2/mocks/platform"
@@ -37,7 +39,7 @@ const (
 
 func createSonarInstance() sonarApi.Sonar {
 	return sonarApi.Sonar{
-		ObjectMeta: metav1.ObjectMeta{
+		ObjectMeta: metaV1.ObjectMeta{
 			Name:      main,
 			Namespace: namespace,
 		},
@@ -68,7 +70,7 @@ func returnTrue() bool {
 }
 
 func TestSonarServiceImpl_DeleteResource(t *testing.T) {
-	secret := coreV1Api.Secret{ObjectMeta: metav1.ObjectMeta{Name: "name", Namespace: "ns"}}
+	secret := coreV1Api.Secret{ObjectMeta: metaV1.ObjectMeta{Name: "name", Namespace: "ns"}}
 	s := Service{
 		k8sClient: fake.NewClientBuilder().WithRuntimeObjects(&secret).Build(),
 	}
@@ -79,7 +81,7 @@ func TestSonarServiceImpl_DeleteResource(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	secret.DeletionTimestamp = &metav1.Time{Time: time.Now()}
+	secret.DeletionTimestamp = &metaV1.Time{Time: time.Now()}
 	secret.Finalizers = []string{"fin"}
 	s.k8sClient = fake.NewClientBuilder().WithRuntimeObjects(&secret).Build()
 
@@ -103,11 +105,11 @@ func TestServiceMock_Configure(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	snr := sonarApi.Sonar{ObjectMeta: metav1.ObjectMeta{
+	snr := sonarApi.Sonar{ObjectMeta: metaV1.ObjectMeta{
 		Namespace: "ns", Name: "snr1",
 	}, Spec: sonarApi.SonarSpec{DefaultPermissionTemplate: "tpl123"}}
 
-	jns := jenkinsV1Api.Jenkins{Spec: jenkinsV1Api.JenkinsSpec{BasePath: "zabagdo"}, ObjectMeta: metav1.ObjectMeta{
+	jns := jenkinsV1Api.Jenkins{Spec: jenkinsV1Api.JenkinsSpec{BasePath: "zabagdo"}, ObjectMeta: metaV1.ObjectMeta{
 		Name: "js1", Namespace: snr.Namespace,
 	}}
 	plMock := pMock.Service{}
@@ -135,8 +137,8 @@ func TestServiceMock_Configure(t *testing.T) {
 	clMock.On("UploadProfile", "EDP way", defaultProfileAbsolutePath).
 		Return("profile123", nil)
 	clMock.On("CreateQualityGate", "EDP way", qualityGates()).Return("qg1", nil)
-	clMock.On("GetGroup", ctx, nonInteractiveGroupName).Return(nil, sonarClient.ErrNotFound("not found"))
-	clMock.On("GetGroup", ctx, sonarDevelopersGroupName).Return(nil, sonarClient.ErrNotFound("not found"))
+	clMock.On("GetGroup", ctx, nonInteractiveGroupName).Return(nil, sonarClient.NotFoundError("not found"))
+	clMock.On("GetGroup", ctx, sonarDevelopersGroupName).Return(nil, sonarClient.NotFoundError("not found"))
 	clMock.On("CreateGroup", ctx, &sonarClient.Group{Name: nonInteractiveGroupName}).Return(nil)
 	clMock.On("CreateGroup", ctx, &sonarClient.Group{Name: sonarDevelopersGroupName}).Return(nil)
 	clMock.On("AddPermissionsToGroup", nonInteractiveGroupName, "scan").Return(nil)
@@ -168,11 +170,11 @@ func TestServiceMock_Configure_FailGetGroupForCreation(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	snr := sonarApi.Sonar{ObjectMeta: metav1.ObjectMeta{
+	snr := sonarApi.Sonar{ObjectMeta: metaV1.ObjectMeta{
 		Namespace: "ns", Name: "snr1",
 	}, Spec: sonarApi.SonarSpec{DefaultPermissionTemplate: "tpl123"}}
 
-	jns := jenkinsV1Api.Jenkins{Spec: jenkinsV1Api.JenkinsSpec{BasePath: "zabagdo"}, ObjectMeta: metav1.ObjectMeta{
+	jns := jenkinsV1Api.Jenkins{Spec: jenkinsV1Api.JenkinsSpec{BasePath: "zabagdo"}, ObjectMeta: metaV1.ObjectMeta{
 		Name: "js1", Namespace: snr.Namespace,
 	}}
 	plMock := pMock.Service{}
@@ -201,7 +203,7 @@ func TestServiceMock_Configure_FailGetGroupForCreation(t *testing.T) {
 	clMock.On("UploadProfile", "EDP way", defaultProfileAbsolutePath).
 		Return("profile123", nil)
 	clMock.On("CreateQualityGate", "EDP way", qualityGates()).Return("qg1", nil)
-	clMock.On("GetGroup", ctx, nonInteractiveGroupName).Return(nil, sonarClient.ErrNotFound("not found"))
+	clMock.On("GetGroup", ctx, nonInteractiveGroupName).Return(nil, sonarClient.NotFoundError("not found"))
 	clMock.On("GetGroup", ctx, sonarDevelopersGroupName).Return(nil, errors.New("FATAL:GETGROUPS"))
 	clMock.On("CreateGroup", ctx, &sonarClient.Group{Name: nonInteractiveGroupName}).Return(nil)
 
@@ -225,11 +227,11 @@ func TestServiceMock_Configure_FailCreateGroup(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	snr := sonarApi.Sonar{ObjectMeta: metav1.ObjectMeta{
+	snr := sonarApi.Sonar{ObjectMeta: metaV1.ObjectMeta{
 		Namespace: "ns", Name: "snr1",
 	}, Spec: sonarApi.SonarSpec{DefaultPermissionTemplate: "tpl123"}}
 
-	jns := jenkinsV1Api.Jenkins{Spec: jenkinsV1Api.JenkinsSpec{BasePath: "zabagdo"}, ObjectMeta: metav1.ObjectMeta{
+	jns := jenkinsV1Api.Jenkins{Spec: jenkinsV1Api.JenkinsSpec{BasePath: "zabagdo"}, ObjectMeta: metaV1.ObjectMeta{
 		Name: "js1", Namespace: snr.Namespace,
 	}}
 	plMock := pMock.Service{}
@@ -258,8 +260,8 @@ func TestServiceMock_Configure_FailCreateGroup(t *testing.T) {
 	clMock.On("UploadProfile", "EDP way", defaultProfileAbsolutePath).
 		Return("profile123", nil)
 	clMock.On("CreateQualityGate", "EDP way", qualityGates()).Return("qg1", nil)
-	clMock.On("GetGroup", ctx, nonInteractiveGroupName).Return(nil, sonarClient.ErrNotFound("not found"))
-	clMock.On("GetGroup", ctx, sonarDevelopersGroupName).Return(nil, sonarClient.ErrNotFound("not found"))
+	clMock.On("GetGroup", ctx, nonInteractiveGroupName).Return(nil, sonarClient.NotFoundError("not found"))
+	clMock.On("GetGroup", ctx, sonarDevelopersGroupName).Return(nil, sonarClient.NotFoundError("not found"))
 	clMock.On("CreateGroup", ctx, &sonarClient.Group{Name: nonInteractiveGroupName}).Return(errors.New("FATAL:CREATE"))
 
 	err := s.Configure(ctx, &snr)
@@ -282,11 +284,11 @@ func TestServiceMock_Configure_FailAddPermissions(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	snr := sonarApi.Sonar{ObjectMeta: metav1.ObjectMeta{
+	snr := sonarApi.Sonar{ObjectMeta: metaV1.ObjectMeta{
 		Namespace: "ns", Name: "snr1",
 	}, Spec: sonarApi.SonarSpec{DefaultPermissionTemplate: "tpl123"}}
 
-	jns := jenkinsV1Api.Jenkins{Spec: jenkinsV1Api.JenkinsSpec{BasePath: "zabagdo"}, ObjectMeta: metav1.ObjectMeta{
+	jns := jenkinsV1Api.Jenkins{Spec: jenkinsV1Api.JenkinsSpec{BasePath: "zabagdo"}, ObjectMeta: metaV1.ObjectMeta{
 		Name: "js1", Namespace: snr.Namespace,
 	}}
 	plMock := pMock.Service{}
@@ -315,8 +317,8 @@ func TestServiceMock_Configure_FailAddPermissions(t *testing.T) {
 	clMock.On("UploadProfile", "EDP way", defaultProfileAbsolutePath).
 		Return("profile123", nil)
 	clMock.On("CreateQualityGate", "EDP way", qualityGates()).Return("qg1", nil)
-	clMock.On("GetGroup", ctx, nonInteractiveGroupName).Return(nil, sonarClient.ErrNotFound("not found"))
-	clMock.On("GetGroup", ctx, sonarDevelopersGroupName).Return(nil, sonarClient.ErrNotFound("not found"))
+	clMock.On("GetGroup", ctx, nonInteractiveGroupName).Return(nil, sonarClient.NotFoundError("not found"))
+	clMock.On("GetGroup", ctx, sonarDevelopersGroupName).Return(nil, sonarClient.NotFoundError("not found"))
 	clMock.On("CreateGroup", ctx, &sonarClient.Group{Name: nonInteractiveGroupName}).Return(nil)
 	clMock.On("CreateGroup", ctx, &sonarClient.Group{Name: sonarDevelopersGroupName}).Return(nil)
 	clMock.On("AddPermissionsToGroup", nonInteractiveGroupName, "scan").Return(errors.New("FATAL:ADDPERM"))
@@ -342,7 +344,7 @@ func TestService_Integration_BadBuilder(t *testing.T) {
 
 func TestService_Integration_getKeycloakRealmErr(t *testing.T) {
 	scheme := runtime.NewScheme()
-	scheme.AddKnownTypes(v1.SchemeGroupVersion, &sonarApi.Sonar{})
+	scheme.AddKnownTypes(admissionV1.SchemeGroupVersion, &sonarApi.Sonar{})
 
 	client := fake.NewClientBuilder().WithScheme(scheme).WithObjects().Build()
 
@@ -361,9 +363,9 @@ func TestService_Integration_getKeycloakRealmErr(t *testing.T) {
 
 func TestService_Integration_NilRealmAnnotation(t *testing.T) {
 	scheme := runtime.NewScheme()
-	scheme.AddKnownTypes(v1.SchemeGroupVersion, &sonarApi.Sonar{}, &keycloakApi.KeycloakRealm{})
+	scheme.AddKnownTypes(admissionV1.SchemeGroupVersion, &sonarApi.Sonar{}, &keycloakApi.KeycloakRealm{})
 	keycloakRealmInstance := keycloakApi.KeycloakRealm{
-		ObjectMeta: metav1.ObjectMeta{
+		ObjectMeta: metaV1.ObjectMeta{
 			Name:      main,
 			Namespace: namespace,
 		},
@@ -386,9 +388,9 @@ func TestService_Integration_NilRealmAnnotation(t *testing.T) {
 
 func TestService_Integration_EmptyAnnotationErr(t *testing.T) {
 	scheme := runtime.NewScheme()
-	scheme.AddKnownTypes(v1.SchemeGroupVersion, &sonarApi.Sonar{}, &keycloakApi.KeycloakRealm{})
+	scheme.AddKnownTypes(admissionV1.SchemeGroupVersion, &sonarApi.Sonar{}, &keycloakApi.KeycloakRealm{})
 	keycloakRealmInstance := keycloakApi.KeycloakRealm{
-		ObjectMeta: metav1.ObjectMeta{
+		ObjectMeta: metaV1.ObjectMeta{
 			Name:        main,
 			Namespace:   namespace,
 			Annotations: map[string]string{annotation: ""},
@@ -399,7 +401,7 @@ func TestService_Integration_EmptyAnnotationErr(t *testing.T) {
 
 	ctx := context.Background()
 	instance := sonarApi.Sonar{
-		ObjectMeta: metav1.ObjectMeta{
+		ObjectMeta: metaV1.ObjectMeta{
 			Name:      main,
 			Namespace: namespace,
 		},
@@ -418,7 +420,7 @@ func TestService_Integration_EmptyAnnotationErr(t *testing.T) {
 
 func TestService_Integration_ConfigureGeneralSettingsErr(t *testing.T) {
 	scheme := runtime.NewScheme()
-	scheme.AddKnownTypes(v1.SchemeGroupVersion, &sonarApi.Sonar{}, &keycloakApi.KeycloakRealm{})
+	scheme.AddKnownTypes(admissionV1.SchemeGroupVersion, &sonarApi.Sonar{}, &keycloakApi.KeycloakRealm{})
 	data := map[string]string{"issuer": name}
 	raw, err := json.Marshal(data)
 	if err != nil {
@@ -426,7 +428,7 @@ func TestService_Integration_ConfigureGeneralSettingsErr(t *testing.T) {
 	}
 
 	keycloakRealmInstance := keycloakApi.KeycloakRealm{
-		ObjectMeta: metav1.ObjectMeta{
+		ObjectMeta: metaV1.ObjectMeta{
 			Name:        main,
 			Namespace:   namespace,
 			Annotations: map[string]string{annotation: string(raw)},
@@ -455,7 +457,7 @@ func TestService_Integration_ConfigureGeneralSettingsErr(t *testing.T) {
 
 func TestService_Integration_EmptyAnnotation(t *testing.T) {
 	scheme := runtime.NewScheme()
-	scheme.AddKnownTypes(v1.SchemeGroupVersion, &sonarApi.Sonar{}, &keycloakApi.KeycloakRealm{})
+	scheme.AddKnownTypes(admissionV1.SchemeGroupVersion, &sonarApi.Sonar{}, &keycloakApi.KeycloakRealm{})
 	data := map[string]string{"issuer": ""}
 	raw, err := json.Marshal(data)
 	if err != nil {
@@ -463,7 +465,7 @@ func TestService_Integration_EmptyAnnotation(t *testing.T) {
 	}
 
 	keycloakRealmInstance := keycloakApi.KeycloakRealm{
-		ObjectMeta: metav1.ObjectMeta{
+		ObjectMeta: metaV1.ObjectMeta{
 			Name:        main,
 			Namespace:   namespace,
 			Annotations: map[string]string{annotation: string(raw)},
@@ -489,7 +491,7 @@ func TestService_Integration_EmptyAnnotation(t *testing.T) {
 
 func TestService_Integration_GetExternalEndpointErr(t *testing.T) {
 	scheme := runtime.NewScheme()
-	scheme.AddKnownTypes(v1.SchemeGroupVersion, &sonarApi.Sonar{}, &keycloakApi.KeycloakRealm{})
+	scheme.AddKnownTypes(admissionV1.SchemeGroupVersion, &sonarApi.Sonar{}, &keycloakApi.KeycloakRealm{})
 
 	client := fake.NewClientBuilder().WithScheme(scheme).WithObjects().Build()
 	errTest := errors.New("test")
@@ -514,7 +516,7 @@ func TestService_Integration_GetExternalEndpointErr(t *testing.T) {
 
 func TestService_Integration_ConfigureGeneralSettingsErr2(t *testing.T) {
 	scheme := runtime.NewScheme()
-	scheme.AddKnownTypes(v1.SchemeGroupVersion, &sonarApi.Sonar{}, &keycloakApi.KeycloakRealm{})
+	scheme.AddKnownTypes(admissionV1.SchemeGroupVersion, &sonarApi.Sonar{}, &keycloakApi.KeycloakRealm{})
 
 	client := fake.NewClientBuilder().WithScheme(scheme).WithObjects().Build()
 	errTest := errors.New("test")
@@ -541,7 +543,7 @@ func TestService_Integration_ConfigureGeneralSettingsErr2(t *testing.T) {
 
 func TestService_Integration_getKeycloakClientErr(t *testing.T) {
 	scheme := runtime.NewScheme()
-	scheme.AddKnownTypes(v1.SchemeGroupVersion, &sonarApi.Sonar{}, &keycloakApi.KeycloakRealm{})
+	scheme.AddKnownTypes(admissionV1.SchemeGroupVersion, &sonarApi.Sonar{}, &keycloakApi.KeycloakRealm{})
 
 	client := fake.NewClientBuilder().WithScheme(scheme).WithObjects().Build()
 
@@ -566,7 +568,7 @@ func TestService_Integration_getKeycloakClientErr(t *testing.T) {
 
 func TestService_Integration_ConfigureGeneralSettingsErr3(t *testing.T) {
 	scheme := runtime.NewScheme()
-	scheme.AddKnownTypes(v1.SchemeGroupVersion, &sonarApi.Sonar{}, &keycloakApi.KeycloakRealm{}, &keycloakApi.KeycloakClient{})
+	scheme.AddKnownTypes(admissionV1.SchemeGroupVersion, &sonarApi.Sonar{}, &keycloakApi.KeycloakRealm{}, &keycloakApi.KeycloakClient{})
 
 	client := fake.NewClientBuilder().WithScheme(scheme).WithObjects().Build()
 
@@ -594,7 +596,7 @@ func TestService_Integration_ConfigureGeneralSettingsErr3(t *testing.T) {
 
 func TestService_Integration_ConfigureGeneralSettingsErr4(t *testing.T) {
 	scheme := runtime.NewScheme()
-	scheme.AddKnownTypes(v1.SchemeGroupVersion, &sonarApi.Sonar{}, &keycloakApi.KeycloakRealm{}, &keycloakApi.KeycloakClient{})
+	scheme.AddKnownTypes(admissionV1.SchemeGroupVersion, &sonarApi.Sonar{}, &keycloakApi.KeycloakRealm{}, &keycloakApi.KeycloakClient{})
 
 	client := fake.NewClientBuilder().WithScheme(scheme).WithObjects().Build()
 
@@ -623,7 +625,7 @@ func TestService_Integration_ConfigureGeneralSettingsErr4(t *testing.T) {
 
 func TestService_Integration_ConfigureGeneralSettingsErr5(t *testing.T) {
 	scheme := runtime.NewScheme()
-	scheme.AddKnownTypes(v1.SchemeGroupVersion, &sonarApi.Sonar{}, &keycloakApi.KeycloakRealm{}, &keycloakApi.KeycloakClient{})
+	scheme.AddKnownTypes(admissionV1.SchemeGroupVersion, &sonarApi.Sonar{}, &keycloakApi.KeycloakRealm{}, &keycloakApi.KeycloakClient{})
 
 	client := fake.NewClientBuilder().WithScheme(scheme).WithObjects().Build()
 
@@ -653,7 +655,7 @@ func TestService_Integration_ConfigureGeneralSettingsErr5(t *testing.T) {
 
 func TestService_Integration_ConfigureGeneralSettingsErr6(t *testing.T) {
 	scheme := runtime.NewScheme()
-	scheme.AddKnownTypes(v1.SchemeGroupVersion, &sonarApi.Sonar{}, &keycloakApi.KeycloakRealm{}, &keycloakApi.KeycloakClient{})
+	scheme.AddKnownTypes(admissionV1.SchemeGroupVersion, &sonarApi.Sonar{}, &keycloakApi.KeycloakRealm{}, &keycloakApi.KeycloakClient{})
 
 	client := fake.NewClientBuilder().WithScheme(scheme).WithObjects().Build()
 
@@ -684,7 +686,7 @@ func TestService_Integration_ConfigureGeneralSettingsErr6(t *testing.T) {
 
 func TestService_Integration_SetProjectsDefaultVisibilityErr(t *testing.T) {
 	scheme := runtime.NewScheme()
-	scheme.AddKnownTypes(v1.SchemeGroupVersion, &sonarApi.Sonar{}, &keycloakApi.KeycloakRealm{}, &keycloakApi.KeycloakClient{})
+	scheme.AddKnownTypes(admissionV1.SchemeGroupVersion, &sonarApi.Sonar{}, &keycloakApi.KeycloakRealm{}, &keycloakApi.KeycloakClient{})
 
 	client := fake.NewClientBuilder().WithScheme(scheme).WithObjects().Build()
 
@@ -716,7 +718,7 @@ func TestService_Integration_SetProjectsDefaultVisibilityErr(t *testing.T) {
 
 func TestService_Integration(t *testing.T) {
 	scheme := runtime.NewScheme()
-	scheme.AddKnownTypes(v1.SchemeGroupVersion, &sonarApi.Sonar{}, &keycloakApi.KeycloakRealm{}, &keycloakApi.KeycloakClient{})
+	scheme.AddKnownTypes(admissionV1.SchemeGroupVersion, &sonarApi.Sonar{}, &keycloakApi.KeycloakRealm{}, &keycloakApi.KeycloakClient{})
 
 	client := fake.NewClientBuilder().WithScheme(scheme).WithObjects().Build()
 
@@ -805,7 +807,7 @@ func TestService_ExposeConfiguration_CreateUserErr(t *testing.T) {
 	errTest := errors.New("test")
 	instance := createSonarInstance()
 	clMock := cMock.ClientInterface{}
-	clMock.On("GetUser", ctx, jenkinsLogin).Return(nil, sonarClient.ErrNotFound("test"))
+	clMock.On("GetUser", ctx, jenkinsLogin).Return(nil, sonarClient.NotFoundError("test"))
 	clMock.On("CreateUser", ctx, tMock.MatchedBy(func(sonar *sonarClient.User) bool {
 		return sonar.Name == jenkinsUsername && sonar.Login == jenkinsLogin
 	})).Return(errTest)
@@ -886,7 +888,7 @@ func TestService_ExposeConfiguration_GetUserTokenErr(t *testing.T) {
 	clMock.On("GetUser", ctx, jenkinsLogin).Return(nil, nil)
 	clMock.On("AddUserToGroup", nonInteractiveGroupName, jenkinsLogin).Return(nil)
 	clMock.On("AddPermissionsToUser", jenkinsLogin, admin).Return(nil)
-	clMock.On("GetUserToken", ctx, jenkinsLogin, strings.Title(jenkinsLogin)).Return(nil, errTest)
+	clMock.On("GetUserToken", ctx, jenkinsLogin, cases.Title(language.English).String(jenkinsLogin)).Return(nil, errTest)
 
 	service := Service{
 		sonarClientBuilder: func(ctx context.Context, instance *sonarApi.Sonar, useDefaultPassword bool) (ClientInterface, error) {
@@ -907,7 +909,7 @@ func TestService_ExposeConfiguration_GenerateUserTokenErr(t *testing.T) {
 	clMock.On("GetUser", ctx, jenkinsLogin).Return(nil, nil)
 	clMock.On("AddUserToGroup", nonInteractiveGroupName, jenkinsLogin).Return(nil)
 	clMock.On("AddPermissionsToUser", jenkinsLogin, admin).Return(nil)
-	clMock.On("GetUserToken", ctx, jenkinsLogin, strings.Title(jenkinsLogin)).Return(nil, sonarClient.ErrNotFound("test"))
+	clMock.On("GetUserToken", ctx, jenkinsLogin, cases.Title(language.English).String(jenkinsLogin)).Return(nil, sonarClient.NotFoundError("test"))
 	clMock.On("GenerateUserToken", jenkinsLogin).Return(nil, errTest)
 
 	service := Service{
@@ -937,7 +939,7 @@ func TestService_ExposeConfiguration_CreateSecretErr(t *testing.T) {
 	clMock.On("GetUser", ctx, jenkinsLogin).Return(nil, nil)
 	clMock.On("AddUserToGroup", nonInteractiveGroupName, jenkinsLogin).Return(nil)
 	clMock.On("AddPermissionsToUser", jenkinsLogin, admin).Return(nil)
-	clMock.On("GetUserToken", ctx, jenkinsLogin, strings.Title(jenkinsLogin)).Return(nil, sonarClient.ErrNotFound("test"))
+	clMock.On("GetUserToken", ctx, jenkinsLogin, cases.Title(language.English).String(jenkinsLogin)).Return(nil, sonarClient.NotFoundError("test"))
 	clMock.On("GenerateUserToken", jenkinsLogin).Return(&ciToken, nil)
 	plMock.On("CreateSecret", main, namespace, ciUserName, ciSecret).Return(nil, errTest)
 
@@ -971,7 +973,7 @@ func TestService_ExposeConfiguration_SetOwnerReferenceErr(t *testing.T) {
 	clMock.On("GetUser", ctx, jenkinsLogin).Return(nil, nil)
 	clMock.On("AddUserToGroup", nonInteractiveGroupName, jenkinsLogin).Return(nil)
 	clMock.On("AddPermissionsToUser", jenkinsLogin, admin).Return(nil)
-	clMock.On("GetUserToken", ctx, jenkinsLogin, strings.Title(jenkinsLogin)).Return(nil, sonarClient.ErrNotFound("test"))
+	clMock.On("GetUserToken", ctx, jenkinsLogin, cases.Title(language.English).String(jenkinsLogin)).Return(nil, sonarClient.NotFoundError("test"))
 	clMock.On("GenerateUserToken", jenkinsLogin).Return(&ciToken, nil)
 	plMock.On("CreateSecret", main, namespace, ciUserName, ciSecret).Return(&secret, nil)
 	plMock.On("SetOwnerReference", &instance, &secret).Return(errTest)
@@ -1001,7 +1003,7 @@ func TestService_ExposeConfiguration_CreateJenkinsServiceAccountErr(t *testing.T
 	clMock.On("GetUser", ctx, jenkinsLogin).Return(nil, nil)
 	clMock.On("AddUserToGroup", nonInteractiveGroupName, jenkinsLogin).Return(nil)
 	clMock.On("AddPermissionsToUser", jenkinsLogin, admin).Return(nil)
-	clMock.On("GetUserToken", ctx, jenkinsLogin, strings.Title(jenkinsLogin)).Return(nil, nil)
+	clMock.On("GetUserToken", ctx, jenkinsLogin, cases.Title(language.English).String(jenkinsLogin)).Return(nil, nil)
 	plMock.On("CreateJenkinsServiceAccount", instance.Namespace, ciUserName, tokenType).Return(errTest)
 
 	service := Service{
@@ -1027,7 +1029,7 @@ func TestService_ExposeConfiguration_ParseDefaultTemplateErr(t *testing.T) {
 	clMock.On("GetUser", ctx, jenkinsLogin).Return(nil, nil)
 	clMock.On("AddUserToGroup", nonInteractiveGroupName, jenkinsLogin).Return(nil)
 	clMock.On("AddPermissionsToUser", jenkinsLogin, admin).Return(nil)
-	clMock.On("GetUserToken", ctx, jenkinsLogin, strings.Title(jenkinsLogin)).Return(nil, nil)
+	clMock.On("GetUserToken", ctx, jenkinsLogin, cases.Title(language.English).String(jenkinsLogin)).Return(nil, nil)
 	plMock.On("CreateJenkinsServiceAccount", instance.Namespace, ciUserName, tokenType).Return(nil)
 
 	service := Service{
@@ -1183,10 +1185,10 @@ func TestService_Configure_createQualityGateErr(t *testing.T) {
 func TestService_Configure_setupWebhookErr(t *testing.T) {
 	ctx := context.Background()
 	scheme := runtime.NewScheme()
-	jns := jenkinsV1Api.Jenkins{Spec: jenkinsV1Api.JenkinsSpec{BasePath: basePath}, ObjectMeta: metav1.ObjectMeta{
+	jns := jenkinsV1Api.Jenkins{Spec: jenkinsV1Api.JenkinsSpec{BasePath: basePath}, ObjectMeta: metaV1.ObjectMeta{
 		Name: name, Namespace: namespace,
 	}}
-	scheme.AddKnownTypes(v1.SchemeGroupVersion, &jenkinsV1Api.JenkinsList{}, &jenkinsV1Api.Jenkins{})
+	scheme.AddKnownTypes(admissionV1.SchemeGroupVersion, &jenkinsV1Api.JenkinsList{}, &jenkinsV1Api.Jenkins{})
 	client := fake.NewClientBuilder().WithScheme(scheme).WithObjects(&jns).Build()
 	data := map[string][]byte{"password": []byte(defaultPassword)}
 	secret := coreV1Api.Secret{Data: data}
@@ -1227,10 +1229,10 @@ func TestService_Configure_setupWebhookErr(t *testing.T) {
 
 func TestService_Configure_configureGeneralSettingsErr(t *testing.T) {
 	scheme := runtime.NewScheme()
-	jns := jenkinsV1Api.Jenkins{Spec: jenkinsV1Api.JenkinsSpec{BasePath: basePath}, ObjectMeta: metav1.ObjectMeta{
+	jns := jenkinsV1Api.Jenkins{Spec: jenkinsV1Api.JenkinsSpec{BasePath: basePath}, ObjectMeta: metaV1.ObjectMeta{
 		Name: name, Namespace: namespace,
 	}}
-	scheme.AddKnownTypes(v1.SchemeGroupVersion, &jenkinsV1Api.JenkinsList{}, &jenkinsV1Api.Jenkins{})
+	scheme.AddKnownTypes(admissionV1.SchemeGroupVersion, &jenkinsV1Api.JenkinsList{}, &jenkinsV1Api.Jenkins{})
 	client := fake.NewClientBuilder().WithScheme(scheme).WithObjects(&jns).Build()
 	data := map[string][]byte{"password": []byte(defaultPassword)}
 	secret := coreV1Api.Secret{Data: data}
@@ -1275,10 +1277,10 @@ func TestService_Configure_configureGeneralSettingsErr(t *testing.T) {
 func TestService_Configure_setDefaultPermissionTemplateErr(t *testing.T) {
 	ctx := context.Background()
 	scheme := runtime.NewScheme()
-	jns := jenkinsV1Api.Jenkins{Spec: jenkinsV1Api.JenkinsSpec{BasePath: basePath}, ObjectMeta: metav1.ObjectMeta{
+	jns := jenkinsV1Api.Jenkins{Spec: jenkinsV1Api.JenkinsSpec{BasePath: basePath}, ObjectMeta: metaV1.ObjectMeta{
 		Name: name, Namespace: namespace,
 	}}
-	scheme.AddKnownTypes(v1.SchemeGroupVersion, &jenkinsV1Api.JenkinsList{}, &jenkinsV1Api.Jenkins{})
+	scheme.AddKnownTypes(admissionV1.SchemeGroupVersion, &jenkinsV1Api.JenkinsList{}, &jenkinsV1Api.Jenkins{})
 	client := fake.NewClientBuilder().WithScheme(scheme).WithObjects(&jns).Build()
 	data := map[string][]byte{"password": []byte(defaultPassword)}
 	secret := coreV1Api.Secret{Data: data}

@@ -3,7 +3,6 @@ package sonar
 import (
 	"context"
 	"encoding/json"
-	"fmt"
 	"net/http"
 	"os"
 	"strings"
@@ -12,6 +11,7 @@ import (
 
 	"github.com/jarcoal/httpmock"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	"gopkg.in/resty.v1"
 )
 
@@ -197,14 +197,15 @@ func TestClient_InstallPlugins_RebootErr(t *testing.T) {
 func TestClient_InstallPlugins(t *testing.T) {
 	status := SystemStatusResponse{Status: "UP"}
 	rawStatus, err := json.Marshal(status)
+	require.NoError(t, err)
+
 	restClient := CreateMockResty()
 	plugins := []string{"test"}
 	plugin := Plugin{Key: name}
 	body := InstalledPluginsResponse{Plugins: []Plugin{plugin}}
 	raw, err := json.Marshal(body)
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
+
 	httpmock.RegisterResponder(http.MethodGet, "https://domain/plugins/installed", httpmock.NewBytesResponder(http.StatusOK, raw))
 	httpmock.RegisterResponder(http.MethodPost, "https://domain/plugins/install", httpmock.NewStringResponder(http.StatusOK, ""))
 	httpmock.RegisterResponder(http.MethodPost, "https://domain/system/restart", httpmock.NewStringResponder(http.StatusOK, ""))
@@ -717,7 +718,6 @@ func TestClient_UploadProfile_PostErr(t *testing.T) {
 	assert.Error(t, err)
 	assert.True(t, strings.Contains(err.Error(), "no responder found"))
 	assert.Empty(t, profile)
-	fmt.Println(err.Error())
 }
 
 func TestClient_UploadProfile_PostBadStatus(t *testing.T) {
@@ -968,8 +968,8 @@ func TestClient_WaitForStatusIsUp(t *testing.T) {
 func TestClient_ChangePassword(t *testing.T) {
 	sc := initClient()
 
-	httpmock.RegisterResponder("GET", "/system/health", httpmock.NewStringResponder(200, ""))
-	httpmock.RegisterResponder("POST", "/users/change_password", httpmock.NewStringResponder(200, ""))
+	httpmock.RegisterResponder("GET", "/system/health", httpmock.NewStringResponder(http.StatusOK, ""))
+	httpmock.RegisterResponder("POST", "/users/change_password", httpmock.NewStringResponder(http.StatusOK, ""))
 
 	if err := sc.ChangePassword(context.Background(), "foo", "bar", "baz"); err != nil {
 		t.Fatal(err)
@@ -983,8 +983,8 @@ func TestClient_ChangePassword(t *testing.T) {
 		t.Fatal("no error or wrong type")
 	}
 
-	httpmock.RegisterResponder("GET", "/system/health", httpmock.NewStringResponder(200, ""))
-	httpmock.RegisterResponder("POST", "/users/change_password", httpmock.NewStringResponder(500, ""))
+	httpmock.RegisterResponder("GET", "/system/health", httpmock.NewStringResponder(http.StatusOK, ""))
+	httpmock.RegisterResponder("POST", "/users/change_password", httpmock.NewStringResponder(http.StatusInternalServerError, ""))
 
 	if err := sc.ChangePassword(context.Background(),
 		"foo", "bar", "baz"); !IsHTTPErrorCode(err, http.StatusInternalServerError) {

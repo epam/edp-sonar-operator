@@ -12,7 +12,7 @@ func TestIsErrNotFoundFalse(t *testing.T) {
 }
 
 func TestIsErrNotFoundTrue(t *testing.T) {
-	err := ErrNotFound("test")
+	err := NotFoundError("test")
 	assert.True(t, IsErrNotFound(err))
 }
 

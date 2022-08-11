@@ -28,8 +28,8 @@ type GroupPermission struct {
 	// Group name or 'anyone' (case insensitive). Example value sonar-administrators.
 	GroupName string `json:"groupName"`
 
-	//Permissions is a list of permissions.
-	//Possible values: admin, codeviewer, issueadmin, securityhotspotadmin, scan, user.
+	// Permissions is a list of permissions.
+	// Possible values: admin, codeviewer, issueadmin, securityhotspotadmin, scan, user.
 	Permissions []string `json:"permissions"`
 }
 

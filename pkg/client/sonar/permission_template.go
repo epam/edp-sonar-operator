@@ -102,7 +102,7 @@ func (sc *Client) GetPermissionTemplate(ctx context.Context, name string) (*Perm
 		}
 	}
 
-	return nil, ErrNotFound("permission template not found")
+	return nil, NotFoundError("permission template not found")
 }
 
 func (sc *Client) AddGroupToPermissionTemplate(ctx context.Context, templateID string,

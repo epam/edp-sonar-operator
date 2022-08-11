@@ -5,8 +5,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/epam/edp-common/pkg/mock"
-	k8sMockClient "github.com/epam/edp-common/pkg/mock/controller-runtime/client"
 	"github.com/pkg/errors"
 	tMock "github.com/stretchr/testify/mock"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -15,6 +13,9 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client/fake"
 	"sigs.k8s.io/controller-runtime/pkg/event"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
+
+	"github.com/epam/edp-common/pkg/mock"
+	k8sMockClient "github.com/epam/edp-common/pkg/mock/controller-runtime/client"
 
 	cMock "github.com/epam/edp-sonar-operator/v2/mocks/client"
 	sMock "github.com/epam/edp-sonar-operator/v2/mocks/service"
@@ -36,7 +37,7 @@ func TestNewReconcile_NotFound(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	if _, err := rec.Reconcile(context.Background(), rq); err != nil {
+	if _, err = rec.Reconcile(context.Background(), rq); err != nil {
 		t.Fatal(err)
 	}
 
@@ -125,7 +126,7 @@ func TestNewReconcile(t *testing.T) {
 	serviceMock.On("ClientForChild", ctx, tMock.AnythingOfType("*v1.SonarPermissionTemplate")).Return(clientMock, nil)
 	serviceMock.On("K8sClient").Return(fakeCl)
 	clientMock.On("GetPermissionTemplate", ctx, permissionTemplate1.Spec.Name).Return(nil,
-		sonarClient.ErrNotFound("not found")).Once()
+		sonarClient.NotFoundError("not found")).Once()
 	permissionTemplateID := "uniq_tpl_id_1"
 	clientMock.On("CreatePermissionTemplate", ctx, specToClientTemplateData(&permissionTemplate1.Spec)).
 		Return(permissionTemplateID, nil)
@@ -156,14 +157,14 @@ func TestNewReconcile(t *testing.T) {
 		t.Fatalf("%+v", err)
 	}
 
-	//ptpl.Status.ID = "id11"
+	// ptpl.Status.ID = "id11"
 	permissionTemplateID2 := "id11"
 	permissionTemplate2 := sampleTemplate.DeepCopy()
 	permissionTemplate2.Status.ID = permissionTemplateID2
 	clientMock.On("GetPermissionTemplate", ctx, permissionTemplate2.Spec.Name).
 		Return(specToClientTemplate(&permissionTemplate2.Spec, permissionTemplateID2), nil).Once()
 	tpl := specToClientTemplate(&permissionTemplate2.Spec, permissionTemplateID2)
-	//tpl.ID = ptpl.Status.ID
+	// tpl.ID = ptpl.Status.ID
 	clientMock.On("UpdatePermissionTemplate", ctx, tpl).Return(nil)
 	clientMock.On("GetPermissionTemplateGroups", ctx, tpl.ID).
 		Return(nil, errors.New("get perm groups fatal"))

@@ -109,11 +109,13 @@ type SystemStatusResponse struct {
 	Status  string `json:"status"`
 }
 
+// WaitForStatusIsUp waits for Sonar to be up
+// It retries the request for the specified number of times with the specified timeout
 func (sc Client) WaitForStatusIsUp(retryCount int, timeout time.Duration) error {
 	var systemStatusResponse SystemStatusResponse
 
 	sc.resty.SetRetryCount(retryCount).
-		SetRetryWaitTime(timeout * time.Second).
+		SetRetryWaitTime(timeout).
 		AddRetryCondition(
 			func(response *resty.Response) (bool, error) {
 				if response.IsError() || !response.IsSuccess() {
@@ -176,7 +178,7 @@ func (sc Client) InstallPlugins(plugins []string) error {
 		if err = sc.Reboot(); err != nil {
 			return err
 		}
-		if err = sc.WaitForStatusIsUp(retryCount, timeOut); err != nil {
+		if err = sc.WaitForStatusIsUp(retryCount, timeOut*time.Second); err != nil {
 			return err
 		}
 	}
@@ -746,6 +748,8 @@ func checkValue(value interface{}, valueToCheck string) bool {
 		if valueToCheck == value {
 			return true
 		}
+	default:
+		return false
 	}
 	return false
 }

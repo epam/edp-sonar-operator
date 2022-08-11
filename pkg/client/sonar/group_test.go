@@ -2,6 +2,7 @@ package sonar
 
 import (
 	"context"
+	"net/http"
 	"testing"
 
 	"github.com/jarcoal/httpmock"
@@ -13,7 +14,7 @@ func TestSonarClient_CreateGroup(t *testing.T) {
 	cs.resty.SetDisableWarn(true)
 
 	httpmock.RegisterResponder("POST", "/user_groups/create",
-		httpmock.NewJsonResponderOrPanic(200, createGroupResponse{Group: Group{ID: "id1"}}))
+		httpmock.NewJsonResponderOrPanic(http.StatusOK, createGroupResponse{Group: Group{ID: "id1"}}))
 
 	gr := Group{Name: "foo", Description: "bar"}
 	if err := cs.CreateGroup(context.Background(), &gr); err != nil {
@@ -25,7 +26,7 @@ func TestSonarClient_CreateGroup(t *testing.T) {
 	}
 
 	httpmock.RegisterResponder("POST", "/user_groups/create",
-		httpmock.NewStringResponder(500, "create fatal"))
+		httpmock.NewStringResponder(http.StatusInternalServerError, "create fatal"))
 	err := cs.CreateGroup(context.Background(), &gr)
 	if err == nil {
 		t.Fatal("no error returned")
@@ -41,7 +42,7 @@ func TestSonarClient_UpdateGroup(t *testing.T) {
 	httpmock.ActivateNonDefault(cs.resty.GetClient())
 	cs.resty.SetDisableWarn(true)
 	httpmock.RegisterResponder("POST", "/user_groups/update",
-		httpmock.NewStringResponder(200, ""))
+		httpmock.NewStringResponder(http.StatusOK, ""))
 
 	if err := cs.UpdateGroup(context.Background(), "currentName",
 		&Group{Name: "name", Description: "desc"}); err != nil {
@@ -49,7 +50,7 @@ func TestSonarClient_UpdateGroup(t *testing.T) {
 	}
 
 	httpmock.RegisterResponder("POST", "/user_groups/update",
-		httpmock.NewStringResponder(500, "update fatal"))
+		httpmock.NewStringResponder(http.StatusInternalServerError, "update fatal"))
 
 	err := cs.UpdateGroup(context.Background(), "currentName",
 		&Group{Name: "name", Description: "desc"})
@@ -69,13 +70,13 @@ func TestSonarClient_DeleteGroup(t *testing.T) {
 	cs.resty.SetDisableWarn(true)
 
 	httpmock.RegisterResponder("POST", "/user_groups/delete",
-		httpmock.NewStringResponder(200, ""))
+		httpmock.NewStringResponder(http.StatusOK, ""))
 	if err := cs.DeleteGroup(context.Background(), "groupName"); err != nil {
 		t.Fatal(err)
 	}
 
 	httpmock.RegisterResponder("POST", "/user_groups/delete",
-		httpmock.NewStringResponder(500, "delete fatal"))
+		httpmock.NewStringResponder(http.StatusInternalServerError, "delete fatal"))
 
 	err := cs.DeleteGroup(context.Background(), "groupName")
 
@@ -93,14 +94,14 @@ func TestSonarClient_SearchGroups(t *testing.T) {
 	httpmock.ActivateNonDefault(cs.resty.GetClient())
 	cs.resty.SetDisableWarn(true)
 	httpmock.RegisterResponder("GET", "/user_groups/search?q=name&f=name",
-		httpmock.NewJsonResponderOrPanic(200, groupSearchResponse{}))
+		httpmock.NewJsonResponderOrPanic(http.StatusOK, groupSearchResponse{}))
 
 	if _, err := cs.SearchGroups(context.Background(), "name"); err != nil {
 		t.Fatal(err)
 	}
 
 	httpmock.RegisterResponder("GET", "/user_groups/search?q=name&f=name",
-		httpmock.NewStringResponder(500, "search fatal"))
+		httpmock.NewStringResponder(http.StatusInternalServerError, "search fatal"))
 
 	_, err := cs.SearchGroups(context.Background(), "name")
 	if err == nil {
@@ -118,7 +119,7 @@ func TestSonarClient_GetGroup(t *testing.T) {
 	httpmock.ActivateNonDefault(cs.resty.GetClient())
 	cs.resty.SetDisableWarn(true)
 	httpmock.RegisterResponder("GET", "/user_groups/search?q=groupName&f=name",
-		httpmock.NewJsonResponderOrPanic(200, groupSearchResponse{Groups: []Group{
+		httpmock.NewJsonResponderOrPanic(http.StatusOK, groupSearchResponse{Groups: []Group{
 			{Name: "groupName"},
 		}}))
 
@@ -127,7 +128,7 @@ func TestSonarClient_GetGroup(t *testing.T) {
 	}
 
 	httpmock.RegisterResponder("GET", "/user_groups/search?q=groupNameNotFound&f=name",
-		httpmock.NewJsonResponderOrPanic(200, groupSearchResponse{Groups: []Group{
+		httpmock.NewJsonResponderOrPanic(http.StatusOK, groupSearchResponse{Groups: []Group{
 			{Name: "groupName"},
 		}}))
 	_, err := cs.GetGroup(context.Background(), "groupNameNotFound")
@@ -140,7 +141,7 @@ func TestSonarClient_GetGroup(t *testing.T) {
 	}
 
 	httpmock.RegisterResponder("GET", "/user_groups/search?q=groupNameNotFound&f=name",
-		httpmock.NewStringResponder(500, "search fatal"))
+		httpmock.NewStringResponder(http.StatusInternalServerError, "search fatal"))
 	_, err = cs.GetGroup(context.Background(), "groupNameNotFound")
 	if err == nil {
 		t.Fatal("no error returned")

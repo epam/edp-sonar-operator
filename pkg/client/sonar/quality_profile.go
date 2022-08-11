@@ -33,5 +33,5 @@ func (sc Client) GetQualityProfile(ctx context.Context, name string) (*QualityPr
 		}
 	}
 
-	return nil, ErrNotFound("quality profile not found")
+	return nil, NotFoundError("quality profile not found")
 }

@@ -56,7 +56,7 @@ func (sc Client) GetUser(ctx context.Context, userName string) (*User, error) {
 		}
 	}
 
-	return nil, ErrNotFound("user not found")
+	return nil, NotFoundError("user not found")
 }
 
 func (sc *Client) CreateUser(ctx context.Context, user *User) error {
@@ -98,5 +98,5 @@ func (sc Client) GetUserToken(ctx context.Context, userLogin, tokenName string) 
 		}
 	}
 
-	return nil, ErrNotFound("Token not found")
+	return nil, NotFoundError("Token not found")
 }

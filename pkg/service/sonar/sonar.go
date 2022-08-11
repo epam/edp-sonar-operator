@@ -5,16 +5,12 @@ import (
 	"context"
 	"encoding/base64"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"log"
 	"net/http"
 	"os"
 
 	"github.com/dchest/uniuri"
-	jenkinsApi "github.com/epam/edp-jenkins-operator/v2/pkg/apis/v2/v1"
-	platformHelper "github.com/epam/edp-jenkins-operator/v2/pkg/service/platform/helper"
-	keycloakApi "github.com/epam/edp-keycloak-operator/pkg/apis/v1/v1"
-	"github.com/epam/edp-keycloak-operator/pkg/controller/helper"
 	"github.com/pkg/errors"
 	"golang.org/x/text/cases"
 	"golang.org/x/text/language"
@@ -24,6 +20,11 @@ import (
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/util/json"
 	"sigs.k8s.io/controller-runtime/pkg/client"
+
+	jenkinsApi "github.com/epam/edp-jenkins-operator/v2/pkg/apis/v2/v1"
+	platformHelper "github.com/epam/edp-jenkins-operator/v2/pkg/service/platform/helper"
+	keycloakApi "github.com/epam/edp-keycloak-operator/pkg/apis/v1/v1"
+	"github.com/epam/edp-keycloak-operator/pkg/controller/helper"
 
 	sonarApi "github.com/epam/edp-sonar-operator/v2/pkg/apis/edp/v1"
 	"github.com/epam/edp-sonar-operator/v2/pkg/client/sonar"
@@ -498,7 +499,7 @@ func getIcon() (*string, error) {
 		return nil, err
 	}
 	reader := bufio.NewReader(f)
-	content, err := ioutil.ReadAll(reader)
+	content, err := io.ReadAll(reader)
 	if err != nil {
 		return nil, err
 	}

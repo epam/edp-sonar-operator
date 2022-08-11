@@ -5,14 +5,14 @@ import (
 	"fmt"
 )
 
-type ErrNotFound string
+type NotFoundError string
 
-func (e ErrNotFound) Error() string {
+func (e NotFoundError) Error() string {
 	return string(e)
 }
 
 func IsErrNotFound(err error) bool {
-	errNotFound := ErrNotFound("")
+	errNotFound := NotFoundError("")
 	ok := errors.As(err, &errNotFound)
 	return ok
 }
