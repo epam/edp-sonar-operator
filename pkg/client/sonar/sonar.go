@@ -27,6 +27,17 @@ const (
 	timeOut          = 10
 )
 
+// SystemHealthResponse provides status of SonarQube.
+// https://next.sonarqube.com/sonarqube/web_api/api/system/health
+type SystemHealthResponse struct {
+	// GREEN: SonarQube is fully operational
+	// YELLOW: SonarQube is usable, but it needs attention in order to be fully operational
+	// RED: SonarQube is not operational
+	Health string `json:"health"`
+	Causes []any  `json:"causes"`
+	Nodes  []any  `json:"nodes"`
+}
+
 var log = ctrl.Log.WithName("sonar_client")
 
 type Client struct {
@@ -76,6 +87,17 @@ func (sc *Client) ChangePassword(ctx context.Context, user string, oldPassword s
 		return errors.Wrap(err, "unable to check sonar health")
 	}
 
+	var systemHealthResponse SystemHealthResponse
+	err = json.Unmarshal(resp.Body(), &systemHealthResponse)
+	if err != nil {
+		return errors.Wrapf(err, cantUnmarshalMsg, resp.Body())
+	}
+
+	// make sure that Sonar is up and running
+	if systemHealthResponse.Health != "GREEN" {
+		return errors.Errorf("sonar is not in green state, current state - %s; %v", systemHealthResponse.Health, systemHealthResponse)
+	}
+
 	resp, err = sc.startRequest(ctx).SetFormData(map[string]string{
 		loginField:         user,
 		"password":         newPassword,
@@ -85,6 +107,12 @@ func (sc *Client) ChangePassword(ctx context.Context, user string, oldPassword s
 	if err = sc.checkError(resp, err); err != nil {
 		return errors.Wrap(err, "unable to change password")
 	}
+
+	// so starting from SonarQube 8.9.9 they changed flow of "/api/users/change_password" endpoint
+	// after successful change of password, Sonar refresh JWT token in cookie,
+	// so we need to update cookie to get new token
+	// https://github.com/SonarSource/sonarqube/commit/eb6741754b2b35172012bc5b30f5b0d53a61f7be#diff-be83bcff4cfc3fb4d04542ca6eea91cfe7738b7bd754d86eb366ce3e18b0aa34
+	sc.resty.SetCookies(resp.Cookies())
 
 	return nil
 }
@@ -149,8 +177,10 @@ func (sc Client) WaitForStatusIsUp(retryCount int, timeout time.Duration) error 
 func (sc Client) InstallPlugins(plugins []string) error {
 	installedPlugins, err := sc.GetInstalledPlugins()
 	if err != nil {
-		return err
+		return errors.Wrap(err, "failed to get list of installed plugins")
 	}
+
+	log.Info("List of installed plugins", "plugins", installedPlugins)
 
 	needReboot := false
 	for _, plugin := range plugins {
@@ -174,7 +204,6 @@ func (sc Client) InstallPlugins(plugins []string) error {
 		}
 	}
 	if needReboot {
-
 		if err = sc.Reboot(); err != nil {
 			return err
 		}
@@ -182,6 +211,9 @@ func (sc Client) InstallPlugins(plugins []string) error {
 			return err
 		}
 	}
+
+	log.Info("Plugins have been installed")
+
 	return nil
 }
 
@@ -371,9 +403,11 @@ func (sc Client) setDefaultQualityGate(qgId string) error {
 }
 
 func (sc Client) UploadProfile(profileName string, profilePath string) (string, error) {
+	log.Info("Attempt to uploading quality profile...", "profileName", profileName, "profilePath", profilePath)
+
 	profileExist, profileId, isDefault, err := sc.checkProfileExist(profileName)
 	if err != nil {
-		return "", err
+		return "", errors.Wrap(err, "failed to get quality profile")
 	}
 
 	if profileExist && isDefault {
@@ -393,6 +427,7 @@ func (sc Client) UploadProfile(profileName string, profilePath string) (string, 
 	}
 
 	log.Info(fmt.Sprintf("Uploading profile %s from path %s", profileName, profilePath))
+
 	resp, err := sc.resty.R().
 		SetHeader(contentTypeField, "multipart/form-data").
 		SetFile("backup", profilePath).

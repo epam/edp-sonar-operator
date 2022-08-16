@@ -966,9 +966,12 @@ func TestClient_WaitForStatusIsUp(t *testing.T) {
 }
 
 func TestClient_ChangePassword(t *testing.T) {
+	t.Parallel()
+
 	sc := initClient()
 
-	httpmock.RegisterResponder("GET", "/system/health", httpmock.NewStringResponder(http.StatusOK, ""))
+	systemHealthResponse := SystemHealthResponse{Health: "GREEN", Causes: []any{}, Nodes: []any{}}
+	httpmock.RegisterResponder("GET", "/system/health", httpmock.NewJsonResponderOrPanic(http.StatusOK, systemHealthResponse))
 	httpmock.RegisterResponder("POST", "/users/change_password", httpmock.NewStringResponder(http.StatusOK, ""))
 
 	if err := sc.ChangePassword(context.Background(), "foo", "bar", "baz"); err != nil {
@@ -983,7 +986,7 @@ func TestClient_ChangePassword(t *testing.T) {
 		t.Fatal("no error or wrong type")
 	}
 
-	httpmock.RegisterResponder("GET", "/system/health", httpmock.NewStringResponder(http.StatusOK, ""))
+	httpmock.RegisterResponder("GET", "/system/health", httpmock.NewJsonResponderOrPanic(http.StatusOK, systemHealthResponse))
 	httpmock.RegisterResponder("POST", "/users/change_password", httpmock.NewStringResponder(http.StatusInternalServerError, ""))
 
 	if err := sc.ChangePassword(context.Background(),

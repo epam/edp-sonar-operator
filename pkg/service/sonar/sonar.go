@@ -6,7 +6,6 @@ import (
 	"encoding/base64"
 	"fmt"
 	"io"
-	"log"
 	"net/http"
 	"os"
 
@@ -19,6 +18,7 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/util/json"
+	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	jenkinsApi "github.com/epam/edp-jenkins-operator/v2/pkg/apis/v2/v1"
@@ -27,8 +27,8 @@ import (
 	"github.com/epam/edp-keycloak-operator/pkg/controller/helper"
 
 	sonarApi "github.com/epam/edp-sonar-operator/v2/pkg/apis/edp/v1"
-	"github.com/epam/edp-sonar-operator/v2/pkg/client/sonar"
 	sonarClient "github.com/epam/edp-sonar-operator/v2/pkg/client/sonar"
+	"github.com/epam/edp-sonar-operator/v2/pkg/client/sonar"
 	pkgHelper "github.com/epam/edp-sonar-operator/v2/pkg/helper"
 	"github.com/epam/edp-sonar-operator/v2/pkg/service/platform"
 	sonarHelper "github.com/epam/edp-sonar-operator/v2/pkg/service/sonar/helper"
@@ -59,6 +59,8 @@ const (
 	failMsgTemplate                  = "Failed to set owner reference for secret %v"
 	failInitSonarMsg                 = "Failed to initialize Sonar Client!"
 )
+
+var log = ctrl.Log.WithName("sonar_service")
 
 type ServiceInterface interface {
 	Configure(ctx context.Context, instance *sonarApi.Sonar) error
@@ -166,6 +168,8 @@ func (s Service) initSonarClient(ctx context.Context, instance *sonarApi.Sonar, 
 
 		if newPassword, ok := credentials["password"]; ok {
 			password = string(newPassword)
+		} else {
+			log.Info("No password found in secret", "secret", adminSecretName)
 		}
 	}
 
@@ -249,7 +253,7 @@ func (s Service) Integration(ctx context.Context, instance *sonarApi.Sonar) (*so
 	}
 
 	dv := "private"
-	log.Printf("trying to set %v visibility for projects as default", dv)
+	log.Info(fmt.Sprintf("trying to set %v visibility for projects as default", dv))
 	if err = sc.SetProjectsDefaultVisibility(dv); err != nil {
 		return nil, errors.Wrapf(err, "couldn't set default %v visibility for projects", dv)
 	}
@@ -577,6 +581,7 @@ func (s *Service) configurePassword(ctx context.Context, instance *sonarApi.Sona
 	err = sc.ChangePassword(ctx, admin, defaultPassword, string(credentials["password"]))
 	if sonarClient.IsHTTPErrorCode(err, http.StatusUnauthorized) ||
 		sonarClient.IsHTTPErrorCode(err, http.StatusForbidden) {
+		log.Error(err, "Failed to change default password for SonarQube")
 		return nil
 	} else if err != nil {
 		return errors.Wrap(err, "Failed to change password!")
