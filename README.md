@@ -26,15 +26,17 @@ In order to install the EDP Sonar Operator, follow the steps below:
 1. To add the Helm EPAMEDP Charts for local client, run "helm repo add":
 
      ```bash
-     helm repo add epamedp https://chartmuseum.demo.edp-epam.com/
+     helm repo add epamedp https://epam.github.io/edp-helm-charts/stable
      ```
 
 2. Choose available Helm chart version:
 
      ```bash
-     helm search repo epamedp/sonar-operator
+     helm search repo epamedp/sonar-operator -l
      NAME                    CHART VERSION   APP VERSION     DESCRIPTION
-     epamedp/sonar-operator  v2.10.0                          Helm chart for Golang application/service deplo...
+     epamedp/sonar-operator  2.11.0          2.11.0          A Helm chart for EDP Sonar Operator
+     epamedp/sonar-operator  2.10.2          2.10.2          A Helm chart for EDP Sonar Operator
+     epamedp/sonar-operator  2.10.0          2.10.0          A Helm chart for EDP Sonar Operator
      ```
 
     _**NOTE:** It is highly recommended to use the latest released version._
@@ -43,17 +45,19 @@ In order to install the EDP Sonar Operator, follow the steps below:
 
     Full available chart parameters available in [deploy-templates/README.md](deploy-templates/README.md):
 
-4. Install operator in the <edp_cicd_project> namespace with the helm command; find below the installation command example:
+4. Install operator in the <edp-project> namespace with the helm command; find below the installation command example:
 
     ```bash
-    helm install sonar-operator epamedp/sonar-operator --version <chart_version> --namespace <edp_cicd_project> --set name=sonar-operator --set global.edpName=<edp_cicd_project> --set global.platform=<platform_type> --set global.dnsWildCard=<cluster_DNS_wildcard>
+    helm install sonar-operator epamedp/sonar-operator --version <chart_version> --namespace <edp-project> --set name=sonar-operator --set global.edpName=<edp-project> --set global.platform=<platform_type> --set global.dnsWildCard=<cluster_DNS_wildcard>
     ```
 
-5. Check the <edp_cicd_project> namespace that should contain operator deployment with your operator in a running status.
+5. Check the <edp-project> namespace that should contain operator deployment with your operator in a running status.
 
 ## Local Development
 
-In order to develop the operator, first set up a local environment. For details, please refer to the [Developer Guide](https://epam.github.io/edp-install/developer-guide/local-development/) page.
+In order to develop the operator, first set up a local environment. For details, please refer to the [Local Development](https://epam.github.io/edp-install/developer-guide/local-development/) page.
+
+Development versions are also available, please refer to the [snapshot helm chart repository](https://epam.github.io/edp-helm-charts/snapshot/) page.
 
 ### Related Articles
 

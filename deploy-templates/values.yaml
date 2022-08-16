@@ -1,18 +1,25 @@
 global:
+  # -- namespace or a project name (in case of OpenShift)
   edpName: ""
+  # -- platform type that can be "kubernetes" or "openshift"
   platform: "openshift"
-  dnsWildCard: "example.com"
+  # -- a cluster DNS wildcard name
+  dnsWildCard:
   openshift:
+    # -- Wich type of kind will be deployed to Openshift (values: deployments/deploymentConfigs)
     deploymentType: "deployments"
 
+# -- component name
 name: sonar-operator
 annotations: {}
 nodeSelector: {}
 tolerations: []
 affinity: {}
 image:
+  # -- EDP sonar-operator Docker image name. The released image can be found on [Dockerhub](https://hub.docker.com/r/epamedp/sonar-operator)
   repository: epamedp/sonar-operator
   # if not defined then .Chart.AppVersion is used
+  # -- EDP sonar-operator Docker image tag. The released image can be found on [Dockerhub](https://hub.docker.com/r/epamedp/sonar-operator/tags)
   tag:
 imagePullPolicy: "IfNotPresent"
 
@@ -32,20 +39,30 @@ sonar:
     # We allow the init containers to have a separate resources declaration because
     # the initContainer does not take as much resources.
     resources: {}
+  # --  Flag to enable/disable Sonar deploy
   deploy: true
+  # --  Sonar name
   name: "sonar"
+  # -- Define sonar docker image name
   image: "sonarqube"
+  # -- Define sonar docker image tag
   version: "8.9.8-community"
   imagePullPolicy: "IfNotPresent"
   initImage: "busybox:1.35.0"
+  # --  Base path for Sonar URL
   basePath: ""
+  # --  Secrets to pull from private Docker registry
   imagePullSecrets:
   storage:
     data:
+      # --  Storageclass for Sonar data volume
       class: gp2
+      # --  Size for Sonar data volume
       size: 1Gi
     database:
+      # --  Storageclass for database data volume
       class: gp2
+      # --  Size for database data volume
       size: 1Gi
   annotations: {}
   nodeSelector: {}
@@ -53,17 +70,17 @@ sonar:
   affinity: {}
   ingress:
     annotations: {}
-    # pathType is only for k8s >= 1.1=
+    # -- pathType is only for k8s >= 1.1=
     pathType: Prefix
-    # For Kubernetes >= 1.18 you should specify the ingress-controller via the field ingressClassName
-    # See https://kubernetes.io/blog/2020/04/02/improvements-to-the-ingress-api-in-kubernetes-1.18/#specifying-the-class-of-an-ingress
+    # -- For Kubernetes >= 1.18 you should specify the ingress-controller via the field ingressClassName
+    # -- See https://kubernetes.io/blog/2020/04/02/improvements-to-the-ingress-api-in-kubernetes-1.18/#specifying-the-class-of-an-ingress
     # ingressClassName: nginx
     tls: []
     #  - secretName: chart-example-tls
     #    hosts:
     #      - chart-example.local
   sonarqubeFolder: /opt/sonarqube
-  # List of plugins to install.
+  # -- List of plugins to install.
   # For example:
   plugins:
     install:
@@ -83,6 +100,7 @@ sonar:
       memory: 1.5Gi
 
   db:
+    # -- Database image name
     image: "postgres:9.6"
     imagePullPolicy: "IfNotPresent"
     resources:
