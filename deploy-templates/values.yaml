@@ -46,7 +46,7 @@ sonar:
   # -- Define sonar docker image name
   image: "sonarqube"
   # -- Define sonar docker image tag
-  version: "8.9.8-community"
+  version: "8.9.9-community"
   imagePullPolicy: "IfNotPresent"
   initImage: "busybox:1.35.0"
   # --  Base path for Sonar URL
