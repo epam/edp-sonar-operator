@@ -1,14 +1,47 @@
 <a name="unreleased"></a>
 ## [Unreleased]
 
+
+<a name="v2.12.0"></a>
+## [v2.12.0] - 2022-08-23
 ### Features
 
+- Switch to use V1 apis of EDP components [EPMDEDP-10087](https://jiraeu.epam.com/browse/EPMDEDP-10087)
+- Download required tools for Makefile targets [EPMDEDP-10105](https://jiraeu.epam.com/browse/EPMDEDP-10105)
 - Switch CRDs to v1 version [EPMDEDP-9221](https://jiraeu.epam.com/browse/EPMDEDP-9221)
+
+### Bug Fixes
+
+- Downgrade Sonar version [EPMDEDP-10281](https://jiraeu.epam.com/browse/EPMDEDP-10281)
+- Downgrade Sonar plugins to fix compatibility [EPMDEDP-10281](https://jiraeu.epam.com/browse/EPMDEDP-10281)
+- Make sure we pass refreshed JWT token from cookies [EPMDEDP-10395](https://jiraeu.epam.com/browse/EPMDEDP-10395)
+
+### Code Refactoring
+
+- Deprecate unused Spec components for Sonar v1 [EPMDEDP-10128](https://jiraeu.epam.com/browse/EPMDEDP-10128)
+- Use repository and tag for image reference in chart [EPMDEDP-10389](https://jiraeu.epam.com/browse/EPMDEDP-10389)
+- Apply new lint config [EPMDEDP-8066](https://jiraeu.epam.com/browse/EPMDEDP-8066)
 
 ### Routine
 
+- Upgrade go version to 1.18 [EPMDEDP-10110](https://jiraeu.epam.com/browse/EPMDEDP-10110)
+- Fix Jira Ticket pattern for changelog generator [EPMDEDP-10159](https://jiraeu.epam.com/browse/EPMDEDP-10159)
+- Update alpine base image to 3.16.2 version [EPMDEDP-10274](https://jiraeu.epam.com/browse/EPMDEDP-10274)
+- Update SonarQube plugins version [EPMDEDP-10274](https://jiraeu.epam.com/browse/EPMDEDP-10274)
+- Update SonarQube to 8.9.9-community version [EPMDEDP-10274](https://jiraeu.epam.com/browse/EPMDEDP-10274)
+- Update sonar version to 8.9.9-community [EPMDEDP-10281](https://jiraeu.epam.com/browse/EPMDEDP-10281)
+- Update sonar version to 8.9.9-community [EPMDEDP-10281](https://jiraeu.epam.com/browse/EPMDEDP-10281)
+- Revert: Update sonar version to 8.9.9-community [EPMDEDP-10281](https://jiraeu.epam.com/browse/EPMDEDP-10281)
+- Change 'go get' to 'go install' for git-chglog [EPMDEDP-10337](https://jiraeu.epam.com/browse/EPMDEDP-10337)
+- Use deployments as default deploymentType for OpenShift [EPMDEDP-10344](https://jiraeu.epam.com/browse/EPMDEDP-10344)
+- Remove VERSION file [EPMDEDP-10387](https://jiraeu.epam.com/browse/EPMDEDP-10387)
+- Add gcflags for go build artifact [EPMDEDP-10411](https://jiraeu.epam.com/browse/EPMDEDP-10411)
 - Update chart annotation [EPMDEDP-8832](https://jiraeu.epam.com/browse/EPMDEDP-8832)
 - Update current development version [EPMDEDP-8832](https://jiraeu.epam.com/browse/EPMDEDP-8832)
+
+### Documentation
+
+- Align README.md [EPMDEDP-10274](https://jiraeu.epam.com/browse/EPMDEDP-10274)
 
 
 <a name="v2.11.0"></a>
@@ -163,7 +196,8 @@ Ensure keycloak role is aligned when migrating from
 <a name="v2.7.0"></a>
 ## [v2.7.0] - 2021-12-03
 
-[Unreleased]: https://github.com/epam/edp-sonar-operator/compare/v2.11.0...HEAD
+[Unreleased]: https://github.com/epam/edp-sonar-operator/compare/v2.12.0...HEAD
+[v2.12.0]: https://github.com/epam/edp-sonar-operator/compare/v2.11.0...v2.12.0
 [v2.11.0]: https://github.com/epam/edp-sonar-operator/compare/v2.10.3...v2.11.0
 [v2.10.3]: https://github.com/epam/edp-sonar-operator/compare/v2.10.2...v2.10.3
 [v2.10.2]: https://github.com/epam/edp-sonar-operator/compare/v2.10.1...v2.10.2
