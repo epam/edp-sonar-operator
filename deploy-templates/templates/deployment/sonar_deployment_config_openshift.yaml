@@ -47,6 +47,9 @@ spec:
               value: jdbc:postgresql://sonar-db/sonar
             - name: sonar.web.context
               value: {{if .Values.sonar.basePath}}"/{{.Values.sonar.basePath}}"{{else}}/{{end}}
+            {{- with .Values.sonar.env }}
+            {{- . | toYaml | trim | nindent 12 }}
+            {{- end }}
           image: "{{.Values.sonar.image}}:{{.Values.sonar.version}}"
           imagePullPolicy: "{{ .Values.sonar.imagePullPolicy }}"
           livenessProbe:

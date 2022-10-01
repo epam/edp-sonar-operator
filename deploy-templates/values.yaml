@@ -54,7 +54,7 @@ sonar:
   # -- Environment variables to attach to the sonar pod
   env:
     - name: SONAR_TELEMETRY_ENABLE
-      value: false
+      value: "false"
   # --  Secrets to pull from private Docker registry
   imagePullSecrets:
   storage:

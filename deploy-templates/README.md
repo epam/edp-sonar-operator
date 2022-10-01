@@ -48,7 +48,7 @@ A Helm chart for EDP Sonar Operator
 | sonar.db.resources.requests.memory | string | `"64Mi"` |  |
 | sonar.db.tolerations | list | `[]` |  |
 | sonar.deploy | bool | `true` | Flag to enable/disable Sonar deploy |
-| sonar.env | list | `[{"name":"SONAR_TELEMETRY_ENABLE","value":false}]` | Environment variables to attach to the sonar pod |
+| sonar.env | list | `[{"name":"SONAR_TELEMETRY_ENABLE","value":"false"}]` | Environment variables to attach to the sonar pod |
 | sonar.image | string | `"sonarqube"` | Define sonar docker image name |
 | sonar.imagePullPolicy | string | `"IfNotPresent"` |  |
 | sonar.imagePullSecrets | string | `nil` | Secrets to pull from private Docker registry |
