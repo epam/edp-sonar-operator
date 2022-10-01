@@ -23,8 +23,8 @@ import (
 	jenkinsV1Api "github.com/epam/edp-jenkins-operator/v2/pkg/apis/v2/v1"
 
 	sonarApi "github.com/epam/edp-sonar-operator/v2/pkg/apis/edp/v1"
-	platformHelper "github.com/epam/edp-sonar-operator/v2/pkg/service/platform/helper"
 	"github.com/epam/edp-sonar-operator/v2/pkg/service/platform/helper"
+	platformHelper "github.com/epam/edp-sonar-operator/v2/pkg/service/platform/helper"
 )
 
 var log = ctrl.Log.WithName("platform")

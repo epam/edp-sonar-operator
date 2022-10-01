@@ -27,8 +27,8 @@ import (
 	"github.com/epam/edp-keycloak-operator/pkg/controller/helper"
 
 	sonarApi "github.com/epam/edp-sonar-operator/v2/pkg/apis/edp/v1"
-	sonarClient "github.com/epam/edp-sonar-operator/v2/pkg/client/sonar"
 	"github.com/epam/edp-sonar-operator/v2/pkg/client/sonar"
+	sonarClient "github.com/epam/edp-sonar-operator/v2/pkg/client/sonar"
 	pkgHelper "github.com/epam/edp-sonar-operator/v2/pkg/helper"
 	"github.com/epam/edp-sonar-operator/v2/pkg/service/platform"
 	sonarHelper "github.com/epam/edp-sonar-operator/v2/pkg/service/sonar/helper"
