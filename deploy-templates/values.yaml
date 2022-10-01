@@ -51,6 +51,10 @@ sonar:
   initImage: "busybox:1.35.0"
   # --  Base path for Sonar URL
   basePath: ""
+  # -- Environment variables to attach to the sonar pod
+  env:
+    - name: SONAR_TELEMETRY_ENABLE
+      value: false
   # --  Secrets to pull from private Docker registry
   imagePullSecrets:
   storage:
