@@ -32,7 +32,12 @@ const (
 	ShortRequeueTime       = 10
 )
 
-func NewReconcileSonar(client client.Client, scheme *runtime.Scheme, log logr.Logger, platformType string) (*ReconcileSonar, error) {
+func NewReconcileSonar(
+	client client.Client,
+	scheme *runtime.Scheme,
+	log logr.Logger,
+	platformType string,
+) (*ReconcileSonar, error) {
 	ps, err := platform.NewService(platformType, scheme, client)
 	if err != nil {
 		return nil, errors.Wrap(err, "unable to create platform service")
@@ -41,7 +46,7 @@ func NewReconcileSonar(client client.Client, scheme *runtime.Scheme, log logr.Lo
 	return &ReconcileSonar{
 		client:   client,
 		scheme:   scheme,
-		service:  sonar.NewService(ps, client, scheme),
+		service:  sonar.NewService(ps, client),
 		log:      log.WithName("sonar"),
 		platform: ps,
 	}, nil

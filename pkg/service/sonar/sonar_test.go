@@ -11,6 +11,7 @@ import (
 	"github.com/pkg/errors"
 	"github.com/stretchr/testify/assert"
 	tMock "github.com/stretchr/testify/mock"
+	"github.com/stretchr/testify/require"
 	"golang.org/x/text/cases"
 	"golang.org/x/text/language"
 	admissionV1 "k8s.io/api/admission/v1"
@@ -142,7 +143,7 @@ func TestServiceMock_Configure(t *testing.T) {
 	clMock.On("CreateGroup", ctx, &sonarClient.Group{Name: nonInteractiveGroupName}).Return(nil)
 	clMock.On("CreateGroup", ctx, &sonarClient.Group{Name: sonarDevelopersGroupName}).Return(nil)
 	clMock.On("AddPermissionsToGroup", nonInteractiveGroupName, "scan").Return(nil)
-	clMock.On("AddWebhook", "jenkins",
+	clMock.On("AddWebhook", "ci-user",
 		"http://jenkins.ns:8080/zabagdo/sonarqube-webhook/").Return(nil)
 	clMock.On("ConfigureGeneralSettings", "values", "sonar.typescript.lcov.reportPaths",
 		"coverage/lcov.info").Return(nil)
@@ -807,9 +808,9 @@ func TestService_ExposeConfiguration_CreateUserErr(t *testing.T) {
 	errTest := errors.New("test")
 	instance := createSonarInstance()
 	clMock := cMock.ClientInterface{}
-	clMock.On("GetUser", ctx, jenkinsLogin).Return(nil, sonarClient.NotFoundError("test"))
+	clMock.On("GetUser", ctx, ciUserLogin).Return(nil, sonarClient.NotFoundError("test"))
 	clMock.On("CreateUser", ctx, tMock.MatchedBy(func(sonar *sonarClient.User) bool {
-		return sonar.Name == jenkinsUsername && sonar.Login == jenkinsLogin
+		return sonar.Name == ciUsername && sonar.Login == ciUserLogin
 	})).Return(errTest)
 
 	service := Service{
@@ -828,7 +829,7 @@ func TestService_ExposeConfiguration_GetUserErr(t *testing.T) {
 	errTest := errors.New("test")
 	instance := createSonarInstance()
 	clMock := cMock.ClientInterface{}
-	clMock.On("GetUser", ctx, jenkinsLogin).Return(nil, errTest)
+	clMock.On("GetUser", ctx, ciUserLogin).Return(nil, errTest)
 
 	service := Service{
 		sonarClientBuilder: func(ctx context.Context, instance *sonarApi.Sonar, useDefaultPassword bool) (ClientInterface, error) {
@@ -846,8 +847,8 @@ func TestService_ExposeConfiguration_AddUserToGroupErr(t *testing.T) {
 	errTest := errors.New("test")
 	instance := createSonarInstance()
 	clMock := cMock.ClientInterface{}
-	clMock.On("GetUser", ctx, jenkinsLogin).Return(nil, nil)
-	clMock.On("AddUserToGroup", nonInteractiveGroupName, jenkinsLogin).Return(errTest)
+	clMock.On("GetUser", ctx, ciUserLogin).Return(nil, nil)
+	clMock.On("AddUserToGroup", nonInteractiveGroupName, ciUserLogin).Return(errTest)
 
 	service := Service{
 		sonarClientBuilder: func(ctx context.Context, instance *sonarApi.Sonar, useDefaultPassword bool) (ClientInterface, error) {
@@ -865,9 +866,9 @@ func TestService_ExposeConfiguration_AddPermissionsToUserErr(t *testing.T) {
 	errTest := errors.New("test")
 	instance := createSonarInstance()
 	clMock := cMock.ClientInterface{}
-	clMock.On("GetUser", ctx, jenkinsLogin).Return(nil, nil)
-	clMock.On("AddUserToGroup", nonInteractiveGroupName, jenkinsLogin).Return(nil)
-	clMock.On("AddPermissionsToUser", jenkinsLogin, admin).Return(errTest)
+	clMock.On("GetUser", ctx, ciUserLogin).Return(nil, nil)
+	clMock.On("AddUserToGroup", nonInteractiveGroupName, ciUserLogin).Return(nil)
+	clMock.On("AddPermissionsToUser", ciUserLogin, admin).Return(errTest)
 
 	service := Service{
 		sonarClientBuilder: func(ctx context.Context, instance *sonarApi.Sonar, useDefaultPassword bool) (ClientInterface, error) {
@@ -885,10 +886,10 @@ func TestService_ExposeConfiguration_GetUserTokenErr(t *testing.T) {
 	errTest := errors.New("test")
 	instance := createSonarInstance()
 	clMock := cMock.ClientInterface{}
-	clMock.On("GetUser", ctx, jenkinsLogin).Return(nil, nil)
-	clMock.On("AddUserToGroup", nonInteractiveGroupName, jenkinsLogin).Return(nil)
-	clMock.On("AddPermissionsToUser", jenkinsLogin, admin).Return(nil)
-	clMock.On("GetUserToken", ctx, jenkinsLogin, cases.Title(language.English).String(jenkinsLogin)).Return(nil, errTest)
+	clMock.On("GetUser", ctx, ciUserLogin).Return(nil, nil)
+	clMock.On("AddUserToGroup", nonInteractiveGroupName, ciUserLogin).Return(nil)
+	clMock.On("AddPermissionsToUser", ciUserLogin, admin).Return(nil)
+	clMock.On("GetUserToken", ctx, ciUserLogin, cases.Title(language.English).String(ciUserLogin)).Return(nil, errTest)
 
 	service := Service{
 		sonarClientBuilder: func(ctx context.Context, instance *sonarApi.Sonar, useDefaultPassword bool) (ClientInterface, error) {
@@ -906,11 +907,11 @@ func TestService_ExposeConfiguration_GenerateUserTokenErr(t *testing.T) {
 	errTest := errors.New("test")
 	instance := createSonarInstance()
 	clMock := cMock.ClientInterface{}
-	clMock.On("GetUser", ctx, jenkinsLogin).Return(nil, nil)
-	clMock.On("AddUserToGroup", nonInteractiveGroupName, jenkinsLogin).Return(nil)
-	clMock.On("AddPermissionsToUser", jenkinsLogin, admin).Return(nil)
-	clMock.On("GetUserToken", ctx, jenkinsLogin, cases.Title(language.English).String(jenkinsLogin)).Return(nil, sonarClient.NotFoundError("test"))
-	clMock.On("GenerateUserToken", jenkinsLogin).Return(nil, errTest)
+	clMock.On("GetUser", ctx, ciUserLogin).Return(nil, nil)
+	clMock.On("AddUserToGroup", nonInteractiveGroupName, ciUserLogin).Return(nil)
+	clMock.On("AddPermissionsToUser", ciUserLogin, admin).Return(nil)
+	clMock.On("GetUserToken", ctx, ciUserLogin, cases.Title(language.English).String(ciUserLogin)).Return(nil, sonarClient.NotFoundError("test"))
+	clMock.On("GenerateUserToken", ciUserLogin).Return(nil, errTest)
 
 	service := Service{
 		sonarClientBuilder: func(ctx context.Context, instance *sonarApi.Sonar, useDefaultPassword bool) (ClientInterface, error) {
@@ -929,18 +930,18 @@ func TestService_ExposeConfiguration_CreateSecretErr(t *testing.T) {
 	ciUserName := fmt.Sprintf("%v-ciuser-token", main)
 	ciToken := name
 	ciSecret := map[string][]byte{
-		"username": []byte(jenkinsLogin),
+		"username": []byte(ciUserLogin),
 		"secret":   []byte(ciToken),
 	}
 	instance := createSonarInstance()
 	plMock := pMock.Service{}
 	clMock := cMock.ClientInterface{}
 
-	clMock.On("GetUser", ctx, jenkinsLogin).Return(nil, nil)
-	clMock.On("AddUserToGroup", nonInteractiveGroupName, jenkinsLogin).Return(nil)
-	clMock.On("AddPermissionsToUser", jenkinsLogin, admin).Return(nil)
-	clMock.On("GetUserToken", ctx, jenkinsLogin, cases.Title(language.English).String(jenkinsLogin)).Return(nil, sonarClient.NotFoundError("test"))
-	clMock.On("GenerateUserToken", jenkinsLogin).Return(&ciToken, nil)
+	clMock.On("GetUser", ctx, ciUserLogin).Return(nil, nil)
+	clMock.On("AddUserToGroup", nonInteractiveGroupName, ciUserLogin).Return(nil)
+	clMock.On("AddPermissionsToUser", ciUserLogin, admin).Return(nil)
+	clMock.On("GetUserToken", ctx, ciUserLogin, cases.Title(language.English).String(ciUserLogin)).Return(nil, sonarClient.NotFoundError("test"))
+	clMock.On("GenerateUserToken", ciUserLogin).Return(&ciToken, nil)
 	plMock.On("CreateSecret", main, namespace, ciUserName, ciSecret).Return(nil, errTest)
 
 	service := Service{
@@ -962,7 +963,7 @@ func TestService_ExposeConfiguration_SetOwnerReferenceErr(t *testing.T) {
 	ciUserName := fmt.Sprintf("%v-ciuser-token", main)
 	ciToken := name
 	ciSecret := map[string][]byte{
-		"username": []byte(jenkinsLogin),
+		"username": []byte(ciUserLogin),
 		"secret":   []byte(ciToken),
 	}
 	secret := coreV1Api.Secret{}
@@ -970,11 +971,11 @@ func TestService_ExposeConfiguration_SetOwnerReferenceErr(t *testing.T) {
 	plMock := pMock.Service{}
 	clMock := cMock.ClientInterface{}
 
-	clMock.On("GetUser", ctx, jenkinsLogin).Return(nil, nil)
-	clMock.On("AddUserToGroup", nonInteractiveGroupName, jenkinsLogin).Return(nil)
-	clMock.On("AddPermissionsToUser", jenkinsLogin, admin).Return(nil)
-	clMock.On("GetUserToken", ctx, jenkinsLogin, cases.Title(language.English).String(jenkinsLogin)).Return(nil, sonarClient.NotFoundError("test"))
-	clMock.On("GenerateUserToken", jenkinsLogin).Return(&ciToken, nil)
+	clMock.On("GetUser", ctx, ciUserLogin).Return(nil, nil)
+	clMock.On("AddUserToGroup", nonInteractiveGroupName, ciUserLogin).Return(nil)
+	clMock.On("AddPermissionsToUser", ciUserLogin, admin).Return(nil)
+	clMock.On("GetUserToken", ctx, ciUserLogin, cases.Title(language.English).String(ciUserLogin)).Return(nil, sonarClient.NotFoundError("test"))
+	clMock.On("GenerateUserToken", ciUserLogin).Return(&ciToken, nil)
 	plMock.On("CreateSecret", main, namespace, ciUserName, ciSecret).Return(&secret, nil)
 	plMock.On("SetOwnerReference", &instance, &secret).Return(errTest)
 
@@ -996,14 +997,29 @@ func TestService_ExposeConfiguration_CreateJenkinsServiceAccountErr(t *testing.T
 	errTest := errors.New("test")
 	ciUserName := fmt.Sprintf("%v-ciuser-token", main)
 	instance := createSonarInstance()
+	scheme := runtime.NewScheme()
+	err := jenkinsV1Api.AddToScheme(scheme)
+	require.NoError(t, err)
+
+	k8sClient := fake.NewClientBuilder().
+		WithScheme(scheme).
+		WithObjects(
+			&jenkinsV1Api.Jenkins{
+				ObjectMeta: metaV1.ObjectMeta{
+					Namespace: instance.Namespace,
+					Name:      "jenkins",
+				},
+			},
+		).
+		Build()
 
 	clMock := cMock.ClientInterface{}
 	plMock := pMock.Service{}
 
-	clMock.On("GetUser", ctx, jenkinsLogin).Return(nil, nil)
-	clMock.On("AddUserToGroup", nonInteractiveGroupName, jenkinsLogin).Return(nil)
-	clMock.On("AddPermissionsToUser", jenkinsLogin, admin).Return(nil)
-	clMock.On("GetUserToken", ctx, jenkinsLogin, cases.Title(language.English).String(jenkinsLogin)).Return(nil, nil)
+	clMock.On("GetUser", ctx, ciUserLogin).Return(nil, nil)
+	clMock.On("AddUserToGroup", nonInteractiveGroupName, ciUserLogin).Return(nil)
+	clMock.On("AddPermissionsToUser", ciUserLogin, admin).Return(nil)
+	clMock.On("GetUserToken", ctx, ciUserLogin, cases.Title(language.English).String(ciUserLogin)).Return(nil, nil)
 	plMock.On("CreateJenkinsServiceAccount", instance.Namespace, ciUserName, tokenType).Return(errTest)
 
 	service := Service{
@@ -1011,10 +1027,12 @@ func TestService_ExposeConfiguration_CreateJenkinsServiceAccountErr(t *testing.T
 			return &clMock, nil
 		},
 		platformService: &plMock,
+		k8sClient:       k8sClient,
 	}
-	err := service.ExposeConfiguration(ctx, &instance)
+
+	err = service.ExposeConfiguration(ctx, &instance)
 	assert.Error(t, err)
-	assert.True(t, strings.Contains(err.Error(), "Failed to create Jenkins Service Account for"))
+	assert.True(t, strings.Contains(err.Error(), "failed to create Jenkins Service Account for"))
 	clMock.AssertExpectations(t)
 }
 
@@ -1023,13 +1041,29 @@ func TestService_ExposeConfiguration_ParseDefaultTemplateErr(t *testing.T) {
 	ciUserName := fmt.Sprintf("%v-ciuser-token", main)
 	instance := createSonarInstance()
 
+	scheme := runtime.NewScheme()
+	err := jenkinsV1Api.AddToScheme(scheme)
+	require.NoError(t, err)
+
+	k8sClient := fake.NewClientBuilder().
+		WithScheme(scheme).
+		WithObjects(
+			&jenkinsV1Api.Jenkins{
+				ObjectMeta: metaV1.ObjectMeta{
+					Namespace: instance.Namespace,
+					Name:      "jenkins",
+				},
+			},
+		).
+		Build()
+
 	clMock := cMock.ClientInterface{}
 	plMock := pMock.Service{}
 
-	clMock.On("GetUser", ctx, jenkinsLogin).Return(nil, nil)
-	clMock.On("AddUserToGroup", nonInteractiveGroupName, jenkinsLogin).Return(nil)
-	clMock.On("AddPermissionsToUser", jenkinsLogin, admin).Return(nil)
-	clMock.On("GetUserToken", ctx, jenkinsLogin, cases.Title(language.English).String(jenkinsLogin)).Return(nil, nil)
+	clMock.On("GetUser", ctx, ciUserLogin).Return(nil, nil)
+	clMock.On("AddUserToGroup", nonInteractiveGroupName, ciUserLogin).Return(nil)
+	clMock.On("AddPermissionsToUser", ciUserLogin, admin).Return(nil)
+	clMock.On("GetUserToken", ctx, ciUserLogin, cases.Title(language.English).String(ciUserLogin)).Return(nil, nil)
 	plMock.On("CreateJenkinsServiceAccount", instance.Namespace, ciUserName, tokenType).Return(nil)
 
 	service := Service{
@@ -1037,10 +1071,12 @@ func TestService_ExposeConfiguration_ParseDefaultTemplateErr(t *testing.T) {
 			return &clMock, nil
 		},
 		platformService: &plMock,
+		k8sClient:       k8sClient,
 	}
-	err := service.ExposeConfiguration(ctx, &instance)
+
+	err = service.ExposeConfiguration(ctx, &instance)
 	assert.Error(t, err)
-	assert.True(t, strings.Contains(err.Error(), "Failed to parse default Jenkins plugin template"))
+	assert.True(t, strings.Contains(err.Error(), "failed to parse default Jenkins plugin template"))
 	clMock.AssertExpectations(t)
 	plMock.AssertExpectations(t)
 }
@@ -1208,7 +1244,7 @@ func TestService_Configure_setupWebhookErr(t *testing.T) {
 	clMock.On("GetGroup", ctx, nonInteractiveGroupName).Return(nil, nil)
 	clMock.On("GetGroup", ctx, sonarDevelopersGroupName).Return(nil, nil)
 	clMock.On("AddPermissionsToGroup", nonInteractiveGroupName, "scan").Return(nil)
-	clMock.On("AddWebhook", jenkinsLogin,
+	clMock.On("AddWebhook", ciUserLogin,
 		"http://jenkins.ns:8080/"+basePath+"/sonarqube-webhook/").Return(errTest)
 
 	service := Service{
@@ -1217,7 +1253,6 @@ func TestService_Configure_setupWebhookErr(t *testing.T) {
 			return &clMock, nil
 		},
 		k8sClient:            client,
-		k8sScheme:            scheme,
 		runningInClusterFunc: returnTrue,
 	}
 	err := service.Configure(ctx, &instance)
@@ -1253,7 +1288,7 @@ func TestService_Configure_configureGeneralSettingsErr(t *testing.T) {
 	clMock.On("GetGroup", ctx, nonInteractiveGroupName).Return(nil, nil)
 	clMock.On("GetGroup", ctx, sonarDevelopersGroupName).Return(nil, nil)
 	clMock.On("AddPermissionsToGroup", nonInteractiveGroupName, "scan").Return(nil)
-	clMock.On("AddWebhook", jenkinsLogin,
+	clMock.On("AddWebhook", ciUserLogin,
 		"http://jenkins.ns:8080/"+basePath+"/sonarqube-webhook/").Return(nil)
 	clMock.On("ConfigureGeneralSettings", "values", "sonar.typescript.lcov.reportPaths",
 		"coverage/lcov.info").Return(errTest)
@@ -1264,7 +1299,6 @@ func TestService_Configure_configureGeneralSettingsErr(t *testing.T) {
 			return &clMock, nil
 		},
 		k8sClient:            client,
-		k8sScheme:            scheme,
 		runningInClusterFunc: returnTrue,
 	}
 	err := service.Configure(ctx, &instance)
@@ -1300,7 +1334,7 @@ func TestService_Configure_setDefaultPermissionTemplateErr(t *testing.T) {
 	clMock.On("GetGroup", ctx, nonInteractiveGroupName).Return(nil, nil)
 	clMock.On("GetGroup", ctx, sonarDevelopersGroupName).Return(nil, nil)
 	clMock.On("AddPermissionsToGroup", nonInteractiveGroupName, "scan").Return(nil)
-	clMock.On("AddWebhook", jenkinsLogin,
+	clMock.On("AddWebhook", ciUserLogin,
 		"http://jenkins.ns:8080/"+basePath+"/sonarqube-webhook/").Return(nil)
 	clMock.On("ConfigureGeneralSettings", "values", "sonar.typescript.lcov.reportPaths",
 		"coverage/lcov.info").Return(nil)
@@ -1314,7 +1348,6 @@ func TestService_Configure_setDefaultPermissionTemplateErr(t *testing.T) {
 			return &clMock, nil
 		},
 		k8sClient:            client,
-		k8sScheme:            scheme,
 		runningInClusterFunc: returnTrue,
 	}
 	err := service.Configure(ctx, &instance)

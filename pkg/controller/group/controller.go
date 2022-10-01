@@ -37,7 +37,7 @@ func NewReconcile(client client.Client, scheme *runtime.Scheme, log logr.Logger,
 	}
 
 	return &Reconcile{
-		service: sonar.NewService(ps, client, scheme),
+		service: sonar.NewService(ps, client),
 		client:  client,
 		log:     log.WithName("sonar-group"),
 	}, nil

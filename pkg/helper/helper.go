@@ -65,25 +65,3 @@ func RunningInCluster() bool {
 	_, err := os.Stat(inClusterNamespacePath)
 	return !os.IsNotExist(err)
 }
-
-func ContainsString(slice []string, s string) bool {
-	for _, item := range slice {
-		if item == s {
-			return true
-		}
-	}
-	return false
-}
-
-func RemoveString(slice []string, s string) []string {
-	result := make([]string, 0, len(slice)-1)
-
-	for _, item := range slice {
-		if item == s {
-			continue
-		}
-		result = append(result, item)
-	}
-
-	return result
-}

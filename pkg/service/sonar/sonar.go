@@ -36,8 +36,8 @@ import (
 )
 
 const (
-	jenkinsLogin                     = "jenkins"
-	jenkinsUsername                  = "Jenkins"
+	ciUserLogin                      = "ci-user"
+	ciUsername                       = "EDP CI User"
 	readUserLogin                    = "read"
 	readUserUsername                 = "Read-only user"
 	nonInteractiveGroupName          = "non-interactive-users"
@@ -83,11 +83,10 @@ type Deletable interface {
 	runtime.Object
 }
 
-func NewService(platformService platform.Service, k8sClient client.Client, k8sScheme *runtime.Scheme) *Service {
+func NewService(platformService platform.Service, k8sClient client.Client) *Service {
 	svc := Service{
 		platformService:      platformService,
 		k8sClient:            k8sClient,
-		k8sScheme:            k8sScheme,
 		runningInClusterFunc: pkgHelper.RunningInCluster,
 	}
 
@@ -100,7 +99,6 @@ type Service struct {
 	// Providing sonar service implementation through the interface (platform abstract)
 	platformService      platform.Service
 	k8sClient            client.Client
-	k8sScheme            *runtime.Scheme
 	sonarClientBuilder   func(ctx context.Context, instance *sonarApi.Sonar, useDefaultPassword bool) (ClientInterface, error)
 	runningInClusterFunc func() bool
 }
@@ -339,38 +337,38 @@ func (s Service) ExposeConfiguration(ctx context.Context, instance *sonarApi.Son
 		return errors.Wrap(err, failInitSonarMsg)
 	}
 
-	_, err = sc.GetUser(ctx, jenkinsLogin)
+	_, err = sc.GetUser(ctx, ciUserLogin)
 	if sonarClient.IsErrNotFound(err) {
 		sonarUser := sonarClient.User{
-			Login: jenkinsLogin, Name: jenkinsUsername, Password: uniuri.New()}
+			Login: ciUserLogin, Name: ciUsername, Password: uniuri.New()}
 		if err = sc.CreateUser(ctx, &sonarUser); err != nil {
-			return errors.Wrapf(err, "Failed to create user %v in Sonar", jenkinsUsername)
+			return errors.Wrapf(err, "Failed to create user %v in Sonar", ciUsername)
 		}
 	} else if err != nil {
-		return errors.Wrapf(err, "unexpected error during get user %s", jenkinsUsername)
+		return errors.Wrapf(err, "unexpected error during get user %s", ciUsername)
 	}
 
-	err = sc.AddUserToGroup(nonInteractiveGroupName, jenkinsLogin)
+	err = sc.AddUserToGroup(nonInteractiveGroupName, ciUserLogin)
 	if err != nil {
-		return errors.Wrapf(err, "Failed to add %v user in %v group!", jenkinsLogin, nonInteractiveGroupName)
+		return errors.Wrapf(err, "Failed to add %v user in %v group!", ciUserLogin, nonInteractiveGroupName)
 	}
 
-	err = sc.AddPermissionsToUser(jenkinsLogin, admin)
+	err = sc.AddPermissionsToUser(ciUserLogin, admin)
 	if err != nil {
-		return errors.Wrapf(err, "Failed to add admin permissions to  %v user", jenkinsLogin)
+		return errors.Wrapf(err, "Failed to add admin permissions to  %v user", ciUserLogin)
 	}
 
 	ciUserName := fmt.Sprintf("%v-ciuser-token", instance.Name)
-	_, err = sc.GetUserToken(ctx, jenkinsLogin, cases.Title(language.English).String(jenkinsLogin))
+	_, err = sc.GetUserToken(ctx, ciUserLogin, cases.Title(language.English).String(ciUserLogin))
 	if sonarClient.IsErrNotFound(err) {
-		ciToken, errGen := sc.GenerateUserToken(jenkinsLogin)
+		ciToken, errGen := sc.GenerateUserToken(ciUserLogin)
 		if errGen != nil {
-			return errors.Wrapf(errGen, "Failed to generate token for %v user", jenkinsLogin)
+			return errors.Wrapf(errGen, "Failed to generate token for %v user", ciUserLogin)
 		}
 
 		if ciToken != nil {
 			ciSecret := map[string][]byte{
-				"username": []byte(jenkinsLogin),
+				"username": []byte(ciUserLogin),
 				"secret":   []byte(*ciToken),
 			}
 
@@ -383,40 +381,13 @@ func (s Service) ExposeConfiguration(ctx context.Context, instance *sonarApi.Son
 			}
 		}
 	} else if err != nil {
-		return errors.Wrapf(err, "unexpected error during get user token for user %s", jenkinsLogin)
+		return errors.Wrapf(err, "unexpected error during get user token for user %s", ciUserLogin)
 	}
 
-	err = s.platformService.CreateJenkinsServiceAccount(instance.Namespace, ciUserName, tokenType)
-	if err != nil {
-		return errors.Wrapf(err, "Failed to create Jenkins Service Account for %v", ciUserName)
-	}
-
-	data := sonarHelper.InitNewJenkinsPluginInfo(true)
-	data.ServerName = instance.Name
-	data.SecretName = ciUserName
-	data.ServerPath = ""
-	if len(instance.Spec.BasePath) != 0 {
-		data.ServerPath = fmt.Sprintf("/%v", instance.Spec.BasePath)
-	}
-
-	jenkinsScriptContext, err := sonarHelper.ParseDefaultTemplate(data)
-	if err != nil {
-		return errors.Wrapf(err, "Failed to parse default Jenkins plugin template!")
-	}
-
-	configMapName := fmt.Sprintf("%s-%s", instance.Name, sonarSpec.JenkinsPluginConfigPostfix)
-	configMapData := map[string]string{
-		jenkinsDefaultScriptConfigMapKey: jenkinsScriptContext.String(),
-	}
-
-	err = s.platformService.CreateConfigMap(instance, configMapName, configMapData)
-	if err != nil {
-		return errors.Wrapf(err, "Failed to create Config Map %v", configMapName)
-	}
-
-	err = s.platformService.CreateJenkinsScript(instance.Namespace, configMapName)
-	if err != nil {
-		return errors.Wrapf(err, "Failed to create Jenkins Script for %v", ciUserName)
+	if s.jenkinsEnabled(ctx, instance.Namespace) {
+		if err = s.exposeJenkinsConfiguration(instance, ciUserName); err != nil {
+			return err
+		}
 	}
 
 	_, err = sc.GetUser(ctx, readUserLogin)
@@ -480,6 +451,43 @@ func (s Service) ExposeConfiguration(ctx context.Context, instance *sonarApi.Son
 	return err
 }
 
+func (s *Service) exposeJenkinsConfiguration(instance *sonarApi.Sonar, ciUserName string) error {
+	err := s.platformService.CreateJenkinsServiceAccount(instance.Namespace, ciUserName, tokenType)
+	if err != nil {
+		return fmt.Errorf("failed to create Jenkins Service Account for %v: %w", ciUserName, err)
+	}
+
+	data := sonarHelper.InitNewJenkinsPluginInfo(true)
+	data.ServerName = instance.Name
+	data.SecretName = ciUserName
+	data.ServerPath = ""
+	if len(instance.Spec.BasePath) != 0 {
+		data.ServerPath = fmt.Sprintf("/%v", instance.Spec.BasePath)
+	}
+
+	jenkinsScriptContext, err := sonarHelper.ParseDefaultTemplate(data)
+	if err != nil {
+		return fmt.Errorf("failed to parse default Jenkins plugin template: %w", err)
+	}
+
+	configMapName := fmt.Sprintf("%s-%s", instance.Name, sonarSpec.JenkinsPluginConfigPostfix)
+	configMapData := map[string]string{
+		jenkinsDefaultScriptConfigMapKey: jenkinsScriptContext.String(),
+	}
+
+	err = s.platformService.CreateConfigMap(instance, configMapName, configMapData)
+	if err != nil {
+		return fmt.Errorf("failed to create Config Map %v: %w", configMapName, err)
+	}
+
+	err = s.platformService.CreateJenkinsScript(instance.Namespace, configMapName)
+	if err != nil {
+		return fmt.Errorf("failed to create Jenkins Script for %v: %w", ciUserName, err)
+	}
+
+	return nil
+}
+
 func (s Service) createEDPComponent(ctx context.Context, sonar *sonarApi.Sonar) error {
 	url, err := s.platformService.GetExternalEndpoint(ctx, sonar.Namespace, sonar.Name)
 	if err != nil {
@@ -540,8 +548,10 @@ func (s Service) Configure(ctx context.Context, instance *sonarApi.Sonar) error 
 		return errors.Wrap(err, "unable to setup groups")
 	}
 
-	if err = s.setupWebhook(ctx, sc, instance.Namespace); err != nil {
-		return errors.Wrap(err, "unable to setup webhook")
+	if s.jenkinsEnabled(ctx, instance.Namespace) {
+		if err = s.setupWebhook(ctx, sc, instance.Namespace); err != nil {
+			return fmt.Errorf("unable to setup webhook: %w", err)
+		}
 	}
 
 	if err = configureGeneralSettings(sc); err != nil {
@@ -560,7 +570,7 @@ func (s *Service) setupWebhook(ctx context.Context, sc ClientInterface, instance
 	if err != nil {
 		return errors.Wrap(err, "unable to get internal jenkins url")
 	}
-	if err = sc.AddWebhook(jenkinsLogin, fmt.Sprintf("%v/%v", jenkinsUrl, webhookUrl)); err != nil {
+	if err = sc.AddWebhook(ciUserLogin, fmt.Sprintf("%v/%v", jenkinsUrl, webhookUrl)); err != nil {
 		return errors.Wrap(err, "Failed to add Jenkins webhook!")
 	}
 
@@ -726,4 +736,14 @@ func (s Service) getInternalJenkinsUrl(ctx context.Context, namespace string) (s
 	}
 
 	return fmt.Sprintf("http://jenkins.%s:8080%v", namespace, basePath), nil
+}
+
+func (s Service) jenkinsEnabled(ctx context.Context, namespace string) bool {
+	jenkinsList := &jenkinsApi.JenkinsList{}
+
+	if err := s.k8sClient.List(ctx, jenkinsList, &client.ListOptions{Namespace: namespace}); err != nil {
+		return false
+	}
+
+	return len(jenkinsList.Items) != 0
 }
