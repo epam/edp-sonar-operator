@@ -69,6 +69,6 @@ A Helm chart for EDP Sonar Operator
 | sonar.storage.database.class | string | `"gp2"` | Storageclass for database data volume |
 | sonar.storage.database.size | string | `"1Gi"` | Size for database data volume |
 | sonar.tolerations | list | `[]` |  |
-| sonar.version | string | `"8.9.9-community"` | Define sonar docker image tag |
+| sonar.version | string | `"8.9.10-community"` | Define sonar docker image tag |
 | tolerations | list | `[]` |  |
 
