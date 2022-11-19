@@ -17,7 +17,7 @@ data:
     export no_proxy={{ .Values.sonar.plugins.noProxy }}
     {{- end }}
     {{- if .Values.sonar.plugins.install }}
-      [ -e {{ .Values.sonar.sonarqubeFolder }}/extensions/downloads/* ] && rm {{ .Values.sonar.sonarqubeFolder }}/extensions/downloads/*
+      rm -f {{ .Values.sonar.sonarqubeFolder }}/extensions/downloads/*
       {{ range $index, $val := .Values.sonar.plugins.install }}
       echo {{ $val | quote }} >> {{ $.Values.sonar.sonarqubeFolder }}/extensions/downloads/list{{ end }}
       cat {{ .Values.sonar.sonarqubeFolder }}/extensions/downloads/list | xargs -n 1 -P 8 wget --directory-prefix {{ .Values.sonar.sonarqubeFolder }}/extensions/downloads --no-verbose{{ if .Values.sonar.plugins.noCheckCertificate }} --no-check-certificate{{ end }}
