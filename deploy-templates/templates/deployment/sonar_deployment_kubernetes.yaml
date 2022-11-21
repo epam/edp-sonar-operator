@@ -89,18 +89,6 @@ spec:
             - mountPath: {{ .Values.sonar.sonarqubeFolder }}/extensions/plugins
               name: data
               subPath: extensions/plugins
-            {{- if .Values.sonar.plugins.install }}
-            - mountPath: {{ .Values.sonar.sonarqubeFolder }}/extensions/downloads
-              name: data
-              subPath: extensions/downloads
-            {{- end }}
-            {{- if .Values.sonar.plugins.lib }}
-            {{- range $index, $val := .Values.sonar.plugins.lib }}
-            - mountPath: {{ $.Values.sonar.sonarqubeFolder }}/lib/common/{{ $val }}
-              name: data
-              subPath: lib/common/{{ $val }}
-            {{- end }}
-            {{- end }}
       dnsPolicy: ClusterFirst
       initContainers:
       {{- if .Values.sonar.plugins.install }}
@@ -111,12 +99,9 @@ spec:
             "-e",
             "/tmp/scripts/install_plugins.sh"]
           volumeMounts:
-            - mountPath: {{ .Values.sonar.sonarqubeFolder }}/extensions/downloads
+            - mountPath: {{ .Values.sonar.sonarqubeFolder }}/extensions/plugins
               name: data
-              subPath: extensions/downloads
-            - mountPath: {{ .Values.sonar.sonarqubeFolder }}/lib/common
-              name: data
-              subPath: lib/common
+              subPath: extensions/plugins
             - name: install-plugins
               mountPath: /tmp/scripts/
             {{- if .Values.sonar.plugins.netrcCreds }}
