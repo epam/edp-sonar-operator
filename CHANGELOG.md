@@ -2,6 +2,29 @@
 ## [Unreleased]
 
 
+<a name="v2.13.0"></a>
+## [v2.13.0] - 2022-11-21
+### Features
+
+- Skip jenkins configuration when it is not deployed [EPMDEDP-10650](https://jiraeu.epam.com/browse/EPMDEDP-10650)
+
+### Bug Fixes
+
+- Align SonarQube plugins installation [EPMDEDP-10821](https://jiraeu.epam.com/browse/EPMDEDP-10821)
+- Clean up sonar plugins installation folder [EPMDEDP-10821](https://jiraeu.epam.com/browse/EPMDEDP-10821)
+
+### Code Refactoring
+
+- Disable Sonar telemetry for OpenShift deployment [EPMDEDP-10655](https://jiraeu.epam.com/browse/EPMDEDP-10655)
+- Disable sonar telemetry by default [EPMDEDP-10655](https://jiraeu.epam.com/browse/EPMDEDP-10655)
+
+### Routine
+
+- Update current development version [EPMDEDP-10274](https://jiraeu.epam.com/browse/EPMDEDP-10274)
+- Enable go-lint for operator [EPMDEDP-10628](https://jiraeu.epam.com/browse/EPMDEDP-10628)
+- Upgrade sonar to version LTS 8.9.10 [EPMDEDP-10754](https://jiraeu.epam.com/browse/EPMDEDP-10754)
+
+
 <a name="v2.12.0"></a>
 ## [v2.12.0] - 2022-08-26
 ### Features
@@ -196,7 +219,8 @@ Ensure keycloak role is aligned when migrating from
 <a name="v2.7.0"></a>
 ## [v2.7.0] - 2021-12-03
 
-[Unreleased]: https://github.com/epam/edp-sonar-operator/compare/v2.12.0...HEAD
+[Unreleased]: https://github.com/epam/edp-sonar-operator/compare/v2.13.0...HEAD
+[v2.13.0]: https://github.com/epam/edp-sonar-operator/compare/v2.12.0...v2.13.0
 [v2.12.0]: https://github.com/epam/edp-sonar-operator/compare/v2.11.0...v2.12.0
 [v2.11.0]: https://github.com/epam/edp-sonar-operator/compare/v2.10.3...v2.11.0
 [v2.10.3]: https://github.com/epam/edp-sonar-operator/compare/v2.10.2...v2.10.3
