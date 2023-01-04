@@ -60,12 +60,12 @@ sonar:
   storage:
     data:
       # --  Storageclass for Sonar data volume
-      class: gp2
+      # class: gp2
       # --  Size for Sonar data volume
       size: 1Gi
     database:
       # --  Storageclass for database data volume
-      class: gp2
+      # class: gp2
       # --  Size for database data volume
       size: 1Gi
   annotations: {}

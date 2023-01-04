@@ -1,3 +1,4 @@
+{{- $storageClassName := .Values.sonar.storage.database.class -}}
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
@@ -11,5 +12,7 @@ spec:
   resources:
     requests:
       storage: {{ .Values.sonar.storage.database.size }}
-  storageClassName: {{ .Values.sonar.storage.database.class }}
+{{ if $storageClassName }}
+  storageClassName: "{{ $storageClassName }}"
+{{ end }}
   volumeMode: Filesystem

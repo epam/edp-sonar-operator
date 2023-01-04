@@ -64,9 +64,7 @@ A Helm chart for EDP Sonar Operator
 | sonar.resources.requests.cpu | string | `"100m"` |  |
 | sonar.resources.requests.memory | string | `"1.5Gi"` |  |
 | sonar.sonarqubeFolder | string | `"/opt/sonarqube"` |  |
-| sonar.storage.data.class | string | `"gp2"` | Storageclass for Sonar data volume |
 | sonar.storage.data.size | string | `"1Gi"` | Size for Sonar data volume |
-| sonar.storage.database.class | string | `"gp2"` | Storageclass for database data volume |
 | sonar.storage.database.size | string | `"1Gi"` | Size for database data volume |
 | sonar.tolerations | list | `[]` |  |
 | sonar.version | string | `"8.9.10-community"` | Define sonar docker image tag |
