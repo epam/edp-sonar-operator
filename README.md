@@ -34,9 +34,8 @@ In order to install the EDP Sonar Operator, follow the steps below:
      ```bash
      helm search repo epamedp/sonar-operator -l
      NAME                    CHART VERSION   APP VERSION     DESCRIPTION
-     epamedp/sonar-operator  2.11.0          2.11.0          A Helm chart for EDP Sonar Operator
-     epamedp/sonar-operator  2.10.2          2.10.2          A Helm chart for EDP Sonar Operator
-     epamedp/sonar-operator  2.10.0          2.10.0          A Helm chart for EDP Sonar Operator
+     epamedp/sonar-operator  2.13.0          2.13.0          A Helm chart for EDP Sonar Operator
+     epamedp/sonar-operator  2.12.0          2.12.0          A Helm chart for EDP Sonar Operator
      ```
 
     _**NOTE:** It is highly recommended to use the latest released version._
