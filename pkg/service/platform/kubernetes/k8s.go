@@ -2,10 +2,10 @@ package kubernetes
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"strings"
 
-	"github.com/pkg/errors"
 	coreV1Api "k8s.io/api/core/v1"
 	k8serr "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -22,7 +22,7 @@ import (
 	edpCompApi "github.com/epam/edp-component-operator/pkg/apis/v1/v1"
 	jenkinsV1Api "github.com/epam/edp-jenkins-operator/v2/pkg/apis/v2/v1"
 
-	sonarApi "github.com/epam/edp-sonar-operator/v2/pkg/apis/edp/v1"
+	sonarApi "github.com/epam/edp-sonar-operator/v2/api/edp/v1"
 	"github.com/epam/edp-sonar-operator/v2/pkg/service/platform/helper"
 	platformHelper "github.com/epam/edp-sonar-operator/v2/pkg/service/platform/helper"
 )
@@ -74,18 +74,22 @@ func (s *K8SService) Init(config *rest.Config, scheme *runtime.Scheme, client cl
 	s.NetworkingV1Client = ecl
 	s.AppsClient = acl
 	s.Scheme = scheme
+
 	return nil
 }
 
-func (s K8SService) GetSecretData(namespace string, name string) (map[string][]byte, error) {
+func (s K8SService) GetSecretData(namespace, name string) (map[string][]byte, error) {
 	sonarSecret, err := s.k8sClusterClient.Secrets(namespace).Get(context.Background(), name, metav1.GetOptions{})
-	if err != nil && k8serr.IsNotFound(err) {
+	if k8serr.IsNotFound(err) {
 		log.Info("Secret in namespace not found", "secret name", name, namespaceField, namespace)
-		var emptyMap map[string][]byte
-		return emptyMap, nil
-	} else if err != nil {
+
+		return nil, nil
+	}
+
+	if err != nil {
 		return nil, err
 	}
+
 	return sonarSecret.Data, nil
 }
 
@@ -143,20 +147,26 @@ func (s K8SService) CreateConfigMap(instance *sonarApi.Sonar, configMapName stri
 	}
 
 	if err := controllerutil.SetControllerReference(instance, configMapObject, s.Scheme); err != nil {
-		return errors.Wrapf(err, "Couldn't set reference for Config Map %v object", configMapObject.Name)
+		return fmt.Errorf("failed to set reference for config map -%s object: %w", configMapObject.Name, err)
 	}
+
 	_, err := s.k8sClusterClient.ConfigMaps(instance.Namespace).Get(context.Background(), configMapObject.Name, metav1.GetOptions{})
 	if err != nil {
-		if k8serr.IsNotFound(err) {
-			cm, errCreateConfigMap := s.k8sClusterClient.ConfigMaps(configMapObject.Namespace).Create(context.Background(), configMapObject, metav1.CreateOptions{})
-			if errCreateConfigMap != nil {
-				return errors.Wrapf(errCreateConfigMap, "Couldn't create Config Map %v object", configMapObject.Name)
-			}
-			log.Info("ConfigMap has been created", namespaceField, cm.Namespace, "config map name", cm.Name)
-			return nil
+		if !k8serr.IsNotFound(err) {
+			return fmt.Errorf("failed to get config map - %s: %w", configMapObject.Name, err)
 		}
-		return errors.Wrapf(err, "Couldn't get ConfigMap %v object", configMapObject.Name)
+
+		cm, errCreateConfigMap := s.k8sClusterClient.ConfigMaps(configMapObject.Namespace).Create(context.Background(), configMapObject, metav1.CreateOptions{})
+		if errCreateConfigMap != nil {
+			return fmt.Errorf("failed to create config map - %s: %w", configMapObject.Name, err)
+		}
+
+		log.Info("ConfigMap has been created", namespaceField, cm.Namespace, "config map name", cm.Name)
+
+		return nil
+
 	}
+
 	return nil
 }
 
@@ -253,8 +263,10 @@ func (s K8SService) CreateEDPComponentIfNotExist(sonar *sonarApi.Sonar, url stri
 		if k8serr.IsNotFound(err) {
 			return s.createEDPComponent(sonar, url, icon)
 		}
-		return errors.Wrapf(err, "failed to get edp component: %v", sonar.Name)
+
+		return fmt.Errorf("failed to get edp component - %s: %w", sonar.Name, err)
 	}
+
 	return nil
 }
 

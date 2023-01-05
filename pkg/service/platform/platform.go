@@ -5,13 +5,12 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/pkg/errors"
 	coreV1Api "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/client-go/tools/clientcmd"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
-	sonarApi "github.com/epam/edp-sonar-operator/v2/pkg/apis/edp/v1"
+	sonarApi "github.com/epam/edp-sonar-operator/v2/api/edp/v1"
 	"github.com/epam/edp-sonar-operator/v2/pkg/service/platform/kubernetes"
 	"github.com/epam/edp-sonar-operator/v2/pkg/service/platform/openshift"
 )
@@ -47,20 +46,19 @@ func NewService(platformType string, scheme *runtime.Scheme, client client.Clien
 	switch strings.ToLower(platformType) {
 	case Kubernetes:
 		s := kubernetes.K8SService{}
-		err = s.Init(restConfig, scheme, client)
-		if err != nil {
-			return nil, errors.Wrap(err, "Failed to initialize Kubernetes platform service!")
+		if err = s.Init(restConfig, scheme, client); err != nil {
+			return nil, fmt.Errorf("failed to initialize Kubernetes platform service: %w", err)
 		}
+
 		return s, nil
 	case Openshift:
 		s := openshift.OpenshiftService{}
-		err = s.Init(restConfig, scheme, client)
-		if err != nil {
-			return nil, errors.Wrap(err, "Failed to initialize OpenShift platform service!")
+		if err = s.Init(restConfig, scheme, client); err != nil {
+			return nil, fmt.Errorf("failed to initialize OpenShift platform service: %w", err)
 		}
+
 		return &s, nil
 	default:
-		err = fmt.Errorf("platform %s is not supported", platformType)
-		return nil, err
+		return nil, fmt.Errorf("platform %s is not supported", platformType)
 	}
 }

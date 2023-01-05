@@ -1,0 +1,37 @@
+domain: edp.epam.com
+layout:
+- go.kubebuilder.io/v3
+plugins:
+  manifests.sdk.operatorframework.io/v2: {}
+  scorecard.sdk.operatorframework.io/v2: {}
+projectName: sonar-operator
+repo: github.com/epam/edp-sonar-operator
+resources:
+- api:
+    crdVersion: v1
+    namespaced: true
+  controller: true
+  domain: edp.epam.com
+  group: v2
+  kind: Sonar
+  path: github.com/epam/edp-sonar-operator/api/v1
+  version: v1
+- api:
+    crdVersion: v1
+    namespaced: true
+  controller: true
+  domain: edp.epam.com
+  group: v2
+  kind: PermissionTemplate
+  path: github.com/epam/edp-sonar-operator/api/v1
+  version: v1
+- api:
+    crdVersion: v1
+    namespaced: true
+  controller: true
+  domain: edp.epam.com
+  group: v2
+  kind: SonarGroup
+  path: github.com/epam/edp-sonar-operator/api/v1
+  version: v1
+version: "3"

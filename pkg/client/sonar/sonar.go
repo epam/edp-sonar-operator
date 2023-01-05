@@ -14,7 +14,7 @@ import (
 	"gopkg.in/resty.v1"
 	ctrl "sigs.k8s.io/controller-runtime"
 
-	sonarClientHelper "github.com/epam/edp-sonar-operator/v2/pkg/client/helper"
+	"github.com/epam/edp-sonar-operator/v2/pkg/helper"
 )
 
 const (
@@ -184,7 +184,7 @@ func (sc Client) InstallPlugins(plugins []string) error {
 
 	needReboot := false
 	for _, plugin := range plugins {
-		if sonarClientHelper.CheckPluginInstalled(installedPlugins, plugin) {
+		if helper.CheckPluginInstalled(installedPlugins, plugin) {
 			continue
 		} else {
 			needReboot = true
@@ -422,7 +422,7 @@ func (sc Client) UploadProfile(profileName string, profilePath string) (string, 
 		return profileId, nil
 	}
 
-	if !sonarClientHelper.FileExists(profilePath) {
+	if !helper.FileExists(profilePath) {
 		return "", fmt.Errorf("file %s does not exist in path provided: %s", profileName, profilePath)
 	}
 

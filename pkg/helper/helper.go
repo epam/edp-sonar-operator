@@ -10,10 +10,10 @@ import (
 )
 
 const (
-	watchNamespaceEnvVar          = "WATCH_NAMESPACE"
-	debugModeEnvVar               = "DEBUG_MODE"
-	inClusterNamespacePath        = "/var/run/secrets/kubernetes.io/serviceaccount/namespace"
-	platformType           string = "PLATFORM_TYPE"
+	watchNamespaceEnvVar   = "WATCH_NAMESPACE"
+	debugModeEnvVar        = "DEBUG_MODE"
+	inClusterNamespacePath = "/var/run/secrets/kubernetes.io/serviceaccount/namespace"
+	platformType           = "PLATFORM_TYPE"
 )
 
 var log = ctrl.Log.WithName("helper_sonar")
@@ -23,6 +23,7 @@ func GetExecutableFilePath() string {
 	if err != nil {
 		log.Error(err, "Couldn't get executable path")
 	}
+
 	return filepath.Dir(executableFilePath)
 }
 
@@ -43,6 +44,7 @@ func GetWatchNamespace() (string, error) {
 	if !found {
 		return "", fmt.Errorf("%s must be set", watchNamespaceEnvVar)
 	}
+
 	return ns, nil
 }
 
@@ -57,6 +59,7 @@ func GetDebugMode() (bool, error) {
 	if err != nil {
 		return false, err
 	}
+
 	return b, nil
 }
 
@@ -64,4 +67,23 @@ func GetDebugMode() (bool, error) {
 func RunningInCluster() bool {
 	_, err := os.Stat(inClusterNamespacePath)
 	return !os.IsNotExist(err)
+}
+
+func FileExists(filename string) bool {
+	info, err := os.Stat(filename)
+	if os.IsNotExist(err) {
+		return false
+	}
+
+	return !info.IsDir()
+}
+
+func CheckPluginInstalled(pluginsList []string, plugin string) bool {
+	for i := range pluginsList {
+		if pluginsList[i] == plugin {
+			return true
+		}
+	}
+
+	return false
 }

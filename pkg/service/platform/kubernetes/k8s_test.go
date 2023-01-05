@@ -22,8 +22,8 @@ import (
 	edpCompApi "github.com/epam/edp-component-operator/pkg/apis/v1/v1"
 	jenkinsV1Api "github.com/epam/edp-jenkins-operator/v2/pkg/apis/v2/v1"
 
+	sonarApi "github.com/epam/edp-sonar-operator/v2/api/edp/v1"
 	kMock "github.com/epam/edp-sonar-operator/v2/mocks/k8s"
-	sonarApi "github.com/epam/edp-sonar-operator/v2/pkg/apis/edp/v1"
 	"github.com/epam/edp-sonar-operator/v2/pkg/helper"
 )
 
@@ -44,7 +44,7 @@ func createObjectMeta() metav1.ObjectMeta {
 	}
 }
 
-func createSecret(name string, namespace string, data map[string][]byte) *coreV1Api.Secret {
+func createSecret(name, namespace string, data map[string][]byte) *coreV1Api.Secret {
 	labels := helper.GenerateLabels(name)
 
 	return &coreV1Api.Secret{
@@ -194,7 +194,7 @@ func TestK8SService_GetExternalEndpoint_Err(t *testing.T) {
 	errTest := errors.New("test")
 	ctx := context.Background()
 	networkingClient := kMock.NetworkingClient{}
-	ingresses := &kMock.Ingress{}
+	ingresses := &kMock.IngressInterface{}
 	networkingClient.On("Ingresses", namespace).Return(ingresses)
 	ingresses.On("Get", ctx, name, metav1.GetOptions{}).Return(nil, errTest)
 
@@ -227,8 +227,10 @@ func TestK8SService_GetExternalEndpoint(t *testing.T) {
 		},
 	}
 	ctx := context.Background()
+
 	networkingClient := kMock.NetworkingClient{}
-	ingresses := &kMock.Ingress{}
+	ingresses := &kMock.IngressInterface{}
+
 	networkingClient.On("Ingresses", namespace).Return(ingresses)
 	ingresses.On("Get", ctx, name, metav1.GetOptions{}).Return(&ingressCR, nil)
 
@@ -256,7 +258,7 @@ func TestK8SService_CreateConfigMap_BadScheme(t *testing.T) {
 	}
 	err := service.CreateConfigMap(&sonarCR, name, configMapData)
 	assert.Error(t, err)
-	assert.True(t, strings.Contains(err.Error(), "Couldn't set reference for Config Map"))
+	assert.Contains(t, err.Error(), "failed to set reference for config map")
 	configMapClient.AssertExpectations(t)
 	coreClient.AssertExpectations(t)
 }
@@ -278,7 +280,7 @@ func TestK8SService_CreateConfigMap_GetErr(t *testing.T) {
 	}
 	err := service.CreateConfigMap(&sonarCR, name, configMapData)
 	assert.Error(t, err)
-	assert.True(t, strings.Contains(err.Error(), "Couldn't get ConfigMap"))
+	assert.Contains(t, err.Error(), "failed to get config map")
 	configMapClient.AssertExpectations(t)
 	coreClient.AssertExpectations(t)
 }
@@ -325,7 +327,7 @@ func TestK8SService_CreateConfigMap_CreateErr(t *testing.T) {
 	}
 	err := service.CreateConfigMap(&sonarCR, name, configMapData)
 	assert.Error(t, err)
-	assert.True(t, strings.Contains(err.Error(), "Couldn't create Config Map"))
+	assert.Contains(t, err.Error(), "failed to create config map")
 	configMapClient.AssertExpectations(t)
 	coreClient.AssertExpectations(t)
 }
@@ -484,7 +486,7 @@ func TestK8SService_CreateEDPComponentIfNotExist(t *testing.T) {
 func TestK8SService_GetAvailableDeploymentReplicas_GetErr(t *testing.T) {
 	sonarCR := sonarApi.Sonar{ObjectMeta: createObjectMeta()}
 	appClient := kMock.PodsStateClient{}
-	deploymentClient := &kMock.Deployment{}
+	deploymentClient := &kMock.DeploymentInterface{}
 	errTest := errors.New("test")
 
 	appClient.On("Deployments", namespace).Return(deploymentClient)
@@ -501,7 +503,7 @@ func TestK8SService_GetAvailableDeploymentReplicas_GetErr(t *testing.T) {
 func TestK8SService_GetAvailableDeploymentReplicas(t *testing.T) {
 	sonarCR := sonarApi.Sonar{ObjectMeta: createObjectMeta()}
 	appClient := kMock.PodsStateClient{}
-	deploymentClient := &kMock.Deployment{}
+	deploymentClient := &kMock.DeploymentInterface{}
 	deploymentCR := appsV1.Deployment{Status: appsV1.DeploymentStatus{
 		AvailableReplicas: 1,
 	}}

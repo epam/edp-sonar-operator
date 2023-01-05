@@ -16,8 +16,8 @@ import (
 	"k8s.io/client-go/rest"
 	"sigs.k8s.io/controller-runtime/pkg/client/fake"
 
+	sonarApi "github.com/epam/edp-sonar-operator/v2/api/edp/v1"
 	oMock "github.com/epam/edp-sonar-operator/v2/mocks/openshift"
-	sonarApi "github.com/epam/edp-sonar-operator/v2/pkg/apis/edp/v1"
 )
 
 const (
