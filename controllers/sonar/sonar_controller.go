@@ -15,7 +15,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 
-	sonarApi "github.com/epam/edp-sonar-operator/v2/api/edp/v1"
+	sonarApi "github.com/epam/edp-sonar-operator/v2/api/v1"
 	"github.com/epam/edp-sonar-operator/v2/pkg/service/platform"
 	"github.com/epam/edp-sonar-operator/v2/pkg/service/sonar"
 )

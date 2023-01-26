@@ -19,10 +19,10 @@ import (
 	"k8s.io/client-go/rest"
 	"sigs.k8s.io/controller-runtime/pkg/client/fake"
 
-	edpCompApi "github.com/epam/edp-component-operator/pkg/apis/v1/v1"
+	edpCompApi "github.com/epam/edp-component-operator/api/v1"
 	jenkinsV1Api "github.com/epam/edp-jenkins-operator/v2/pkg/apis/v2/v1"
 
-	sonarApi "github.com/epam/edp-sonar-operator/v2/api/edp/v1"
+	sonarApi "github.com/epam/edp-sonar-operator/v2/api/v1"
 	kMock "github.com/epam/edp-sonar-operator/v2/mocks/k8s"
 	"github.com/epam/edp-sonar-operator/v2/pkg/helper"
 )

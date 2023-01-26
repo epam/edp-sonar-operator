@@ -23,10 +23,10 @@ import (
 
 	jenkinsApi "github.com/epam/edp-jenkins-operator/v2/pkg/apis/v2/v1"
 	platformHelper "github.com/epam/edp-jenkins-operator/v2/pkg/service/platform/helper"
-	keycloakApi "github.com/epam/edp-keycloak-operator/pkg/apis/v1/v1"
-	"github.com/epam/edp-keycloak-operator/pkg/controller/helper"
+	keycloakApi "github.com/epam/edp-keycloak-operator/api/v1"
+	"github.com/epam/edp-keycloak-operator/controllers/helper"
 
-	sonarApi "github.com/epam/edp-sonar-operator/v2/api/edp/v1"
+	sonarApi "github.com/epam/edp-sonar-operator/v2/api/v1"
 	"github.com/epam/edp-sonar-operator/v2/pkg/client/sonar"
 	sonarClient "github.com/epam/edp-sonar-operator/v2/pkg/client/sonar"
 	pkgHelper "github.com/epam/edp-sonar-operator/v2/pkg/helper"

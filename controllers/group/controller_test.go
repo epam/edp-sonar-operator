@@ -20,7 +20,7 @@ import (
 
 	"github.com/epam/edp-common/pkg/mock"
 
-	apiV1 "github.com/epam/edp-sonar-operator/v2/api/edp/v1"
+	sonarApi "github.com/epam/edp-sonar-operator/v2/api/v1"
 	cMock "github.com/epam/edp-sonar-operator/v2/mocks/client"
 	sMock "github.com/epam/edp-sonar-operator/v2/mocks/service"
 	sonarClient "github.com/epam/edp-sonar-operator/v2/pkg/client/sonar"
@@ -46,14 +46,14 @@ func createObjectMeta() metav1.ObjectMeta {
 		Name:      name}
 }
 
-func createInstance() apiV1.SonarGroup {
-	return apiV1.SonarGroup{
+func createInstance() sonarApi.SonarGroup {
+	return sonarApi.SonarGroup{
 		TypeMeta: metav1.TypeMeta{
 			Kind:       "SonarGroup",
 			APIVersion: "v1",
 		},
 		ObjectMeta: createObjectMeta(),
-		Status: apiV1.SonarGroupStatus{
+		Status: sonarApi.SonarGroupStatus{
 			ID: id,
 		},
 	}
@@ -62,13 +62,13 @@ func TestNewReconcile(t *testing.T) {
 	tm := metav1.Time{Time: time.Now()}
 	ctx := context.Background()
 
-	sg := apiV1.SonarGroup{
-		Spec: apiV1.SonarGroupSpec{
+	sg := sonarApi.SonarGroup{
+		Spec: sonarApi.SonarGroupSpec{
 			SonarOwner:  "sonar",
 			Name:        "sc-name",
 			Description: "sc-desc",
 		},
-		Status: apiV1.SonarGroupStatus{ID: "id1"},
+		Status: sonarApi.SonarGroupStatus{ID: "id1"},
 		TypeMeta: metav1.TypeMeta{
 			Kind:       "SonarGroup",
 			APIVersion: "v2.edp.epam.com/v1",
@@ -77,14 +77,14 @@ func TestNewReconcile(t *testing.T) {
 			DeletionTimestamp: &tm},
 	}
 
-	sn := apiV1.Sonar{
+	sn := sonarApi.Sonar{
 		ObjectMeta: metav1.ObjectMeta{Name: "sonar", Namespace: sg.Namespace},
 		TypeMeta:   metav1.TypeMeta{Kind: "Sonar", APIVersion: "v2.edp.epam.com/v1"},
-		Spec:       apiV1.SonarSpec{BasePath: "path"},
+		Spec:       sonarApi.SonarSpec{BasePath: "path"},
 	}
 
 	scheme := runtime.NewScheme()
-	if err := apiV1.AddToScheme(scheme); err != nil {
+	if err := sonarApi.AddToScheme(scheme); err != nil {
 		t.Fatal(err)
 	}
 
@@ -153,7 +153,7 @@ func TestReconcile_Reconcile_BadClientErr(t *testing.T) {
 func TestReconcile_Reconcile_NotFound(t *testing.T) {
 	ctx := context.Background()
 	scheme := runtime.NewScheme()
-	scheme.AddKnownTypes(v1.SchemeGroupVersion, &apiV1.SonarGroup{})
+	scheme.AddKnownTypes(v1.SchemeGroupVersion, &sonarApi.SonarGroup{})
 	client := fake.NewClientBuilder().WithScheme(scheme).Build()
 	controller := Reconcile{
 		client: client,
@@ -172,7 +172,7 @@ func TestReconcile_Reconcile_tryReconcile_ClientForChildErr(t *testing.T) {
 	scheme := runtime.NewScheme()
 	instance := createInstance()
 	service := sMock.ServiceInterface{}
-	scheme.AddKnownTypes(v1.SchemeGroupVersion, &apiV1.SonarGroup{})
+	scheme.AddKnownTypes(v1.SchemeGroupVersion, &sonarApi.SonarGroup{})
 	client := fake.NewClientBuilder().WithScheme(scheme).WithObjects(&instance).Build()
 
 	errTest := errors.New("test")
@@ -201,7 +201,7 @@ func TestReconcile_Reconcile_tryReconcile_GetGroupErr(t *testing.T) {
 	instance := createInstance()
 	service := sMock.ServiceInterface{}
 	sonarClientMock := &cMock.ClientInterface{}
-	scheme.AddKnownTypes(v1.SchemeGroupVersion, &apiV1.SonarGroup{})
+	scheme.AddKnownTypes(v1.SchemeGroupVersion, &sonarApi.SonarGroup{})
 	client := fake.NewClientBuilder().WithScheme(scheme).WithObjects(&instance).Build()
 
 	errTest := errors.New("test")
@@ -232,7 +232,7 @@ func TestReconcile_Reconcile_tryReconcile_CreateGroupErr(t *testing.T) {
 	instance := createInstance()
 	service := sMock.ServiceInterface{}
 	sonarClientMock := &cMock.ClientInterface{}
-	scheme.AddKnownTypes(v1.SchemeGroupVersion, &apiV1.SonarGroup{})
+	scheme.AddKnownTypes(v1.SchemeGroupVersion, &sonarApi.SonarGroup{})
 	client := fake.NewClientBuilder().WithScheme(scheme).WithObjects(&instance).Build()
 
 	errTest := errors.New("test")
@@ -261,7 +261,7 @@ func TestReconcile_Reconcile_tryReconcile_CreateGroupErr(t *testing.T) {
 func TestReconcile_Reconcile_tryReconcile_EmptyStatusID(t *testing.T) {
 	ctx := context.Background()
 	scheme := runtime.NewScheme()
-	instance := apiV1.SonarGroup{
+	instance := sonarApi.SonarGroup{
 		TypeMeta: metav1.TypeMeta{
 			Kind:       "SonarGroup",
 			APIVersion: "v1",
@@ -270,7 +270,7 @@ func TestReconcile_Reconcile_tryReconcile_EmptyStatusID(t *testing.T) {
 	}
 	service := sMock.ServiceInterface{}
 	sonarClientMock := &cMock.ClientInterface{}
-	scheme.AddKnownTypes(v1.SchemeGroupVersion, &apiV1.SonarGroup{})
+	scheme.AddKnownTypes(v1.SchemeGroupVersion, &sonarApi.SonarGroup{})
 	client := fake.NewClientBuilder().WithScheme(scheme).WithObjects(&instance).Build()
 
 	service.On("ClientForChild", ctx, &instance).Return(sonarClientMock, nil)
@@ -300,7 +300,7 @@ func TestReconcile_Reconcile_tryReconcile_UpdateGroupErr(t *testing.T) {
 	instance := createInstance()
 	service := sMock.ServiceInterface{}
 	sonarClientMock := &cMock.ClientInterface{}
-	scheme.AddKnownTypes(v1.SchemeGroupVersion, &apiV1.SonarGroup{})
+	scheme.AddKnownTypes(v1.SchemeGroupVersion, &sonarApi.SonarGroup{})
 	client := fake.NewClientBuilder().WithScheme(scheme).WithObjects(&instance).Build()
 
 	errTest := errors.New("test")
@@ -333,7 +333,7 @@ func TestReconcile_Reconcile_tryReconcile_DeleteResourceErr(t *testing.T) {
 	instance := createInstance()
 	service := sMock.ServiceInterface{}
 	sonarClientMock := &cMock.ClientInterface{}
-	scheme.AddKnownTypes(v1.SchemeGroupVersion, &apiV1.SonarGroup{})
+	scheme.AddKnownTypes(v1.SchemeGroupVersion, &sonarApi.SonarGroup{})
 	client := fake.NewClientBuilder().WithScheme(scheme).WithObjects(&instance).Build()
 
 	errTest := errors.New("test")

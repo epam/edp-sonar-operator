@@ -2,13 +2,6 @@ package main
 
 import (
 	"flag"
-	edpCompApi "github.com/epam/edp-component-operator/pkg/apis/v1/v1"
-	jenkinsApi "github.com/epam/edp-jenkins-operator/v2/pkg/apis/v2/v1"
-	keycloakApi "github.com/epam/edp-keycloak-operator/pkg/apis/v1/v1"
-	sonarApiv1 "github.com/epam/edp-sonar-operator/v2/api/edp/v1"
-	sonarApiv1alpha1 "github.com/epam/edp-sonar-operator/v2/api/edp/v1alpha1"
-	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
-	clientgoscheme "k8s.io/client-go/kubernetes/scheme"
 	"os"
 
 	// Import all Kubernetes client auth plugins (e.g. Azure, GCP, OIDC, etc.)
@@ -17,6 +10,8 @@ import (
 
 	"k8s.io/apimachinery/pkg/api/meta"
 	"k8s.io/apimachinery/pkg/runtime"
+	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
+	clientgoscheme "k8s.io/client-go/kubernetes/scheme"
 	"k8s.io/client-go/rest"
 	ctrl "sigs.k8s.io/controller-runtime"
 	//+kubebuilder:scaffold:imports
@@ -25,6 +20,12 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/log/zap"
 
 	buildInfo "github.com/epam/edp-common/pkg/config"
+	edpCompApi "github.com/epam/edp-component-operator/api/v1"
+	jenkinsApi "github.com/epam/edp-jenkins-operator/v2/pkg/apis/v2/v1"
+	keycloakApi "github.com/epam/edp-keycloak-operator/api/v1"
+
+	sonarApiv1 "github.com/epam/edp-sonar-operator/v2/api/v1"
+	sonarApiv1alpha1 "github.com/epam/edp-sonar-operator/v2/api/v1alpha1"
 	"github.com/epam/edp-sonar-operator/v2/controllers/group"
 	"github.com/epam/edp-sonar-operator/v2/controllers/permission_template"
 	"github.com/epam/edp-sonar-operator/v2/controllers/sonar"
