@@ -90,7 +90,7 @@ sonar:
     install:
       - "https://github.com/vaulttec/sonar-auth-oidc/releases/download/v2.1.1/sonar-auth-oidc-plugin-2.1.1.jar"
       - "https://github.com/checkstyle/sonar-checkstyle/releases/download/9.3/checkstyle-sonar-plugin-9.3.jar"
-      - "https://github.com/spotbugs/sonar-findbugs/releases/download/4.2.0/sonar-findbugs-plugin-4.2.0.jar"
+      - "https://github.com/spotbugs/sonar-findbugs/releases/download/4.2.2/sonar-findbugs-plugin-4.2.2.jar"
       - "https://github.com/jborgers/sonar-pmd/releases/download/3.4.0/sonar-pmd-plugin-3.4.0.jar"
       - "https://github.com/sbaudoin/sonar-ansible/releases/download/v2.5.1/sonar-ansible-plugin-2.5.1.jar"
       - "https://github.com/sbaudoin/sonar-yaml/releases/download/v1.7.0/sonar-yaml-plugin-1.7.0.jar"
