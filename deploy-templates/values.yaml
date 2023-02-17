@@ -30,6 +30,20 @@ resources:
     cpu: 50m
     memory: 64Mi
 
+# -- Additional volumes to be added to the pod
+extraVolumes: []
+#  - name: custom-ca
+#    secret:
+#      defaultMode: 420
+#      secretName: custom-ca
+
+# -- Additional volumeMounts to be added to the container
+extraVolumeMounts: []
+#  - name: custom-ca
+#    mountPath: /etc/ssl/certs/CA.crt
+#    readOnly: true
+#    subPath: CA.crt
+
 sonar:
   initContainers:
     # image: busybox:1.32

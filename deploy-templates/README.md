@@ -23,6 +23,8 @@ A Helm chart for EDP Sonar Operator
 |-----|------|---------|-------------|
 | affinity | object | `{}` |  |
 | annotations | object | `{}` |  |
+| extraVolumeMounts | list | `[]` | Additional volumeMounts to be added to the container |
+| extraVolumes | list | `[]` | Additional volumes to be added to the pod |
 | global.dnsWildCard | string | `nil` | a cluster DNS wildcard name |
 | global.edpName | string | `""` | namespace or a project name (in case of OpenShift) |
 | global.openshift.deploymentType | string | `"deployments"` | Wich type of kind will be deployed to Openshift (values: deployments/deploymentConfigs) |
