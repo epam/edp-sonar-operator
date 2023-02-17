@@ -1,6 +1,21 @@
 <a name="unreleased"></a>
 ## [Unreleased]
 
+### Features
+
+- Updated project skeleton [EPMDEDP-11166](https://jiraeu.epam.com/browse/EPMDEDP-11166)
+- Updated EDP components [EPMDEDP-11206](https://jiraeu.epam.com/browse/EPMDEDP-11206)
+- Provide opportunity to use defaul cluster storageClassName [EPMDEDP-11230](https://jiraeu.epam.com/browse/EPMDEDP-11230)
+
+### Routine
+
+- Update current development version [EPMDEDP-10610](https://jiraeu.epam.com/browse/EPMDEDP-10610)
+- Bump sonar findbugs version [EPMDEDP-11381](https://jiraeu.epam.com/browse/EPMDEDP-11381)
+
+### Documentation
+
+- Update chart and application version in Readme file [EPMDEDP-11221](https://jiraeu.epam.com/browse/EPMDEDP-11221)
+
 
 <a name="v2.13.0"></a>
 ## [v2.13.0] - 2022-12-06
@@ -53,8 +68,8 @@
 - Update SonarQube plugins version [EPMDEDP-10274](https://jiraeu.epam.com/browse/EPMDEDP-10274)
 - Update SonarQube to 8.9.9-community version [EPMDEDP-10274](https://jiraeu.epam.com/browse/EPMDEDP-10274)
 - Update sonar version to 8.9.9-community [EPMDEDP-10281](https://jiraeu.epam.com/browse/EPMDEDP-10281)
-- Update sonar version to 8.9.9-community [EPMDEDP-10281](https://jiraeu.epam.com/browse/EPMDEDP-10281)
 - Revert: Update sonar version to 8.9.9-community [EPMDEDP-10281](https://jiraeu.epam.com/browse/EPMDEDP-10281)
+- Update sonar version to 8.9.9-community [EPMDEDP-10281](https://jiraeu.epam.com/browse/EPMDEDP-10281)
 - Change 'go get' to 'go install' for git-chglog [EPMDEDP-10337](https://jiraeu.epam.com/browse/EPMDEDP-10337)
 - Use deployments as default deploymentType for OpenShift [EPMDEDP-10344](https://jiraeu.epam.com/browse/EPMDEDP-10344)
 - Remove VERSION file [EPMDEDP-10387](https://jiraeu.epam.com/browse/EPMDEDP-10387)
@@ -88,8 +103,8 @@
 - Ensure CI user has browse permissions [EPMDEDP-7506](https://jiraeu.epam.com/browse/EPMDEDP-7506)
 - sonar secrets generation [EPMDEDP-7633](https://jiraeu.epam.com/browse/EPMDEDP-7633)
 - Changelog links [EPMDEDP-7847](https://jiraeu.epam.com/browse/EPMDEDP-7847)
-- Upgrade SonarQube to the LTS 8.9.4 version [EPMDEDP-8041](https://jiraeu.epam.com/browse/EPMDEDP-8041)
 - Upgrade SonarQube to the LTS 8.9.6 version [EPMDEDP-8041](https://jiraeu.epam.com/browse/EPMDEDP-8041)
+- Upgrade SonarQube to the LTS 8.9.4 version [EPMDEDP-8041](https://jiraeu.epam.com/browse/EPMDEDP-8041)
 - save template ID in k8s, immediately after creation in sonar [EPMDEDP-8055](https://jiraeu.epam.com/browse/EPMDEDP-8055)
 - QualityGatesListResponse unmarshalling bugfix [EPMDEDP-8224](https://jiraeu.epam.com/browse/EPMDEDP-8224)
 - Change ca-certificates in dockerfile [EPMDEDP-8238](https://jiraeu.epam.com/browse/EPMDEDP-8238)
@@ -109,11 +124,11 @@
 
 - Align CI flow for GH Actions [EPMDEDP-7391](https://jiraeu.epam.com/browse/EPMDEDP-7391)
 - Add fake kubeconfig to fix unit tests [EPMDEDP-7391](https://jiraeu.epam.com/browse/EPMDEDP-7391)
-- Add tests [EPMDEDP-7994](https://jiraeu.epam.com/browse/EPMDEDP-7994)
-- Add tests [EPMDEDP-7994](https://jiraeu.epam.com/browse/EPMDEDP-7994)
-- Add tests [EPMDEDP-7994](https://jiraeu.epam.com/browse/EPMDEDP-7994)
-- Add tests [EPMDEDP-7994](https://jiraeu.epam.com/browse/EPMDEDP-7994)
 - tests refactoring [EPMDEDP-7994](https://jiraeu.epam.com/browse/EPMDEDP-7994)
+- Add tests [EPMDEDP-7994](https://jiraeu.epam.com/browse/EPMDEDP-7994)
+- Add tests [EPMDEDP-7994](https://jiraeu.epam.com/browse/EPMDEDP-7994)
+- Add tests [EPMDEDP-7994](https://jiraeu.epam.com/browse/EPMDEDP-7994)
+- Add tests [EPMDEDP-7994](https://jiraeu.epam.com/browse/EPMDEDP-7994)
 - Add tests [EPMDEDP-7994](https://jiraeu.epam.com/browse/EPMDEDP-7994)
 
 ### Routine
@@ -190,8 +205,8 @@ Ensure keycloak role is aligned when migrating from
 
 ### Routine
 
-- Upgrade SonarQube to the LTS 8.9.3 version [EPMDEDP-7409](https://jiraeu.epam.com/browse/EPMDEDP-7409)
 - Upgrade SonarQube Scanner version [EPMDEDP-7409](https://jiraeu.epam.com/browse/EPMDEDP-7409)
+- Upgrade SonarQube to the LTS 8.9.3 version [EPMDEDP-7409](https://jiraeu.epam.com/browse/EPMDEDP-7409)
 - Update openssh-client version [EPMDEDP-7469](https://jiraeu.epam.com/browse/EPMDEDP-7469)
 - Add changelog generator [EPMDEDP-7847](https://jiraeu.epam.com/browse/EPMDEDP-7847)
 - Add codecov report [EPMDEDP-7885](https://jiraeu.epam.com/browse/EPMDEDP-7885)
