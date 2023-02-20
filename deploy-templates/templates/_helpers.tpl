@@ -93,3 +93,25 @@ Return if ingress supports pathType.
 {{- define "sonar.ingress.supportsPathType" -}}
   {{- or (eq (include "sonar.ingress.isStable" .) "true") (and (eq (include "sonar.ingress.apiVersion" .) "networking.k8s.io/v1beta1") (semverCompare ">= 1.18-0" .Capabilities.KubeVersion.Version)) -}}
 {{- end -}}
+
+{{/*
+Set sonarqube.jvmOpts
+*/}}
+{{- define "sonarqube.jvmOpts" -}}
+{{- if .Values.sonar.caCerts.enabled -}}
+{{ printf "-Djavax.net.ssl.trustStore=%s/certs/cacerts %s" .Values.sonar.sonarqubeFolder .Values.sonar.jvmOpts | trim | quote }}
+{{- else -}}
+{{ printf "%s" .Values.sonar.jvmOpts }}
+{{- end -}}
+{{- end -}}
+
+{{/*
+Set sonarqube.jvmCEOpts
+*/}}
+{{- define "sonarqube.jvmCEOpts" -}}
+{{- if .Values.sonar.caCerts.enabled -}}
+{{ printf "-Djavax.net.ssl.trustStore=%s/certs/cacerts %s" .Values.sonar.sonarqubeFolder .Values.sonar.jvmCeOpts | trim | quote }}
+{{- else -}}
+{{ printf "%s" .Values.sonar.jvmCeOpts }}
+{{- end -}}
+{{- end -}}

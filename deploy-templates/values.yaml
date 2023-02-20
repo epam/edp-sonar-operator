@@ -53,9 +53,9 @@ sonar:
     # We allow the init containers to have a separate resources declaration because
     # the initContainer does not take as much resources.
     resources: {}
-  # --  Flag to enable/disable Sonar deploy
+  # -- Flag to enable/disable Sonar deploy
   deploy: true
-  # --  Sonar name
+  # -- Sonar name
   name: "sonar"
   # -- Define sonar docker image name
   image: "sonarqube"
@@ -63,13 +63,13 @@ sonar:
   version: "8.9.10-community"
   imagePullPolicy: "IfNotPresent"
   initImage: "busybox:1.35.0"
-  # --  Base path for Sonar URL
+  # -- Base path for Sonar URL
   basePath: ""
   # -- Environment variables to attach to the sonar pod
   env:
     - name: SONAR_TELEMETRY_ENABLE
       value: "false"
-  # --  Secrets to pull from private Docker registry
+  # -- Secrets to pull from private Docker registry
   imagePullSecrets:
   storage:
     data:
@@ -116,6 +116,22 @@ sonar:
     requests:
       cpu: 100m
       memory: 1.5Gi
+
+  # Provide a secret containing one or more certificate files in the keys that will be added to cacerts.
+  # The cacerts file will be set via SONARQUBE_WEB_JVM_OPTS and SONAR_CE_JAVAOPTS
+  caCerts:
+    # -- Flag for enabling additional CA certificates
+    enabled: false
+    # -- Change init CA certificates container image
+    image: adoptopenjdk/openjdk11:alpine
+    # -- Name of the secret containing additional CA certificates
+    secret: your-secret
+
+  # -- Values to add to SONARQUBE_WEB_JVM_OPTS
+  jvmOpts: ""
+
+  # -- Values to add to SONAR_CE_JAVAOPTS
+  jvmCeOpts: ""
 
   db:
     # -- Database image name

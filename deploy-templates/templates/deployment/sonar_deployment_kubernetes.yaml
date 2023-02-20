@@ -35,6 +35,10 @@ spec:
         - args:
             - -Dsonar.search.javaAdditionalOpts=-Dnode.store.allow_mmap=false
           env:
+            - name: SONAR_WEB_JAVAOPTS
+              value: {{ template "sonarqube.jvmOpts" . }}
+            - name: SONAR_CE_JAVAOPTS
+              value: {{ template "sonarqube.jvmCEOpts" . }}
             - name: SONARQUBE_JDBC_USERNAME
               valueFrom:
                 secretKeyRef:
@@ -89,8 +93,30 @@ spec:
             - mountPath: {{ .Values.sonar.sonarqubeFolder }}/extensions/plugins
               name: data
               subPath: extensions/plugins
+            {{- if .Values.sonar.caCerts.enabled }}
+            - mountPath: {{ .Values.sonar.sonarqubeFolder }}/certs
+              name: data
+              subPath: certs
+            {{- end }}
       dnsPolicy: ClusterFirst
       initContainers:
+      {{- if .Values.sonar.caCerts.enabled }}
+        - name: ca-certs
+          image: {{ default "adoptopenjdk/openjdk11:alpine" .Values.sonar.caCerts.image }}
+          imagePullPolicy: {{ .Values.sonar.imagePullPolicy  }}
+          command: ["sh"]
+          args: ["-c", "cp -f \"${JAVA_HOME}/lib/security/cacerts\" /tmp/certs/cacerts; if [ \"$(ls /tmp/secrets/ca-certs)\" ]; then for f in /tmp/secrets/ca-certs/*; do keytool -importcert -file \"${f}\" -alias \"$(basename \"${f}\")\" -keystore /tmp/certs/cacerts -storepass changeit -trustcacerts -noprompt; done; fi;"]
+          {{- if $securityContext := .Values.sonar.initContainers.securityContext }}
+          securityContext:
+{{ toYaml $securityContext | indent 12 }}
+          {{- end }}
+          volumeMounts:
+            - mountPath: /tmp/certs
+              name: data
+              subPath: certs
+            - mountPath: /tmp/secrets/ca-certs
+              name: ca-certs
+      {{- end }}
       {{- if .Values.sonar.plugins.install }}
         - name: install-plugins
           image: {{ default "epamedp/alpine-wget:1.0.3" .Values.sonar.plugins.image }}
@@ -148,6 +174,11 @@ spec:
         - name: data
           persistentVolumeClaim:
             claimName: sonar-data
+        {{- if .Values.sonar.caCerts.enabled }}
+        - name: ca-certs
+          secret:
+            secretName: {{ .Values.sonar.caCerts.secret }}
+        {{- end }}
       {{- with .Values.sonar.nodeSelector }}
       nodeSelector:
         {{- toYaml . | nindent 8 }}

@@ -40,6 +40,9 @@ A Helm chart for EDP Sonar Operator
 | sonar.affinity | object | `{}` |  |
 | sonar.annotations | object | `{}` |  |
 | sonar.basePath | string | `""` | Base path for Sonar URL |
+| sonar.caCerts.enabled | bool | `false` | Flag for enabling additional CA certificates |
+| sonar.caCerts.image | string | `"adoptopenjdk/openjdk11:alpine"` | Change init CA certificates container image |
+| sonar.caCerts.secret | string | `"your-secret"` | Name of the secret containing additional CA certificates |
 | sonar.db.affinity | object | `{}` |  |
 | sonar.db.annotations | object | `{}` |  |
 | sonar.db.image | string | `"postgres:9.6"` | Database image name |
@@ -59,6 +62,8 @@ A Helm chart for EDP Sonar Operator
 | sonar.ingress.tls | list | `[]` | See https://kubernetes.io/blog/2020/04/02/improvements-to-the-ingress-api-in-kubernetes-1.18/#specifying-the-class-of-an-ingress ingressClassName: nginx |
 | sonar.initContainers.resources | object | `{}` |  |
 | sonar.initImage | string | `"busybox:1.35.0"` |  |
+| sonar.jvmCeOpts | string | `""` | Values to add to SONAR_CE_JAVAOPTS |
+| sonar.jvmOpts | string | `""` | Values to add to SONARQUBE_WEB_JVM_OPTS |
 | sonar.name | string | `"sonar"` | Sonar name |
 | sonar.nodeSelector | object | `{}` |  |
 | sonar.plugins | object | `{"install":["https://github.com/vaulttec/sonar-auth-oidc/releases/download/v2.1.1/sonar-auth-oidc-plugin-2.1.1.jar","https://github.com/checkstyle/sonar-checkstyle/releases/download/9.3/checkstyle-sonar-plugin-9.3.jar","https://github.com/spotbugs/sonar-findbugs/releases/download/4.2.2/sonar-findbugs-plugin-4.2.2.jar","https://github.com/jborgers/sonar-pmd/releases/download/3.4.0/sonar-pmd-plugin-3.4.0.jar","https://github.com/sbaudoin/sonar-ansible/releases/download/v2.5.1/sonar-ansible-plugin-2.5.1.jar","https://github.com/sbaudoin/sonar-yaml/releases/download/v1.7.0/sonar-yaml-plugin-1.7.0.jar","https://github.com/Inform-Software/sonar-groovy/releases/download/1.8/sonar-groovy-plugin-1.8.jar"]}` | List of plugins to install. For example: |
