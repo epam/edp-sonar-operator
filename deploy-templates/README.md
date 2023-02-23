@@ -42,7 +42,7 @@ A Helm chart for EDP Sonar Operator
 | sonar.basePath | string | `""` | Base path for Sonar URL |
 | sonar.caCerts.enabled | bool | `false` | Flag for enabling additional CA certificates |
 | sonar.caCerts.image | string | `"adoptopenjdk/openjdk11:alpine"` | Change init CA certificates container image |
-| sonar.caCerts.secret | string | `"your-secret"` | Name of the secret containing additional CA certificates |
+| sonar.caCerts.secret | string | `"secret-name"` | Name of the secret containing additional CA certificates |
 | sonar.db.affinity | object | `{}` |  |
 | sonar.db.annotations | object | `{}` |  |
 | sonar.db.image | string | `"postgres:9.6"` | Database image name |
