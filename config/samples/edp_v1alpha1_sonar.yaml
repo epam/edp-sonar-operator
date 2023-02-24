@@ -1,0 +1,85 @@
+apiVersion: edp.epam.com/v1alpha1
+kind: Sonar
+metadata:
+  labels:
+    app.kubernetes.io/name: sonar
+    app.kubernetes.io/instance: sonar-sample
+    app.kubernetes.io/part-of: sonar-operator
+    app.kubernetes.io/managed-by: kustomize
+    app.kubernetes.io/created-by: sonar-operator
+  name: sonar-sample
+spec:
+
+# required
+  secret: "sonar-secret"
+  url: "sonar.com" # example
+
+# optional
+  users:
+    - login: "ci-user"
+      username: "EDP CI User"
+      group: "non-interactive-users"
+      permissions:
+        - "admin"
+    - login: "read"
+      username: "Read-only user"
+      group: "non-interactive-users"
+  groups:
+    - name: "non-interactive-users"
+      permissions:
+        - "scan"
+    - name: "sonar-developers"
+  plugins:
+    - "authoidc"
+    - "checkstyle"
+    - "findbugs"
+    - "pmd"
+    - "jacoco"
+    - "xml"
+    - "javascript"
+    - "go"
+    - "ansible"
+    - "yaml"
+    - "python"
+    - "csharp"
+    - "groovy"
+  qualityGates:
+    - conditions:
+        - error: "80"
+          metric: "new_coverage"
+          op: "LT"
+          period: "1"
+        - error: "0"
+          metric: "test_errors"
+          op: "GT"
+        - error: "3"
+          metric: "new_duplicated_lines_density"
+          op: "GT"
+          period: "1"
+        - error: "0"
+          metric: "test_failures"
+          op: "GT"
+        - error: "0"
+          metric: "blocker_violations"
+          op: "GT"
+        - error: "0"
+          metric: "critical_violations"
+          op: "GT"
+      name: "EDP way"
+      setAsDefault: true
+  settings:
+    - key: "sonar.typescript.lcov.reportPaths"
+      value: "coverage/lcov.info"
+      valueType: "value"
+    - key: "sonar.coverage.jacoco.xmlReportPaths"
+      value: "target/site/jacoco/jacoco.xml"
+      valueType: "value"
+    - key: "sonar.auth.oidc.groupsSync.claimName"
+      value: "groups"
+      valueType: "roles"
+    - key: "sonar.auth.oidc.groupsSync"
+      value: "true"
+      valueType: "value"
+    - key: "sonar.auth.oidc.enabled"
+      value: "true"
+      valueType: "value"

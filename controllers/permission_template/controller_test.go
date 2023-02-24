@@ -5,6 +5,7 @@ import (
 	"errors"
 	"testing"
 
+	"github.com/stretchr/testify/assert"
 	tMock "github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -17,11 +18,11 @@ import (
 	"github.com/epam/edp-common/pkg/mock"
 	k8sMockClient "github.com/epam/edp-common/pkg/mock/controller-runtime/client"
 
-	sonarApi "github.com/epam/edp-sonar-operator/v2/api/v1"
-	cMock "github.com/epam/edp-sonar-operator/v2/mocks/client"
-	sMock "github.com/epam/edp-sonar-operator/v2/mocks/service"
-	sonarClient "github.com/epam/edp-sonar-operator/v2/pkg/client/sonar"
-	"github.com/epam/edp-sonar-operator/v2/pkg/service/platform"
+	sonarApi "github.com/epam/edp-sonar-operator/api/v1alpha1"
+	cMock "github.com/epam/edp-sonar-operator/mocks/client"
+	sMock "github.com/epam/edp-sonar-operator/mocks/service"
+	sonarClient "github.com/epam/edp-sonar-operator/pkg/client/sonar"
+	"github.com/epam/edp-sonar-operator/pkg/service/platform"
 )
 
 func TestNewReconcile_NotFound(t *testing.T) {
@@ -33,9 +34,7 @@ func TestNewReconcile_NotFound(t *testing.T) {
 	fakeCl := fake.NewClientBuilder().WithScheme(scheme).Build()
 	l := mock.NewLogr()
 	rec, err := NewReconcile(fakeCl, scheme, l, "kubernetes")
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 
 	if _, err = rec.Reconcile(context.Background(), rq); err != nil {
 		t.Fatal(err)
@@ -117,15 +116,13 @@ func TestNewReconcile(t *testing.T) {
 	l := mock.NewLogr()
 
 	rec, err := NewReconcile(fakeCl, scheme, l, platform.Kubernetes)
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 
 	serviceMock := sMock.ServiceInterface{}
 	rec.service = &serviceMock
 	clientMock := &cMock.ClientInterface{}
 
-	serviceMock.On("ClientForChild", ctx, tMock.AnythingOfType("*v1.SonarPermissionTemplate")).Return(clientMock, nil)
+	serviceMock.On("ClientForChild", ctx, tMock.AnythingOfType("*v1alpha1.SonarPermissionTemplate")).Return(clientMock, nil)
 	serviceMock.On("K8sClient").Return(fakeCl)
 	clientMock.
 		On("GetPermissionTemplate", ctx, permissionTemplate1.Spec.Name).
@@ -152,7 +149,7 @@ func TestNewReconcile(t *testing.T) {
 	serviceMock.
 		On("DeleteResource",
 			ctx,
-			tMock.AnythingOfType("*v1.SonarPermissionTemplate"),
+			tMock.AnythingOfType("*v1alpha1.SonarPermissionTemplate"),
 			finalizer,
 			tMock.AnythingOfType("func() error"),
 		).
@@ -191,14 +188,14 @@ func TestNewReconcile(t *testing.T) {
 		t.Fatal("no error returned")
 	}
 
-	if err.Error() != "unable to sync permission template groups: unable to get permission template groups: get perm groups fatal" {
-		t.Fatalf("wrong error returned: %s", err.Error())
-	}
+	assert.Equal(t, "failed to sync permission template groups: failed to get permission template groups: get perm groups fatal", err.Error())
 }
 
 func TestSpecIsUpdated(t *testing.T) {
-	if isSpecUpdated(event.UpdateEvent{ObjectNew: &sonarApi.SonarPermissionTemplate{},
-		ObjectOld: &sonarApi.SonarPermissionTemplate{}}) {
+	if isSpecUpdated(event.UpdateEvent{
+		ObjectNew: &sonarApi.SonarPermissionTemplate{},
+		ObjectOld: &sonarApi.SonarPermissionTemplate{},
+	}) {
 		t.Fatal("spec is updated")
 	}
 }

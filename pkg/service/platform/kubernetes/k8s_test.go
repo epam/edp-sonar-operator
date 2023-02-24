@@ -2,7 +2,6 @@ package kubernetes
 
 import (
 	"context"
-	"strings"
 	"testing"
 
 	"github.com/pkg/errors"
@@ -22,9 +21,9 @@ import (
 	edpCompApi "github.com/epam/edp-component-operator/api/v1"
 	jenkinsV1Api "github.com/epam/edp-jenkins-operator/v2/pkg/apis/v2/v1"
 
-	sonarApi "github.com/epam/edp-sonar-operator/v2/api/v1"
-	kMock "github.com/epam/edp-sonar-operator/v2/mocks/k8s"
-	"github.com/epam/edp-sonar-operator/v2/pkg/helper"
+	sonarApi "github.com/epam/edp-sonar-operator/api/v1alpha1"
+	kMock "github.com/epam/edp-sonar-operator/mocks/k8s"
+	"github.com/epam/edp-sonar-operator/pkg/helper"
 )
 
 const (
@@ -451,7 +450,7 @@ func TestK8SService_CreateEDPComponentIfNotExist_GetErr(t *testing.T) {
 	}
 	err := service.CreateEDPComponentIfNotExist(&sonarCR, host, icon)
 	assert.Error(t, err)
-	assert.True(t, strings.Contains(err.Error(), "failed to get edp component"))
+	assert.Contains(t, err.Error(), "failed to get edp component")
 }
 
 func TestK8SService_CreateEDPComponentIfNotExist_AlreadyExist(t *testing.T) {

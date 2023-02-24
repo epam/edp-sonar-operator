@@ -6,13 +6,16 @@ import (
 	"testing"
 
 	"github.com/jarcoal/httpmock"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestSonarClient_CreateUser(t *testing.T) {
 	cs := initClient()
 	httpmock.RegisterResponder("POST", "/users/create",
 		httpmock.NewJsonResponderOrPanic(http.StatusOK, createUserResponse{
-			User: User{Login: "userlogin", Name: "username"}}))
+			User: User{Login: "userlogin", Name: "username"},
+		}))
 
 	u := User{Name: "foo", Login: "bar"}
 	if err := cs.CreateUser(context.Background(), &u); err != nil {
@@ -22,11 +25,9 @@ func TestSonarClient_CreateUser(t *testing.T) {
 	httpmock.RegisterResponder("POST", "/users/create",
 		httpmock.NewStringResponder(http.StatusInternalServerError, "create fatal"))
 	err := cs.CreateUser(context.Background(), &u)
-	if err == nil {
-		t.Fatal("no error returned")
-	}
+	require.Error(t, err)
 
-	if err.Error() != "unable to create user user: status: 500, body: create fatal" {
+	if err.Error() != "failed to create user user: status: 500, body: create fatal" {
 		t.Fatalf("wrong error returned: %s", err.Error())
 	}
 }
@@ -44,11 +45,9 @@ func TestSonarClient_SearchUsers(t *testing.T) {
 		httpmock.NewStringResponder(http.StatusInternalServerError, "search fatal"))
 
 	_, err := cs.SearchUsers(context.Background(), "name")
-	if err == nil {
-		t.Fatal("no error returned")
-	}
+	require.Error(t, err)
 
-	if err.Error() != "unable to search for users: status: 500, body: search fatal" {
+	if err.Error() != "failed to search for users: status: 500, body: search fatal" {
 		t.Fatalf("wrong error returned: %s", err.Error())
 	}
 }
@@ -69,9 +68,7 @@ func TestSonarClient_GetUser(t *testing.T) {
 			{Name: "userName", Login: "loginName"},
 		}}))
 	_, err := cs.GetUser(context.Background(), "userNameNotFound")
-	if err == nil {
-		t.Fatal("no error returned")
-	}
+	require.Error(t, err)
 
 	if !IsErrNotFound(err) {
 		t.Fatalf("wrong error returned: %s", err.Error())
@@ -79,13 +76,11 @@ func TestSonarClient_GetUser(t *testing.T) {
 
 	httpmock.RegisterResponder("GET", "/users/search?q=userNameNotFound",
 		httpmock.NewStringResponder(http.StatusInternalServerError, "search fatal"))
+
 	_, err = cs.GetUser(context.Background(), "userNameNotFound")
-	if err == nil {
-		t.Fatal("no error returned")
-	}
-	if err.Error() != "unable to search for users: unable to search for users: status: 500, body: search fatal" {
-		t.Fatalf("wrong error returned: %s", err.Error())
-	}
+	require.Error(t, err)
+
+	assert.Equal(t, "failed to search for users: failed to search for users: status: 500, body: search fatal", err.Error())
 }
 
 func TestSonarClient_SearchUserTokens(t *testing.T) {
@@ -101,11 +96,9 @@ func TestSonarClient_SearchUserTokens(t *testing.T) {
 		httpmock.NewStringResponder(http.StatusInternalServerError, "search fatal"))
 
 	_, err := cs.SearchUserTokens(context.Background(), "name")
-	if err == nil {
-		t.Fatal("no error returned")
-	}
+	require.Error(t, err)
 
-	if err.Error() != "unable to search for user tokens: status: 500, body: search fatal" {
+	if err.Error() != "failed to search for user tokens: status: 500, body: search fatal" {
 		t.Fatalf("wrong error returned: %s", err.Error())
 	}
 }
@@ -125,10 +118,9 @@ func TestSonarClient_GetUserToken(t *testing.T) {
 		httpmock.NewJsonResponderOrPanic(http.StatusOK, userTokenSearchResponse{UserTokens: []UserToken{
 			{Name: "userName", Login: "loginName"},
 		}}))
+
 	_, err := cs.GetUserToken(context.Background(), "userNameNotFound", "someToken")
-	if err == nil {
-		t.Fatal("no error returned")
-	}
+	require.Error(t, err)
 
 	if !IsErrNotFound(err) {
 		t.Fatalf("wrong error returned: %s", err.Error())
@@ -136,11 +128,9 @@ func TestSonarClient_GetUserToken(t *testing.T) {
 
 	httpmock.RegisterResponder("GET", "/user_tokens/search?login=userNameNotFound",
 		httpmock.NewStringResponder(http.StatusInternalServerError, "search fatal"))
+
 	_, err = cs.GetUserToken(context.Background(), "userNameNotFound", "someToken")
-	if err == nil {
-		t.Fatal("no error returned")
-	}
-	if err.Error() != "unable to search for user tokens: unable to search for user tokens: status: 500, body: search fatal" {
-		t.Fatalf("wrong error returned: %s", err.Error())
-	}
+	require.Error(t, err)
+
+	assert.Equal(t, "failed to search for user tokens: failed to search for user tokens: status: 500, body: search fatal", err.Error())
 }

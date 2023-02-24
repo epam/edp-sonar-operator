@@ -3,8 +3,6 @@ package sonar
 import (
 	"context"
 	"fmt"
-
-	"github.com/pkg/errors"
 )
 
 type User struct {
@@ -38,7 +36,7 @@ func (sc *Client) SearchUsers(ctx context.Context, userName string) ([]User, err
 		Get(fmt.Sprintf("/users/search?q=%s", userName))
 
 	if err = sc.checkError(rsp, err); err != nil {
-		return nil, errors.Wrap(err, "unable to search for users")
+		return nil, fmt.Errorf("failed to search for users: %w", err)
 	}
 
 	return userResponse.Users, nil
@@ -47,7 +45,7 @@ func (sc *Client) SearchUsers(ctx context.Context, userName string) ([]User, err
 func (sc Client) GetUser(ctx context.Context, userName string) (*User, error) {
 	users, err := sc.SearchUsers(ctx, userName)
 	if err != nil {
-		return nil, errors.Wrap(err, "unable to search for users")
+		return nil, fmt.Errorf("failed to search for users: %w", err)
 	}
 
 	for _, u := range users {
@@ -62,13 +60,16 @@ func (sc Client) GetUser(ctx context.Context, userName string) (*User, error) {
 func (sc *Client) CreateUser(ctx context.Context, user *User) error {
 	var createUserRsp createUserResponse
 
-	rsp, err := sc.startRequest(ctx).SetResult(&createUserRsp).SetFormData(map[string]string{
-		"login":    user.Login,
-		"name":     user.Name,
-		"password": user.Password,
-	}).Post("/users/create")
+	rsp, err := sc.startRequest(ctx).
+		SetResult(&createUserRsp).
+		SetFormData(map[string]string{
+			"login":    user.Login,
+			"name":     user.Name,
+			"password": user.Password,
+		}).
+		Post("/users/create")
 	if err = sc.checkError(rsp, err); err != nil {
-		return errors.Wrap(err, "unable to create user user")
+		return fmt.Errorf("failed to create user user: %w", err)
 	}
 
 	return nil
@@ -80,7 +81,7 @@ func (sc *Client) SearchUserTokens(ctx context.Context, userLogin string) ([]Use
 		Get(fmt.Sprintf("/user_tokens/search?login=%s", userLogin))
 
 	if err = sc.checkError(rsp, err); err != nil {
-		return nil, errors.Wrap(err, "unable to search for user tokens")
+		return nil, fmt.Errorf("failed to search for user tokens: %w", err)
 	}
 
 	return userTokenResponse.UserTokens, nil
@@ -89,7 +90,7 @@ func (sc *Client) SearchUserTokens(ctx context.Context, userLogin string) ([]Use
 func (sc Client) GetUserToken(ctx context.Context, userLogin, tokenName string) (*UserToken, error) {
 	userTokens, err := sc.SearchUserTokens(ctx, userLogin)
 	if err != nil {
-		return nil, errors.Wrap(err, "unable to search for user tokens")
+		return nil, fmt.Errorf("failed to search for user tokens: %w", err)
 	}
 
 	for _, ut := range userTokens {

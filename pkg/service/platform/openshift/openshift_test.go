@@ -16,8 +16,8 @@ import (
 	"k8s.io/client-go/rest"
 	"sigs.k8s.io/controller-runtime/pkg/client/fake"
 
-	sonarApi "github.com/epam/edp-sonar-operator/v2/api/v1"
-	oMock "github.com/epam/edp-sonar-operator/v2/mocks/openshift"
+	sonarApi "github.com/epam/edp-sonar-operator/api/v1alpha1"
+	oMock "github.com/epam/edp-sonar-operator/mocks/openshift"
 )
 
 const (
@@ -71,10 +71,11 @@ func TestOpenshiftService_GetExternalEndpoint_NotFound(t *testing.T) {
 }
 
 func TestOpenshiftService_GetExternalEndpoint(t *testing.T) {
-	route := routeV1.Route{Spec: routeV1.RouteSpec{
-		TLS:  &routeV1.TLSConfig{Termination: "yes"},
-		Host: host,
-	},
+	route := routeV1.Route{
+		Spec: routeV1.RouteSpec{
+			TLS:  &routeV1.TLSConfig{Termination: "yes"},
+			Host: host,
+		},
 	}
 	ctx := context.Background()
 	routeClient := oMock.RouteClient{}

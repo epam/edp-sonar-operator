@@ -2,8 +2,7 @@ package sonar
 
 import (
 	"context"
-
-	"github.com/pkg/errors"
+	"fmt"
 )
 
 const templateIdName = "templateId"
@@ -46,7 +45,7 @@ func (sc *Client) CreatePermissionTemplate(ctx context.Context, tpl *PermissionT
 	}).Post("/permissions/create_template")
 
 	if err = sc.checkError(rsp, err); err != nil {
-		return "", errors.Wrap(err, "unable to create permission template")
+		return "", fmt.Errorf("failed to create permission template: %w", err)
 	}
 
 	return result.PermissionTemplate.ID, nil
@@ -61,7 +60,7 @@ func (sc *Client) UpdatePermissionTemplate(ctx context.Context, tpl *PermissionT
 	}).Post("/permissions/update_template")
 
 	if err = sc.checkError(rsp, err); err != nil {
-		return errors.Wrap(err, "unable to update permission template")
+		return fmt.Errorf("failed to update permission template: %w", err)
 	}
 
 	return nil
@@ -73,7 +72,7 @@ func (sc *Client) DeletePermissionTemplate(ctx context.Context, id string) error
 	}).Post("/permissions/delete_template")
 
 	if err = sc.checkError(rsp, err); err != nil {
-		return errors.Wrap(err, "unable to delete permission template")
+		return fmt.Errorf("failed to delete permission template: %w", err)
 	}
 
 	return nil
@@ -84,7 +83,7 @@ func (sc *Client) SearchPermissionTemplates(ctx context.Context, name string) ([
 	rsp, err := sc.startRequest(ctx).SetQueryParam("q", name).SetResult(&result).
 		Get("/permissions/search_templates")
 	if err = sc.checkError(rsp, err); err != nil {
-		return nil, errors.Wrap(err, "unable to search for permission templates")
+		return nil, fmt.Errorf("failed to search for permission templates: %w", err)
 	}
 
 	return result.PermissionTemplates, nil
@@ -93,7 +92,7 @@ func (sc *Client) SearchPermissionTemplates(ctx context.Context, name string) ([
 func (sc *Client) GetPermissionTemplate(ctx context.Context, name string) (*PermissionTemplate, error) {
 	tpls, err := sc.SearchPermissionTemplates(ctx, name)
 	if err != nil {
-		return nil, errors.Wrap(err, "unable to search for permission templates")
+		return nil, fmt.Errorf("failed to search for permission templates: %w", err)
 	}
 
 	for _, t := range tpls {
@@ -106,7 +105,8 @@ func (sc *Client) GetPermissionTemplate(ctx context.Context, name string) (*Perm
 }
 
 func (sc *Client) AddGroupToPermissionTemplate(ctx context.Context, templateID string,
-	permGroup *PermissionTemplateGroup) error {
+	permGroup *PermissionTemplateGroup,
+) error {
 	for _, perm := range permGroup.Permissions {
 		rsp, err := sc.startRequest(ctx).SetFormData(map[string]string{
 			templateIdName: templateID,
@@ -115,7 +115,7 @@ func (sc *Client) AddGroupToPermissionTemplate(ctx context.Context, templateID s
 		}).Post("/permissions/add_group_to_template")
 
 		if err = sc.checkError(rsp, err); err != nil {
-			return errors.Wrap(err, "unable to add group to permission template")
+			return fmt.Errorf("failed to add group to permission template: %w", err)
 		}
 	}
 
@@ -124,26 +124,32 @@ func (sc *Client) AddGroupToPermissionTemplate(ctx context.Context, templateID s
 
 func (sc *Client) GetPermissionTemplateGroups(ctx context.Context, templateID string) ([]PermissionTemplateGroup, error) {
 	var response getPermissionGroupsResponse
-	rsp, err := sc.startRequest(ctx).SetResult(&response).
-		SetQueryParam(templateIdName, templateID).Get("/permissions/template_groups")
+	rsp, err := sc.startRequest(ctx).
+		SetResult(&response).
+		SetQueryParam(templateIdName, templateID).
+		Get("/permissions/template_groups")
+
 	if err = sc.checkError(rsp, err); err != nil {
-		return nil, errors.Wrap(err, "unable to get permission template groups")
+		return nil, fmt.Errorf("failed to get permission template groups: %w", err)
 	}
 
 	return response.Groups, nil
 }
 
 func (sc *Client) RemoveGroupFromPermissionTemplate(ctx context.Context, templateID string,
-	permGroup *PermissionTemplateGroup) error {
+	permGroup *PermissionTemplateGroup,
+) error {
 	for _, perm := range permGroup.Permissions {
-		rsp, err := sc.startRequest(ctx).SetFormData(map[string]string{
-			templateIdName: templateID,
-			"groupName":    permGroup.GroupName,
-			"permission":   perm,
-		}).Post("/permissions/remove_group_from_template")
+		rsp, err := sc.startRequest(ctx).
+			SetFormData(map[string]string{
+				templateIdName: templateID,
+				"groupName":    permGroup.GroupName,
+				"permission":   perm,
+			}).
+			Post("/permissions/remove_group_from_template")
 
 		if err = sc.checkError(rsp, err); err != nil {
-			return errors.Wrap(err, "unable to remove group from permission template")
+			return fmt.Errorf("failed to remove group from permission template: %w", err)
 		}
 	}
 
@@ -151,12 +157,14 @@ func (sc *Client) RemoveGroupFromPermissionTemplate(ctx context.Context, templat
 }
 
 func (sc *Client) SetDefaultPermissionTemplate(ctx context.Context, name string) error {
-	rsp, err := sc.startRequest(ctx).SetFormData(map[string]string{
-		"templateName": name,
-	}).Post("/permissions/set_default_template")
+	rsp, err := sc.startRequest(ctx).
+		SetFormData(map[string]string{
+			"templateName": name,
+		}).
+		Post("/permissions/set_default_template")
 
 	if err = sc.checkError(rsp, err); err != nil {
-		return errors.Wrap(err, "unable to set default permission template")
+		return fmt.Errorf("failed to set default permission template: %w", err)
 	}
 
 	return nil

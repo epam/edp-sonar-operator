@@ -6,10 +6,11 @@ import (
 	"testing"
 
 	"github.com/jarcoal/httpmock"
+	"github.com/stretchr/testify/require"
 )
 
 func initClient() *Client {
-	cs := InitNewRestClient("", "", "")
+	cs := NewClient("", "", "")
 	httpmock.ActivateNonDefault(cs.resty.GetClient())
 	cs.resty.SetDisableWarn(true)
 
@@ -33,11 +34,9 @@ func TestSonarClient_CreatePermissionTemplate(t *testing.T) {
 		Name: "foo",
 	})
 
-	if err == nil {
-		t.Fatal("no error returned")
-	}
+	require.Error(t, err)
 
-	if err.Error() != "unable to create permission template: status: 500, body: create fatal" {
+	if err.Error() != "failed to create permission template: status: 500, body: create fatal" {
 		t.Fatalf("wrong error returned: %s", err.Error())
 	}
 }
@@ -59,11 +58,9 @@ func TestClient_UpdatePermissionTemplate(t *testing.T) {
 		},
 	})
 
-	if err == nil {
-		t.Fatal("no error returned")
-	}
+	require.Error(t, err)
 
-	if err.Error() != "unable to update permission template: status: 500, body: update fatal" {
+	if err.Error() != "failed to update permission template: status: 500, body: update fatal" {
 		t.Fatalf("wrong error returned: %s", err.Error())
 	}
 }
@@ -81,11 +78,9 @@ func TestClient_DeletePermissionTemplate(t *testing.T) {
 		httpmock.NewStringResponder(http.StatusInternalServerError, "delete fatal"))
 	err := cs.DeletePermissionTemplate(context.Background(), "id1")
 
-	if err == nil {
-		t.Fatal("no error returned")
-	}
+	require.Error(t, err)
 
-	if err.Error() != "unable to delete permission template: status: 500, body: delete fatal" {
+	if err.Error() != "failed to delete permission template: status: 500, body: delete fatal" {
 		t.Fatalf("wrong error returned: %s", err.Error())
 	}
 }
@@ -102,11 +97,9 @@ func TestClient_SearchPermissionTemplates(t *testing.T) {
 		httpmock.NewStringResponder(http.StatusInternalServerError, "search fatal"))
 	_, err := cs.SearchPermissionTemplates(context.Background(), "test")
 
-	if err == nil {
-		t.Fatal("no error returned")
-	}
+	require.Error(t, err)
 
-	if err.Error() != "unable to search for permission templates: status: 500, body: search fatal" {
+	if err.Error() != "failed to search for permission templates: status: 500, body: search fatal" {
 		t.Fatalf("wrong error returned: %s", err.Error())
 	}
 }
@@ -138,9 +131,7 @@ func TestClient_GetPermissionTemplate(t *testing.T) {
 			}}))
 
 	_, err := cs.GetPermissionTemplate(context.Background(), "test")
-	if err == nil {
-		t.Fatal("no error returned")
-	}
+	require.Error(t, err)
 
 	if !IsErrNotFound(err) {
 		t.Fatalf("wrong error returned: %s", err.Error())
@@ -150,11 +141,9 @@ func TestClient_GetPermissionTemplate(t *testing.T) {
 		httpmock.NewStringResponder(http.StatusInternalServerError, "search fatal"))
 
 	_, err = cs.GetPermissionTemplate(context.Background(), "test")
-	if err == nil {
-		t.Fatal("no error returned")
-	}
+	require.Error(t, err, "no error returned")
 
-	if err.Error() != "unable to search for permission templates: unable to search for permission templates: status: 500, body: search fatal" {
+	if err.Error() != "failed to search for permission templates: failed to search for permission templates: status: 500, body: search fatal" {
 		t.Fatalf("wrong error returned: %s", err.Error())
 	}
 }
@@ -175,11 +164,9 @@ func TestClient_AddGroupToPermissionTemplate(t *testing.T) {
 	err := sc.AddGroupToPermissionTemplate(context.Background(), "tpl1",
 		&PermissionTemplateGroup{GroupName: "test", Permissions: []string{"admin"}})
 
-	if err == nil {
-		t.Fatal("no error returned")
-	}
+	require.Error(t, err)
 
-	if err.Error() != "unable to add group to permission template: status: 500, body: add fatal" {
+	if err.Error() != "failed to add group to permission template: status: 500, body: add fatal" {
 		t.Fatalf("wrong error returned: %s", err.Error())
 	}
 }
@@ -196,11 +183,9 @@ func TestClient_GetPermissionTemplateGroups(t *testing.T) {
 		httpmock.NewStringResponder(http.StatusInternalServerError, "get template groups fatal"))
 
 	_, err := sc.GetPermissionTemplateGroups(context.Background(), "tplid1")
-	if err == nil {
-		t.Fatal("no error returned")
-	}
+	require.Error(t, err)
 
-	if err.Error() != "unable to get permission template groups: status: 500, body: get template groups fatal" {
+	if err.Error() != "failed to get permission template groups: status: 500, body: get template groups fatal" {
 		t.Fatalf("wrong error returned: %s", err.Error())
 	}
 }
@@ -221,11 +206,9 @@ func TestClient_RemoveGroupFromPermissionTemplate(t *testing.T) {
 	err := sc.RemoveGroupFromPermissionTemplate(context.Background(), "tpl1",
 		&PermissionTemplateGroup{GroupName: "test1", Permissions: []string{"foo"}})
 
-	if err == nil {
-		t.Fatal("no error returned")
-	}
+	require.Error(t, err)
 
-	if err.Error() != "unable to remove group from permission template: status: 500, body: remove fatal" {
+	if err.Error() != "failed to remove group from permission template: status: 500, body: remove fatal" {
 		t.Fatalf("wrong error returned: %s", err.Error())
 	}
 }
@@ -242,11 +225,9 @@ func TestClient_SetDefaultPermissionTemplate(t *testing.T) {
 		httpmock.NewStringResponder(http.StatusInternalServerError, "set default fatal"))
 
 	err := sc.SetDefaultPermissionTemplate(context.Background(), "test1")
-	if err == nil {
-		t.Fatal("no error returned")
-	}
+	require.Error(t, err)
 
-	if err.Error() != "unable to set default permission template: status: 500, body: set default fatal" {
+	if err.Error() != "failed to set default permission template: status: 500, body: set default fatal" {
 		t.Fatalf("wrong err returned: %s", err.Error())
 	}
 }

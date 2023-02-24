@@ -22,9 +22,9 @@ import (
 	edpCompApi "github.com/epam/edp-component-operator/api/v1"
 	jenkinsV1Api "github.com/epam/edp-jenkins-operator/v2/pkg/apis/v2/v1"
 
-	sonarApi "github.com/epam/edp-sonar-operator/v2/api/v1"
-	"github.com/epam/edp-sonar-operator/v2/pkg/service/platform/helper"
-	platformHelper "github.com/epam/edp-sonar-operator/v2/pkg/service/platform/helper"
+	sonarApi "github.com/epam/edp-sonar-operator/api/v1alpha1"
+	"github.com/epam/edp-sonar-operator/pkg/service/platform/helper"
+	platformHelper "github.com/epam/edp-sonar-operator/pkg/service/platform/helper"
 )
 
 var log = ctrl.Log.WithName("platform")
@@ -108,7 +108,6 @@ func (s K8SService) CreateSecret(sonarName, namespace, secretName string, data m
 
 	existingSecret, err := s.k8sClusterClient.Secrets(sonarSecretObject.Namespace).
 		Get(context.TODO(), sonarSecretObject.Name, metav1.GetOptions{})
-
 	if err != nil {
 		if k8serr.IsNotFound(err) {
 			log.V(1).Info("Creating a new Secret for Sonar", namespace, sonarSecretObject.Namespace, "secret name", sonarSecretObject.Name, "sonar name", sonarName)
@@ -193,7 +192,6 @@ func (s K8SService) CreateJenkinsScript(namespace string, configMap string) erro
 		return err
 	}
 	return nil
-
 }
 
 func (s K8SService) getJenkinsScript(name, namespace string) (*jenkinsV1Api.JenkinsScript, error) {
@@ -295,9 +293,11 @@ func (s K8SService) createEDPComponent(sonar *sonarApi.Sonar, url string, icon s
 			Visible: true,
 		},
 	}
+
 	if err := controllerutil.SetControllerReference(sonar, obj, s.Scheme); err != nil {
 		return err
 	}
+
 	return s.client.Create(context.TODO(), obj)
 }
 

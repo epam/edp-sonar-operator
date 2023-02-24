@@ -1,4 +1,4 @@
-module github.com/epam/edp-sonar-operator/v2
+module github.com/epam/edp-sonar-operator
 
 go 1.19
 

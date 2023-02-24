@@ -5,19 +5,19 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/dchest/uniuri"
 	"github.com/go-logr/logr"
-	coreV1Api "k8s.io/api/core/v1"
+	coreV1 "k8s.io/api/core/v1"
 	k8sErrors "k8s.io/apimachinery/pkg/api/errors"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	metaV1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/apimachinery/pkg/types"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 
-	sonarApi "github.com/epam/edp-sonar-operator/v2/api/v1"
-	"github.com/epam/edp-sonar-operator/v2/pkg/service/platform"
-	"github.com/epam/edp-sonar-operator/v2/pkg/service/sonar"
+	sonarApi "github.com/epam/edp-sonar-operator/api/v1alpha1"
+	"github.com/epam/edp-sonar-operator/pkg/service/platform"
+	"github.com/epam/edp-sonar-operator/pkg/service/sonar"
 )
 
 const (
@@ -65,20 +65,21 @@ func (r *ReconcileSonar) SetupWithManager(mgr ctrl.Manager) error {
 		Complete(r)
 }
 
-func (r *ReconcileSonar) createDBSecret(sonarName, namespace string) (*coreV1Api.Secret, error) {
-	dbSecret := map[string][]byte{
-		"database-user":     []byte("admin"),
-		"database-password": []byte(uniuri.New()),
+func (r *ReconcileSonar) getSonarSecret(ctx context.Context, secretName, namespace string) (*coreV1.Secret, error) {
+	var secret coreV1.Secret
+
+	if err := r.client.Get(ctx, types.NamespacedName{
+		Name:      secretName,
+		Namespace: namespace,
+	}, &secret); err != nil {
+		return nil, fmt.Errorf("failed to get sonar secret: %w", err)
 	}
 
-	sonarDbName := fmt.Sprintf("%v-db", sonarName)
-
-	secret, err := r.platform.CreateSecret(sonarName, namespace, sonarDbName, dbSecret)
-	if err != nil {
-		return nil, fmt.Errorf("failed to create secret for - %s: %w", sonarDbName, err)
+	if secret.Data["token"] == nil {
+		return nil, fmt.Errorf("one or more fields are missing in sonar secret")
 	}
 
-	return secret, nil
+	return &secret, nil
 }
 
 //+kubebuilder:rbac:groups=v1.edp.epam.com,namespace=placeholder,resources=sonars,verbs=get;list;watch;create;update;patch;delete
@@ -100,19 +101,13 @@ func (r *ReconcileSonar) Reconcile(ctx context.Context, request reconcile.Reques
 		return reconcile.Result{}, err
 	}
 
-	secret, err := r.createDBSecret(instance.Name, instance.Namespace)
+	secret, err := r.getSonarSecret(ctx, instance.Spec.Secret, instance.Namespace)
 	if err != nil {
 		return reconcile.Result{RequeueAfter: DefaultRequeueTime * time.Second}, err
 	}
+
 	if err = r.platform.SetOwnerReference(instance, secret); err != nil {
 		return reconcile.Result{RequeueAfter: DefaultRequeueTime * time.Second}, err
-	}
-
-	if dcIsReady, errIsReady := r.service.IsDeploymentReady(instance); errIsReady != nil {
-		return reconcile.Result{RequeueAfter: DefaultRequeueTime * time.Second}, fmt.Errorf("failed to checking if deployment configs is ready: %w", err)
-	} else if !dcIsReady {
-		log.Info("Deployment config is not ready for configuration yet")
-		return reconcile.Result{RequeueAfter: DefaultRequeueTime * time.Second}, nil
 	}
 
 	if instance.Status.Status == "" {
@@ -175,7 +170,7 @@ func (r *ReconcileSonar) Reconcile(ctx context.Context, request reconcile.Reques
 	}
 
 	if err = r.updateAvailableStatus(ctx, instance, true); err != nil {
-		log.Info("Failed to update availability status")
+		log.Info("failed to update availability status")
 
 		return reconcile.Result{RequeueAfter: DefaultRequeueTime * time.Second}, err
 	}
@@ -190,7 +185,8 @@ func (r *ReconcileSonar) updateStatus(ctx context.Context, instance *sonarApi.So
 		WithName("status_update")
 	currentStatus := instance.Status.Status
 	instance.Status.Status = newStatus
-	instance.Status.LastTimeUpdated = metav1.Now()
+	instance.Status.LastTimeUpdated = metaV1.Now()
+
 	if err := r.client.Status().Update(ctx, instance); err != nil {
 		if updErr := r.client.Update(ctx, instance); updErr != nil {
 			return fmt.Errorf("failed to update status from %s to %s: %w", currentStatus, newStatus, err)
@@ -206,9 +202,10 @@ func (r *ReconcileSonar) updateAvailableStatus(ctx context.Context, instance *so
 	log := r.log.
 		WithValues("Request.Namespace", instance.Namespace, "Request.Name", instance.Name).
 		WithName("status_update")
+
 	if instance.Status.Available != value {
 		instance.Status.Available = value
-		instance.Status.LastTimeUpdated = metav1.Now()
+		instance.Status.LastTimeUpdated = metaV1.Now()
 
 		if err := r.client.Status().Update(ctx, instance); err != nil {
 			if updErr := r.client.Update(ctx, instance); updErr != nil {

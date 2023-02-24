@@ -9,7 +9,7 @@ rules:
 - apiGroups:
   - v1.edp.epam.com
   resources:
-  - keycloaks
+  - sonargroups
   verbs:
   - create
   - delete
@@ -21,13 +21,65 @@ rules:
 - apiGroups:
   - v1.edp.epam.com
   resources:
-  - keycloaks/finalizers
+  - sonargroups/finalizers
   verbs:
   - update
 - apiGroups:
   - v1.edp.epam.com
   resources:
-  - keycloaks/status
+  - sonargroups/status
+  verbs:
+  - get
+  - patch
+  - update
+- apiGroups:
+  - v1.edp.epam.com
+  resources:
+  - sonarpermissiontemplates
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - v1.edp.epam.com
+  resources:
+  - sonarpermissiontemplates/finalizers
+  verbs:
+  - update
+- apiGroups:
+  - v1.edp.epam.com
+  resources:
+  - sonarpermissiontemplates/status
+  verbs:
+  - get
+  - patch
+  - update
+- apiGroups:
+  - v1.edp.epam.com
+  resources:
+  - sonars
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - v1.edp.epam.com
+  resources:
+  - sonars/finalizers
+  verbs:
+  - update
+- apiGroups:
+  - v1.edp.epam.com
+  resources:
+  - sonars/status
   verbs:
   - get
   - patch

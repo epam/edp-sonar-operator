@@ -24,12 +24,11 @@ import (
 	jenkinsApi "github.com/epam/edp-jenkins-operator/v2/pkg/apis/v2/v1"
 	keycloakApi "github.com/epam/edp-keycloak-operator/api/v1"
 
-	sonarApiv1 "github.com/epam/edp-sonar-operator/v2/api/v1"
-	sonarApiv1alpha1 "github.com/epam/edp-sonar-operator/v2/api/v1alpha1"
-	"github.com/epam/edp-sonar-operator/v2/controllers/group"
-	"github.com/epam/edp-sonar-operator/v2/controllers/permission_template"
-	"github.com/epam/edp-sonar-operator/v2/controllers/sonar"
-	"github.com/epam/edp-sonar-operator/v2/pkg/helper"
+	sonarApi "github.com/epam/edp-sonar-operator/api/v1alpha1"
+	"github.com/epam/edp-sonar-operator/controllers/group"
+	"github.com/epam/edp-sonar-operator/controllers/permission_template"
+	"github.com/epam/edp-sonar-operator/controllers/sonar"
+	"github.com/epam/edp-sonar-operator/pkg/helper"
 )
 
 var (
@@ -57,7 +56,7 @@ func main() {
 
 	mode, err := helper.GetDebugMode()
 	if err != nil {
-		setupLog.Error(err, "unable to get debug mode value")
+		setupLog.Error(err, "failed to get debug mode value")
 		os.Exit(1)
 	}
 
@@ -68,8 +67,8 @@ func main() {
 	flag.Parse()
 
 	utilruntime.Must(clientgoscheme.AddToScheme(scheme))
-	utilruntime.Must(sonarApiv1.AddToScheme(scheme))
-	utilruntime.Must(sonarApiv1alpha1.AddToScheme(scheme))
+	utilruntime.Must(sonarApi.AddToScheme(scheme))
+	utilruntime.Must(sonarApi.AddToScheme(scheme))
 	utilruntime.Must(edpCompApi.AddToScheme(scheme))
 	utilruntime.Must(jenkinsApi.AddToScheme(scheme))
 	utilruntime.Must(keycloakApi.AddToScheme(scheme))
@@ -90,7 +89,7 @@ func main() {
 
 	ns, err := helper.GetWatchNamespace()
 	if err != nil {
-		setupLog.Error(err, "unable to get watch namespace")
+		setupLog.Error(err, "failed to get watch namespace")
 		os.Exit(1)
 	}
 
@@ -108,7 +107,7 @@ func main() {
 		Namespace: ns,
 	})
 	if err != nil {
-		setupLog.Error(err, "unable to start manager")
+		setupLog.Error(err, "failed to start manager")
 		os.Exit(1)
 	}
 
@@ -154,12 +153,12 @@ func main() {
 	}
 
 	if err = mgr.AddHealthzCheck("healthz", healthz.Ping); err != nil {
-		setupLog.Error(err, "unable to set up health check")
+		setupLog.Error(err, "failed to set up health check")
 		os.Exit(1)
 	}
 
 	if err = mgr.AddReadyzCheck("readyz", healthz.Ping); err != nil {
-		setupLog.Error(err, "unable to set up ready check")
+		setupLog.Error(err, "failed to set up ready check")
 		os.Exit(1)
 	}
 

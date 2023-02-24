@@ -11,16 +11,15 @@ import (
 	routeV1Client "github.com/openshift/client-go/route/clientset/versioned/typed/route/v1"
 	securityV1Client "github.com/openshift/client-go/security/clientset/versioned/typed/security/v1"
 	templateV1Client "github.com/openshift/client-go/template/clientset/versioned/typed/template/v1"
-	"github.com/pkg/errors"
 	k8serrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/client-go/rest"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
-	sonarApi "github.com/epam/edp-sonar-operator/v2/api/v1"
-	platformHelper "github.com/epam/edp-sonar-operator/v2/pkg/service/platform/helper"
-	"github.com/epam/edp-sonar-operator/v2/pkg/service/platform/kubernetes"
+	sonarApi "github.com/epam/edp-sonar-operator/api/v1alpha1"
+	platformHelper "github.com/epam/edp-sonar-operator/pkg/service/platform/helper"
+	"github.com/epam/edp-sonar-operator/pkg/service/platform/kubernetes"
 )
 
 type OpenshiftPodsStateClient interface {
@@ -59,7 +58,6 @@ const (
 )
 
 func (service *OpenshiftService) Init(config *rest.Config, scheme *runtime.Scheme, client client.Client) error {
-
 	err := service.K8SService.Init(config, scheme, client)
 	if err != nil {
 		return err
@@ -102,12 +100,12 @@ func (service *OpenshiftService) Init(config *rest.Config, scheme *runtime.Schem
 func (service *OpenshiftService) GetExternalEndpoint(ctx context.Context, namespace string, name string) (string, error) {
 	r, err := service.routeClient.Routes(namespace).Get(ctx, name, metav1.GetOptions{})
 	if err != nil && k8serrors.IsNotFound(err) {
-		return "", errors.Wrapf(err, "Route %v in namespace %v not found", name, namespace)
+		return "", fmt.Errorf("failed to find route %v in namespace %v: %w", name, namespace, err)
 	} else if err != nil {
 		return "", err
 	}
 
-	var routeScheme = "http"
+	routeScheme := "http"
 	if r.Spec.TLS.Termination != "" {
 		routeScheme = "https"
 	}

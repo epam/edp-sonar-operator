@@ -2,19 +2,7 @@ package v1alpha1
 
 import metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
-// +kubebuilder:object:root=true
-// +kubebuilder:subresource:status
-// +kubebuilder:deprecatedversion
-
-// SonarGroup is the Schema for the sonar group API.
-type SonarGroup struct {
-	metav1.TypeMeta   `json:",inline"`
-	metav1.ObjectMeta `json:"metadata,omitempty"`
-
-	Spec   SonarGroupSpec   `json:"spec,omitempty"`
-	Status SonarGroupStatus `json:"status,omitempty"`
-}
-
+// SonarGroupSpec defines the desired state of SonarGroup.
 type SonarGroupSpec struct {
 	// SonarOwner is a name of root sonar custom resource.
 	SonarOwner string `json:"sonarOwner"`
@@ -27,6 +15,7 @@ type SonarGroupSpec struct {
 	Description string `json:"description,omitempty"`
 }
 
+// SonarGroupStatus defines the observed state of SonarGroup.
 type SonarGroupStatus struct {
 	// +optional
 	Value string `json:"value,omitempty"`
@@ -39,13 +28,16 @@ type SonarGroupStatus struct {
 }
 
 // +kubebuilder:object:root=true
+// +kubebuilder:subresource:status
+// +kubebuilder:storageversion
 
-// SonarGroupList contains a list of SonarGroup.
-type SonarGroupList struct {
-	metav1.TypeMeta `json:",inline"`
-	metav1.ListMeta `json:"metadata,omitempty"`
+// SonarGroup is the Schema for the sonar group API.
+type SonarGroup struct {
+	metav1.TypeMeta   `json:",inline"`
+	metav1.ObjectMeta `json:"metadata,omitempty"`
 
-	Items []SonarGroup `json:"items"`
+	Spec   SonarGroupSpec   `json:"spec,omitempty"`
+	Status SonarGroupStatus `json:"status,omitempty"`
 }
 
 func (in *SonarGroup) GetFailureCount() int64 {
@@ -66,4 +58,18 @@ func (in *SonarGroup) SetStatus(value string) {
 
 func (in *SonarGroup) SonarOwner() string {
 	return in.Spec.SonarOwner
+}
+
+// +kubebuilder:object:root=true
+
+// SonarGroupList contains a list of SonarGroup.
+type SonarGroupList struct {
+	metav1.TypeMeta `json:",inline"`
+	metav1.ListMeta `json:"metadata,omitempty"`
+
+	Items []SonarGroup `json:"items"`
+}
+
+func init() {
+	SchemeBuilder.Register(&SonarGroup{}, &SonarGroupList{})
 }

@@ -2,19 +2,7 @@ package v1alpha1
 
 import metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
-// +kubebuilder:object:root=true
-// +kubebuilder:subresource:status
-// +kubebuilder:deprecatedversion
-
-// SonarPermissionTemplate is the Schema for the sonar permission template API.
-type SonarPermissionTemplate struct {
-	metav1.TypeMeta   `json:",inline"`
-	metav1.ObjectMeta `json:"metadata,omitempty"`
-
-	Spec   SonarPermissionTemplateSpec   `json:"spec,omitempty"`
-	Status SonarPermissionTemplateStatus `json:"status,omitempty"`
-}
-
+// SonarPermissionTemplateSpec defines the desired state of SonarPermissionTemplate.
 type SonarPermissionTemplateSpec struct {
 	// SonarOwner is a name of root sonar custom resource.
 	SonarOwner string `json:"sonarOwner"`
@@ -35,6 +23,7 @@ type SonarPermissionTemplateSpec struct {
 	GroupPermissions []GroupPermission `json:"groupPermissions,omitempty"`
 }
 
+// GroupPermission represents the group and its permissions.
 type GroupPermission struct {
 	// Group name or 'anyone' (case insensitive). Example value sonar-administrators.
 	GroupName string `json:"groupName"`
@@ -44,6 +33,7 @@ type GroupPermission struct {
 	Permissions []string `json:"permissions"`
 }
 
+// SonarPermissionTemplateStatus defines the observed state of SonarPermissionTemplate.
 type SonarPermissionTemplateStatus struct {
 	// +optional
 	Value string `json:"value,omitempty"`
@@ -56,13 +46,16 @@ type SonarPermissionTemplateStatus struct {
 }
 
 // +kubebuilder:object:root=true
+// +kubebuilder:subresource:status
+// +kubebuilder:storageversion
 
-// SonarPermissionTemplateList contains a list of SonarPermissionTemplate.
-type SonarPermissionTemplateList struct {
-	metav1.TypeMeta `json:",inline"`
-	metav1.ListMeta `json:"metadata,omitempty"`
+// SonarPermissionTemplate is the Schema for the sonar permission template API.
+type SonarPermissionTemplate struct {
+	metav1.TypeMeta   `json:",inline"`
+	metav1.ObjectMeta `json:"metadata,omitempty"`
 
-	Items []SonarPermissionTemplate `json:"items"`
+	Spec   SonarPermissionTemplateSpec   `json:"spec,omitempty"`
+	Status SonarPermissionTemplateStatus `json:"status,omitempty"`
 }
 
 func (in *SonarPermissionTemplate) GetFailureCount() int64 {
@@ -83,4 +76,18 @@ func (in *SonarPermissionTemplate) SetStatus(value string) {
 
 func (in *SonarPermissionTemplate) SonarOwner() string {
 	return in.Spec.SonarOwner
+}
+
+// +kubebuilder:object:root=true
+
+// SonarPermissionTemplateList contains a list of SonarPermissionTemplate.
+type SonarPermissionTemplateList struct {
+	metav1.TypeMeta `json:",inline"`
+	metav1.ListMeta `json:"metadata,omitempty"`
+
+	Items []SonarPermissionTemplate `json:"items"`
+}
+
+func init() {
+	SchemeBuilder.Register(&SonarPermissionTemplate{}, &SonarPermissionTemplateList{})
 }

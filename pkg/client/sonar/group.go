@@ -3,8 +3,6 @@ package sonar
 import (
 	"context"
 	"fmt"
-
-	"github.com/pkg/errors"
 )
 
 type Group struct {
@@ -23,7 +21,7 @@ func (sc *Client) SearchGroups(ctx context.Context, groupName string) ([]Group, 
 		Get(fmt.Sprintf("/user_groups/search?q=%s&f=name", groupName))
 
 	if err = sc.checkError(rsp, err); err != nil {
-		return nil, errors.Wrap(err, "unable to search for groups")
+		return nil, fmt.Errorf("failed to search for groups: %w", err)
 	}
 
 	return groupResponse.Groups, nil
@@ -32,7 +30,7 @@ func (sc *Client) SearchGroups(ctx context.Context, groupName string) ([]Group, 
 func (sc Client) GetGroup(ctx context.Context, groupName string) (*Group, error) {
 	groups, err := sc.SearchGroups(ctx, groupName)
 	if err != nil {
-		return nil, errors.Wrap(err, "unable to search for groups")
+		return nil, fmt.Errorf("failed to search for groups: %w", err)
 	}
 
 	for _, g := range groups {
@@ -51,12 +49,16 @@ type createGroupResponse struct {
 func (sc *Client) CreateGroup(ctx context.Context, group *Group) error {
 	var createGroupRsp createGroupResponse
 
-	rsp, err := sc.startRequest(ctx).SetResult(&createGroupRsp).SetFormData(map[string]string{
-		"name":        group.Name,
-		"description": group.Description,
-	}).Post("/user_groups/create")
+	rsp, err := sc.startRequest(ctx).
+		SetResult(&createGroupRsp).
+		SetFormData(map[string]string{
+			"name":        group.Name,
+			"description": group.Description,
+		}).
+		Post("/user_groups/create")
+
 	if err = sc.checkError(rsp, err); err != nil {
-		return errors.Wrap(err, "unable to create user group")
+		return fmt.Errorf("failed to create user group: %w", err)
 	}
 	group.ID = createGroupRsp.Group.ID
 
@@ -75,7 +77,7 @@ func (sc *Client) UpdateGroup(ctx context.Context, currentName string, group *Gr
 
 	rsp, err := sc.startRequest(ctx).SetFormData(rqParams).Post("/user_groups/update")
 	if err = sc.checkError(rsp, err); err != nil {
-		return errors.Wrap(err, "unable to update group")
+		return fmt.Errorf("failed to update group: %w", err)
 	}
 
 	return nil
@@ -86,7 +88,7 @@ func (sc *Client) DeleteGroup(ctx context.Context, groupName string) error {
 		"name": groupName,
 	}).Post("/user_groups/delete")
 	if err = sc.checkError(rsp, err); err != nil {
-		return errors.Wrap(err, "unable to delete group")
+		return fmt.Errorf("failed to delete group: %w", err)
 	}
 
 	return nil

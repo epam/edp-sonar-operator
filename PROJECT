@@ -1,4 +1,4 @@
-domain: edp.epam.com
+domain: epam.com
 layout:
 - go.kubebuilder.io/v3
 plugins:
@@ -11,27 +11,27 @@ resources:
     crdVersion: v1
     namespaced: true
   controller: true
-  domain: edp.epam.com
-  group: v2
+  domain: epam.com
+  group: edp
   kind: Sonar
-  path: github.com/epam/edp-sonar-operator/api/v1
-  version: v1
+  path: github.com/epam/edp-sonar-operator/api/v1alpha1
+  version: v1alpha1
 - api:
     crdVersion: v1
     namespaced: true
   controller: true
-  domain: edp.epam.com
-  group: v2
+  domain: epam.com
+  group: edp
   kind: PermissionTemplate
-  path: github.com/epam/edp-sonar-operator/api/v1
+  path: github.com/epam/edp-sonar-operator/api/v1alpha1
   version: v1
 - api:
     crdVersion: v1
     namespaced: true
   controller: true
-  domain: edp.epam.com
-  group: v2
+  domain: epam.com
+  group: edp
   kind: SonarGroup
-  path: github.com/epam/edp-sonar-operator/api/v1
-  version: v1
+  path: github.com/epam/edp-sonar-operator/api/v1alpha1
+  version: v1alpha1
 version: "3"

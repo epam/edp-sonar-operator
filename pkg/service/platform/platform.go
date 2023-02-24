@@ -10,9 +10,9 @@ import (
 	"k8s.io/client-go/tools/clientcmd"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
-	sonarApi "github.com/epam/edp-sonar-operator/v2/api/v1"
-	"github.com/epam/edp-sonar-operator/v2/pkg/service/platform/kubernetes"
-	"github.com/epam/edp-sonar-operator/v2/pkg/service/platform/openshift"
+	sonarApi "github.com/epam/edp-sonar-operator/api/v1alpha1"
+	"github.com/epam/edp-sonar-operator/pkg/service/platform/kubernetes"
+	"github.com/epam/edp-sonar-operator/pkg/service/platform/openshift"
 )
 
 const (

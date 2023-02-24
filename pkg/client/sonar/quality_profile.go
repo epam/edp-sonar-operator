@@ -4,8 +4,6 @@ import (
 	"context"
 	"fmt"
 	"strings"
-
-	"github.com/pkg/errors"
 )
 
 type QualityProfile struct {
@@ -24,7 +22,7 @@ func (sc Client) GetQualityProfile(ctx context.Context, name string) (*QualityPr
 		Get(fmt.Sprintf("/qualityprofiles/search?qualityProfile=%s",
 			strings.ReplaceAll(name, " ", "+")))
 	if err = sc.checkError(rsp, err); err != nil {
-		return nil, errors.Wrap(err, "unable to get quality profile")
+		return nil, fmt.Errorf("failed to get quality profile: %w", err)
 	}
 
 	for _, r := range searchRsp.Profiles {

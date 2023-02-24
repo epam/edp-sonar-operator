@@ -1,7 +1,6 @@
 package platform
 
 import (
-	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -15,7 +14,7 @@ func TestNewService_NonValidPlatform(t *testing.T) {
 	platformType := "test"
 	service, err := NewService(platformType, scheme, client)
 	assert.Error(t, err)
-	assert.True(t, strings.Contains(err.Error(), "is not supported"))
+	assert.Contains(t, err.Error(), "is not supported")
 	assert.Nil(t, service)
 }
 

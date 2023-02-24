@@ -6,10 +6,11 @@ import (
 	"testing"
 
 	"github.com/jarcoal/httpmock"
+	"github.com/stretchr/testify/require"
 )
 
 func TestSonarClient_CreateGroup(t *testing.T) {
-	cs := InitNewRestClient("", "", "")
+	cs := NewClient("", "", "")
 	httpmock.ActivateNonDefault(cs.resty.GetClient())
 	cs.resty.SetDisableWarn(true)
 
@@ -28,17 +29,15 @@ func TestSonarClient_CreateGroup(t *testing.T) {
 	httpmock.RegisterResponder("POST", "/user_groups/create",
 		httpmock.NewStringResponder(http.StatusInternalServerError, "create fatal"))
 	err := cs.CreateGroup(context.Background(), &gr)
-	if err == nil {
-		t.Fatal("no error returned")
-	}
+	require.Error(t, err)
 
-	if err.Error() != "unable to create user group: status: 500, body: create fatal" {
+	if err.Error() != "failed to create user group: status: 500, body: create fatal" {
 		t.Fatalf("wrong error returned: %s", err.Error())
 	}
 }
 
 func TestSonarClient_UpdateGroup(t *testing.T) {
-	cs := InitNewRestClient("", "", "")
+	cs := NewClient("", "", "")
 	httpmock.ActivateNonDefault(cs.resty.GetClient())
 	cs.resty.SetDisableWarn(true)
 	httpmock.RegisterResponder("POST", "/user_groups/update",
@@ -55,17 +54,15 @@ func TestSonarClient_UpdateGroup(t *testing.T) {
 	err := cs.UpdateGroup(context.Background(), "currentName",
 		&Group{Name: "name", Description: "desc"})
 
-	if err == nil {
-		t.Fatal("no error returned")
-	}
+	require.Error(t, err)
 
-	if err.Error() != "unable to update group: status: 500, body: update fatal" {
+	if err.Error() != "failed to update group: status: 500, body: update fatal" {
 		t.Fatalf("wrong error returned: %s", err.Error())
 	}
 }
 
 func TestSonarClient_DeleteGroup(t *testing.T) {
-	cs := InitNewRestClient("", "", "")
+	cs := NewClient("", "", "")
 	httpmock.ActivateNonDefault(cs.resty.GetClient())
 	cs.resty.SetDisableWarn(true)
 
@@ -80,17 +77,15 @@ func TestSonarClient_DeleteGroup(t *testing.T) {
 
 	err := cs.DeleteGroup(context.Background(), "groupName")
 
-	if err == nil {
-		t.Fatal("no error returned")
-	}
+	require.Error(t, err)
 
-	if err.Error() != "unable to delete group: status: 500, body: delete fatal" {
+	if err.Error() != "failed to delete group: status: 500, body: delete fatal" {
 		t.Fatalf("wrong error returned: %s", err.Error())
 	}
 }
 
 func TestSonarClient_SearchGroups(t *testing.T) {
-	cs := InitNewRestClient("", "", "")
+	cs := NewClient("", "", "")
 	httpmock.ActivateNonDefault(cs.resty.GetClient())
 	cs.resty.SetDisableWarn(true)
 	httpmock.RegisterResponder("GET", "/user_groups/search?q=name&f=name",
@@ -104,17 +99,15 @@ func TestSonarClient_SearchGroups(t *testing.T) {
 		httpmock.NewStringResponder(http.StatusInternalServerError, "search fatal"))
 
 	_, err := cs.SearchGroups(context.Background(), "name")
-	if err == nil {
-		t.Fatal("no error returned")
-	}
+	require.Error(t, err)
 
-	if err.Error() != "unable to search for groups: status: 500, body: search fatal" {
+	if err.Error() != "failed to search for groups: status: 500, body: search fatal" {
 		t.Fatalf("wrong error returned: %s", err.Error())
 	}
 }
 
 func TestSonarClient_GetGroup(t *testing.T) {
-	cs := InitNewRestClient("", "", "")
+	cs := NewClient("", "", "")
 
 	httpmock.ActivateNonDefault(cs.resty.GetClient())
 	cs.resty.SetDisableWarn(true)
@@ -132,9 +125,7 @@ func TestSonarClient_GetGroup(t *testing.T) {
 			{Name: "groupName"},
 		}}))
 	_, err := cs.GetGroup(context.Background(), "groupNameNotFound")
-	if err == nil {
-		t.Fatal("no error returned")
-	}
+	require.Error(t, err)
 
 	if !IsErrNotFound(err) {
 		t.Fatalf("wrong error returned: %s", err.Error())
@@ -143,10 +134,8 @@ func TestSonarClient_GetGroup(t *testing.T) {
 	httpmock.RegisterResponder("GET", "/user_groups/search?q=groupNameNotFound&f=name",
 		httpmock.NewStringResponder(http.StatusInternalServerError, "search fatal"))
 	_, err = cs.GetGroup(context.Background(), "groupNameNotFound")
-	if err == nil {
-		t.Fatal("no error returned")
-	}
-	if err.Error() != "unable to search for groups: unable to search for groups: status: 500, body: search fatal" {
+	require.Error(t, err)
+	if err.Error() != "failed to search for groups: failed to search for groups: status: 500, body: search fatal" {
 		t.Fatalf("wrong error returned: %s", err.Error())
 	}
 }
