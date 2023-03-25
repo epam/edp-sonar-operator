@@ -1,16 +1,24 @@
 <a name="unreleased"></a>
 ## [Unreleased]
 
+
+<a name="v2.14.0"></a>
+## [v2.14.0] - 2023-03-24
 ### Features
 
 - Updated project skeleton [EPMDEDP-11166](https://jiraeu.epam.com/browse/EPMDEDP-11166)
 - Updated EDP components [EPMDEDP-11206](https://jiraeu.epam.com/browse/EPMDEDP-11206)
 - Provide opportunity to use defaul cluster storageClassName [EPMDEDP-11230](https://jiraeu.epam.com/browse/EPMDEDP-11230)
+- Add the ability to add additional certs to Sonar [EPMDEDP-11529](https://jiraeu.epam.com/browse/EPMDEDP-11529)
+- Add the ability to use additional volumes in helm chart [EPMDEDP-11529](https://jiraeu.epam.com/browse/EPMDEDP-11529)
 
 ### Routine
 
 - Update current development version [EPMDEDP-10610](https://jiraeu.epam.com/browse/EPMDEDP-10610)
 - Bump sonar findbugs version [EPMDEDP-11381](https://jiraeu.epam.com/browse/EPMDEDP-11381)
+- Update git-chglog for sonar-operator [EPMDEDP-11518](https://jiraeu.epam.com/browse/EPMDEDP-11518)
+- Change the value of the parameter that contains the name of the secret [EPMDEDP-11529](https://jiraeu.epam.com/browse/EPMDEDP-11529)
+- Upgrade alpine image version to 3.16.4 [EPMDEDP-11764](https://jiraeu.epam.com/browse/EPMDEDP-11764)
 
 ### Documentation
 
@@ -234,7 +242,8 @@ Ensure keycloak role is aligned when migrating from
 <a name="v2.7.0"></a>
 ## [v2.7.0] - 2021-12-03
 
-[Unreleased]: https://github.com/epam/edp-sonar-operator/compare/v2.13.0...HEAD
+[Unreleased]: https://github.com/epam/edp-sonar-operator/compare/v2.14.0...HEAD
+[v2.14.0]: https://github.com/epam/edp-sonar-operator/compare/v2.13.0...v2.14.0
 [v2.13.0]: https://github.com/epam/edp-sonar-operator/compare/v2.12.0...v2.13.0
 [v2.12.0]: https://github.com/epam/edp-sonar-operator/compare/v2.11.0...v2.12.0
 [v2.11.0]: https://github.com/epam/edp-sonar-operator/compare/v2.10.3...v2.11.0
