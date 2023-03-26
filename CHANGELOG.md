@@ -3,14 +3,31 @@
 
 ### Features
 
+- Configuration step generalised [EPMDEDP-11167](https://jiraeu.epam.com/browse/EPMDEDP-11167)
+
+### Routine
+
+- Bump golang.org/x/net from 0.5.0 to 0.8.0 [EPMDEDP-11578](https://jiraeu.epam.com/browse/EPMDEDP-11578)
+- Upgrade alpine image version to 3.16.4 [EPMDEDP-11764](https://jiraeu.epam.com/browse/EPMDEDP-11764)
+
+
+<a name="v2.14.0"></a>
+## [v2.14.0] - 2023-03-25
+### Features
+
 - Updated project skeleton [EPMDEDP-11166](https://jiraeu.epam.com/browse/EPMDEDP-11166)
 - Updated EDP components [EPMDEDP-11206](https://jiraeu.epam.com/browse/EPMDEDP-11206)
 - Provide opportunity to use defaul cluster storageClassName [EPMDEDP-11230](https://jiraeu.epam.com/browse/EPMDEDP-11230)
+- Add the ability to add additional certs to Sonar [EPMDEDP-11529](https://jiraeu.epam.com/browse/EPMDEDP-11529)
+- Add the ability to use additional volumes in helm chart [EPMDEDP-11529](https://jiraeu.epam.com/browse/EPMDEDP-11529)
 
 ### Routine
 
 - Update current development version [EPMDEDP-10610](https://jiraeu.epam.com/browse/EPMDEDP-10610)
 - Bump sonar findbugs version [EPMDEDP-11381](https://jiraeu.epam.com/browse/EPMDEDP-11381)
+- Update git-chglog for sonar-operator [EPMDEDP-11518](https://jiraeu.epam.com/browse/EPMDEDP-11518)
+- Change the value of the parameter that contains the name of the secret [EPMDEDP-11529](https://jiraeu.epam.com/browse/EPMDEDP-11529)
+- Upgrade alpine image version to 3.16.4 [EPMDEDP-11764](https://jiraeu.epam.com/browse/EPMDEDP-11764)
 
 ### Documentation
 
@@ -68,8 +85,8 @@
 - Update SonarQube plugins version [EPMDEDP-10274](https://jiraeu.epam.com/browse/EPMDEDP-10274)
 - Update SonarQube to 8.9.9-community version [EPMDEDP-10274](https://jiraeu.epam.com/browse/EPMDEDP-10274)
 - Update sonar version to 8.9.9-community [EPMDEDP-10281](https://jiraeu.epam.com/browse/EPMDEDP-10281)
-- Revert: Update sonar version to 8.9.9-community [EPMDEDP-10281](https://jiraeu.epam.com/browse/EPMDEDP-10281)
 - Update sonar version to 8.9.9-community [EPMDEDP-10281](https://jiraeu.epam.com/browse/EPMDEDP-10281)
+- Revert: Update sonar version to 8.9.9-community [EPMDEDP-10281](https://jiraeu.epam.com/browse/EPMDEDP-10281)
 - Change 'go get' to 'go install' for git-chglog [EPMDEDP-10337](https://jiraeu.epam.com/browse/EPMDEDP-10337)
 - Use deployments as default deploymentType for OpenShift [EPMDEDP-10344](https://jiraeu.epam.com/browse/EPMDEDP-10344)
 - Remove VERSION file [EPMDEDP-10387](https://jiraeu.epam.com/browse/EPMDEDP-10387)
@@ -103,8 +120,8 @@
 - Ensure CI user has browse permissions [EPMDEDP-7506](https://jiraeu.epam.com/browse/EPMDEDP-7506)
 - sonar secrets generation [EPMDEDP-7633](https://jiraeu.epam.com/browse/EPMDEDP-7633)
 - Changelog links [EPMDEDP-7847](https://jiraeu.epam.com/browse/EPMDEDP-7847)
-- Upgrade SonarQube to the LTS 8.9.6 version [EPMDEDP-8041](https://jiraeu.epam.com/browse/EPMDEDP-8041)
 - Upgrade SonarQube to the LTS 8.9.4 version [EPMDEDP-8041](https://jiraeu.epam.com/browse/EPMDEDP-8041)
+- Upgrade SonarQube to the LTS 8.9.6 version [EPMDEDP-8041](https://jiraeu.epam.com/browse/EPMDEDP-8041)
 - save template ID in k8s, immediately after creation in sonar [EPMDEDP-8055](https://jiraeu.epam.com/browse/EPMDEDP-8055)
 - QualityGatesListResponse unmarshalling bugfix [EPMDEDP-8224](https://jiraeu.epam.com/browse/EPMDEDP-8224)
 - Change ca-certificates in dockerfile [EPMDEDP-8238](https://jiraeu.epam.com/browse/EPMDEDP-8238)
@@ -124,11 +141,11 @@
 
 - Align CI flow for GH Actions [EPMDEDP-7391](https://jiraeu.epam.com/browse/EPMDEDP-7391)
 - Add fake kubeconfig to fix unit tests [EPMDEDP-7391](https://jiraeu.epam.com/browse/EPMDEDP-7391)
+- Add tests [EPMDEDP-7994](https://jiraeu.epam.com/browse/EPMDEDP-7994)
+- Add tests [EPMDEDP-7994](https://jiraeu.epam.com/browse/EPMDEDP-7994)
+- Add tests [EPMDEDP-7994](https://jiraeu.epam.com/browse/EPMDEDP-7994)
+- Add tests [EPMDEDP-7994](https://jiraeu.epam.com/browse/EPMDEDP-7994)
 - tests refactoring [EPMDEDP-7994](https://jiraeu.epam.com/browse/EPMDEDP-7994)
-- Add tests [EPMDEDP-7994](https://jiraeu.epam.com/browse/EPMDEDP-7994)
-- Add tests [EPMDEDP-7994](https://jiraeu.epam.com/browse/EPMDEDP-7994)
-- Add tests [EPMDEDP-7994](https://jiraeu.epam.com/browse/EPMDEDP-7994)
-- Add tests [EPMDEDP-7994](https://jiraeu.epam.com/browse/EPMDEDP-7994)
 - Add tests [EPMDEDP-7994](https://jiraeu.epam.com/browse/EPMDEDP-7994)
 
 ### Routine
@@ -205,8 +222,8 @@ Ensure keycloak role is aligned when migrating from
 
 ### Routine
 
-- Upgrade SonarQube Scanner version [EPMDEDP-7409](https://jiraeu.epam.com/browse/EPMDEDP-7409)
 - Upgrade SonarQube to the LTS 8.9.3 version [EPMDEDP-7409](https://jiraeu.epam.com/browse/EPMDEDP-7409)
+- Upgrade SonarQube Scanner version [EPMDEDP-7409](https://jiraeu.epam.com/browse/EPMDEDP-7409)
 - Update openssh-client version [EPMDEDP-7469](https://jiraeu.epam.com/browse/EPMDEDP-7469)
 - Add changelog generator [EPMDEDP-7847](https://jiraeu.epam.com/browse/EPMDEDP-7847)
 - Add codecov report [EPMDEDP-7885](https://jiraeu.epam.com/browse/EPMDEDP-7885)
@@ -234,7 +251,8 @@ Ensure keycloak role is aligned when migrating from
 <a name="v2.7.0"></a>
 ## [v2.7.0] - 2021-12-03
 
-[Unreleased]: https://github.com/epam/edp-sonar-operator/compare/v2.13.0...HEAD
+[Unreleased]: https://github.com/epam/edp-sonar-operator/compare/v2.14.0...HEAD
+[v2.14.0]: https://github.com/epam/edp-sonar-operator/compare/v2.13.0...v2.14.0
 [v2.13.0]: https://github.com/epam/edp-sonar-operator/compare/v2.12.0...v2.13.0
 [v2.12.0]: https://github.com/epam/edp-sonar-operator/compare/v2.11.0...v2.12.0
 [v2.11.0]: https://github.com/epam/edp-sonar-operator/compare/v2.10.3...v2.11.0
