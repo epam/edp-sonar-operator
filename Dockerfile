@@ -1,12 +1,12 @@
-FROM alpine:3.16.4
+FROM alpine:3.18.0
 
 ENV OPERATOR=/usr/local/bin/sonar-operator \
     USER_UID=1001 \
     USER_NAME=sonar-operator \
     HOME=/home/sonar-operator
 
-RUN apk add --no-cache ca-certificates=20220614-r0 \
-                       openssh-client==9.0_p1-r2
+RUN apk add --no-cache ca-certificates=20230506-r0 \
+                       openssh-client==9.3_p1-r3
 
 # install operator binary
 COPY ./dist/go-binary ${OPERATOR}
