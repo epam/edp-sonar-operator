@@ -1,3 +1,4 @@
+{{- if .Values.sonar.deploy -}}
 {{ if eq .Values.global.platform "openshift" }}
 apiVersion: route.openshift.io/v1
 kind: Route
@@ -23,4 +24,5 @@ spec:
   wildcardPolicy: None
 status:
   ingress: []
+{{ end }}
 {{ end }}

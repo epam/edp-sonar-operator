@@ -1,4 +1,5 @@
 {{ if eq .Values.global.platform "kubernetes" }}
+{{- if .Values.sonar.deploy -}}
 {{- $ingressApiIsStable := eq (include "sonar.ingress.isStable" .) "true" -}}
 {{- $ingressSupportsIngressClassName := eq (include "sonar.ingress.supportsIngressClassName" .) "true" -}}
 {{- $ingressSupportsPathType := eq (include "sonar.ingress.supportsPathType" .) "true" -}}
@@ -40,4 +41,5 @@ spec:
               serviceName: sonar
               servicePort: 9000
               {{- end }}
+{{ end }}
 {{ end }}
