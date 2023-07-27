@@ -2,9 +2,9 @@ global:
   # -- namespace or a project name (in case of OpenShift)
   edpName: ""
   # -- platform type that can be "kubernetes" or "openshift"
-  platform: "openshift"
+  platform: "kubernetes"
   # -- a cluster DNS wildcard name
-  dnsWildCard:
+  dnsWildCard: ""
   openshift:
     # -- Wich type of kind will be deployed to Openshift (values: deployments/deploymentConfigs)
     deploymentType: "deployments"
@@ -43,6 +43,10 @@ extraVolumeMounts: []
 #    mountPath: /etc/ssl/certs/CA.crt
 #    readOnly: true
 #    subPath: CA.crt
+
+sonarCR:
+  # -- Specifies whether Sonar CR should be created
+  create: true
 
 sonar:
   initContainers:

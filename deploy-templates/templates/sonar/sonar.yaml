@@ -1,4 +1,4 @@
-{{- if .Values.sonar.deploy -}}
+{{- if .Values.sonarCR.create -}}
 apiVersion: v2.edp.epam.com/v1
 kind: Sonar
 metadata:

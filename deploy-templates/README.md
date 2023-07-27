@@ -25,10 +25,10 @@ A Helm chart for EDP Sonar Operator
 | annotations | object | `{}` |  |
 | extraVolumeMounts | list | `[]` | Additional volumeMounts to be added to the container |
 | extraVolumes | list | `[]` | Additional volumes to be added to the pod |
-| global.dnsWildCard | string | `nil` | a cluster DNS wildcard name |
+| global.dnsWildCard | string | `""` | a cluster DNS wildcard name |
 | global.edpName | string | `""` | namespace or a project name (in case of OpenShift) |
 | global.openshift.deploymentType | string | `"deployments"` | Wich type of kind will be deployed to Openshift (values: deployments/deploymentConfigs) |
-| global.platform | string | `"openshift"` | platform type that can be "kubernetes" or "openshift" |
+| global.platform | string | `"kubernetes"` | platform type that can be "kubernetes" or "openshift" |
 | image.repository | string | `"epamedp/sonar-operator"` | EDP sonar-operator Docker image name. The released image can be found on [Dockerhub](https://hub.docker.com/r/epamedp/sonar-operator) |
 | image.tag | string | `nil` | EDP sonar-operator Docker image tag. The released image can be found on [Dockerhub](https://hub.docker.com/r/epamedp/sonar-operator/tags) |
 | imagePullPolicy | string | `"IfNotPresent"` |  |
@@ -75,5 +75,6 @@ A Helm chart for EDP Sonar Operator
 | sonar.storage.database.size | string | `"1Gi"` | Size for database data volume |
 | sonar.tolerations | list | `[]` |  |
 | sonar.version | string | `"8.9.10-community"` | Define sonar docker image tag |
+| sonarCR.create | bool | `true` | Specifies whether Sonar CR should be created |
 | tolerations | list | `[]` |  |
 
