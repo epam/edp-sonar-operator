@@ -1475,7 +1475,7 @@ limitations under the License -->
         </rule>
         <rule>
             <repositoryKey>squid</repositoryKey>
-            <key>S1148</key>
+            <key>S4507</key>
             <priority>CRITICAL</priority>
             <parameters/>
         </rule>
@@ -2549,7 +2549,7 @@ limitations under the License -->
         </rule>
         <rule>
             <repositoryKey>squid</repositoryKey>
-            <key>S2277</key>
+            <key>S5542</key>
             <priority>CRITICAL</priority>
             <parameters/>
         </rule>
@@ -2825,7 +2825,7 @@ limitations under the License -->
         </rule>
         <rule>
             <repositoryKey>squid</repositoryKey>
-            <key>S2976</key>
+            <key>S5445</key>
             <priority>MAJOR</priority>
             <parameters/>
         </rule>
@@ -3429,7 +3429,13 @@ limitations under the License -->
         </rule>
         <rule>
             <repositoryKey>squid</repositoryKey>
-            <key>S2070</key>
+            <key>S4790</key>
+            <priority>CRITICAL</priority>
+            <parameters/>
+        </rule>
+        <rule>
+            <repositoryKey>squid</repositoryKey>
+            <key>S5344</key>
             <priority>CRITICAL</priority>
             <parameters/>
         </rule>
@@ -3442,12 +3448,6 @@ limitations under the License -->
         <rule>
             <repositoryKey>squid</repositoryKey>
             <key>S2078</key>
-            <priority>CRITICAL</priority>
-            <parameters/>
-        </rule>
-        <rule>
-            <repositoryKey>squid</repositoryKey>
-            <key>S2089</key>
             <priority>CRITICAL</priority>
             <parameters/>
         </rule>
@@ -3478,25 +3478,19 @@ limitations under the License -->
         </rule>
         <rule>
             <repositoryKey>squid</repositoryKey>
-            <key>S2258</key>
+            <key>S5547</key>
             <priority>BLOCKER</priority>
             <parameters/>
         </rule>
         <rule>
             <repositoryKey>squid</repositoryKey>
-            <key>S2278</key>
+            <key>S5547</key>
             <priority>CRITICAL</priority>
             <parameters/>
         </rule>
         <rule>
             <repositoryKey>squid</repositoryKey>
             <key>S2384</key>
-            <priority>CRITICAL</priority>
-            <parameters/>
-        </rule>
-        <rule>
-            <repositoryKey>squid</repositoryKey>
-            <key>S2653</key>
             <priority>CRITICAL</priority>
             <parameters/>
         </rule>
@@ -3515,12 +3509,6 @@ limitations under the License -->
         <rule>
             <repositoryKey>squid</repositoryKey>
             <key>S3355</key>
-            <priority>CRITICAL</priority>
-            <parameters/>
-        </rule>
-        <rule>
-            <repositoryKey>squid</repositoryKey>
-            <key>S3369</key>
             <priority>CRITICAL</priority>
             <parameters/>
         </rule>
