@@ -3484,12 +3484,6 @@ limitations under the License -->
         </rule>
         <rule>
             <repositoryKey>squid</repositoryKey>
-            <key>S5547</key>
-            <priority>CRITICAL</priority>
-            <parameters/>
-        </rule>
-        <rule>
-            <repositoryKey>squid</repositoryKey>
             <key>S2384</key>
             <priority>CRITICAL</priority>
             <parameters/>
