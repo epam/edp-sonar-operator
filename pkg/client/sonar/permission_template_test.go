@@ -19,7 +19,7 @@ func initClient() *Client {
 
 func TestSonarClient_CreatePermissionTemplate(t *testing.T) {
 	cs := initClient()
-	httpmock.RegisterResponder("POST", "/permissions/create_template",
+	httpmock.RegisterResponder("POST", "/api/permissions/create_template",
 		httpmock.NewStringResponder(http.StatusOK, ""))
 	if _, err := cs.CreatePermissionTemplate(context.Background(), &PermissionTemplateData{
 		Name: "foo",
@@ -27,7 +27,7 @@ func TestSonarClient_CreatePermissionTemplate(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	httpmock.RegisterResponder("POST", "/permissions/create_template",
+	httpmock.RegisterResponder("POST", "/api/permissions/create_template",
 		httpmock.NewStringResponder(http.StatusInternalServerError, "create fatal"))
 
 	_, err := cs.CreatePermissionTemplate(context.Background(), &PermissionTemplateData{
@@ -43,13 +43,13 @@ func TestSonarClient_CreatePermissionTemplate(t *testing.T) {
 
 func TestClient_UpdatePermissionTemplate(t *testing.T) {
 	cs := initClient()
-	httpmock.RegisterResponder("POST", "/permissions/update_template",
+	httpmock.RegisterResponder("POST", "/api/permissions/update_template",
 		httpmock.NewStringResponder(http.StatusOK, ""))
 	if err := cs.UpdatePermissionTemplate(context.Background(), &PermissionTemplate{PermissionTemplateData: PermissionTemplateData{Name: "foo"}}); err != nil {
 		t.Fatal(err)
 	}
 
-	httpmock.RegisterResponder("POST", "/permissions/update_template",
+	httpmock.RegisterResponder("POST", "/api/permissions/update_template",
 		httpmock.NewStringResponder(http.StatusInternalServerError, "update fatal"))
 
 	err := cs.UpdatePermissionTemplate(context.Background(), &PermissionTemplate{
@@ -68,13 +68,13 @@ func TestClient_UpdatePermissionTemplate(t *testing.T) {
 func TestClient_DeletePermissionTemplate(t *testing.T) {
 	cs := initClient()
 
-	httpmock.RegisterResponder("POST", "/permissions/delete_template",
+	httpmock.RegisterResponder("POST", "/api/permissions/delete_template",
 		httpmock.NewStringResponder(http.StatusOK, ""))
 	if err := cs.DeletePermissionTemplate(context.Background(), "id1"); err != nil {
 		t.Fatal(err)
 	}
 
-	httpmock.RegisterResponder("POST", "/permissions/delete_template",
+	httpmock.RegisterResponder("POST", "/api/permissions/delete_template",
 		httpmock.NewStringResponder(http.StatusInternalServerError, "delete fatal"))
 	err := cs.DeletePermissionTemplate(context.Background(), "id1")
 
@@ -87,13 +87,13 @@ func TestClient_DeletePermissionTemplate(t *testing.T) {
 
 func TestClient_SearchPermissionTemplates(t *testing.T) {
 	cs := initClient()
-	httpmock.RegisterResponder("GET", "/permissions/search_templates?q=test",
+	httpmock.RegisterResponder("GET", "/api/permissions/search_templates?q=test",
 		httpmock.NewStringResponder(http.StatusOK, ""))
 	if _, err := cs.SearchPermissionTemplates(context.Background(), "test"); err != nil {
 		t.Fatal(err)
 	}
 
-	httpmock.RegisterResponder("GET", "/permissions/search_templates?q=test",
+	httpmock.RegisterResponder("GET", "/api/permissions/search_templates?q=test",
 		httpmock.NewStringResponder(http.StatusInternalServerError, "search fatal"))
 	_, err := cs.SearchPermissionTemplates(context.Background(), "test")
 
@@ -107,7 +107,7 @@ func TestClient_SearchPermissionTemplates(t *testing.T) {
 func TestClient_GetPermissionTemplate(t *testing.T) {
 	cs := initClient()
 
-	httpmock.RegisterResponder("GET", "/permissions/search_templates?q=test",
+	httpmock.RegisterResponder("GET", "/api/permissions/search_templates?q=test",
 		httpmock.NewJsonResponderOrPanic(http.StatusOK,
 			searchPermissionTemplatesResponse{PermissionTemplates: []PermissionTemplate{
 				{
@@ -120,7 +120,7 @@ func TestClient_GetPermissionTemplate(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	httpmock.RegisterResponder("GET", "/permissions/search_templates?q=test",
+	httpmock.RegisterResponder("GET", "/api/permissions/search_templates?q=test",
 		httpmock.NewJsonResponderOrPanic(http.StatusOK,
 			searchPermissionTemplatesResponse{PermissionTemplates: []PermissionTemplate{
 				{
@@ -137,7 +137,7 @@ func TestClient_GetPermissionTemplate(t *testing.T) {
 		t.Fatalf("wrong error returned: %s", err.Error())
 	}
 
-	httpmock.RegisterResponder("GET", "/permissions/search_templates?q=test",
+	httpmock.RegisterResponder("GET", "/api/permissions/search_templates?q=test",
 		httpmock.NewStringResponder(http.StatusInternalServerError, "search fatal"))
 
 	_, err = cs.GetPermissionTemplate(context.Background(), "test")
@@ -151,14 +151,14 @@ func TestClient_GetPermissionTemplate(t *testing.T) {
 func TestClient_AddGroupToPermissionTemplate(t *testing.T) {
 	sc := initClient()
 
-	httpmock.RegisterResponder("POST", "/permissions/add_group_to_template",
+	httpmock.RegisterResponder("POST", "/api/permissions/add_group_to_template",
 		httpmock.NewStringResponder(http.StatusOK, ""))
 	if err := sc.AddGroupToPermissionTemplate(context.Background(), "tpl1",
 		&PermissionTemplateGroup{GroupName: "test", Permissions: []string{"admin"}}); err != nil {
 		t.Fatal(err)
 	}
 
-	httpmock.RegisterResponder("POST", "/permissions/add_group_to_template",
+	httpmock.RegisterResponder("POST", "/api/permissions/add_group_to_template",
 		httpmock.NewStringResponder(http.StatusInternalServerError, "add fatal"))
 
 	err := sc.AddGroupToPermissionTemplate(context.Background(), "tpl1",
@@ -173,13 +173,13 @@ func TestClient_AddGroupToPermissionTemplate(t *testing.T) {
 
 func TestClient_GetPermissionTemplateGroups(t *testing.T) {
 	sc := initClient()
-	httpmock.RegisterResponder("GET", "/permissions/template_groups?templateId=tplid1",
+	httpmock.RegisterResponder("GET", "/api/permissions/template_groups?templateId=tplid1",
 		httpmock.NewStringResponder(http.StatusOK, ""))
 	if _, err := sc.GetPermissionTemplateGroups(context.Background(), "tplid1"); err != nil {
 		t.Fatal(err)
 	}
 
-	httpmock.RegisterResponder("GET", "/permissions/template_groups?templateId=tplid1",
+	httpmock.RegisterResponder("GET", "/api/permissions/template_groups?templateId=tplid1",
 		httpmock.NewStringResponder(http.StatusInternalServerError, "get template groups fatal"))
 
 	_, err := sc.GetPermissionTemplateGroups(context.Background(), "tplid1")
@@ -193,14 +193,14 @@ func TestClient_GetPermissionTemplateGroups(t *testing.T) {
 func TestClient_RemoveGroupFromPermissionTemplate(t *testing.T) {
 	sc := initClient()
 
-	httpmock.RegisterResponder("POST", "/permissions/remove_group_from_template",
+	httpmock.RegisterResponder("POST", "/api/permissions/remove_group_from_template",
 		httpmock.NewStringResponder(http.StatusOK, ""))
 	if err := sc.RemoveGroupFromPermissionTemplate(context.Background(), "tpl1",
 		&PermissionTemplateGroup{GroupName: "test1", Permissions: []string{"foo"}}); err != nil {
 		t.Fatal(err)
 	}
 
-	httpmock.RegisterResponder("POST", "/permissions/remove_group_from_template",
+	httpmock.RegisterResponder("POST", "/api/permissions/remove_group_from_template",
 		httpmock.NewStringResponder(http.StatusInternalServerError, "remove fatal"))
 
 	err := sc.RemoveGroupFromPermissionTemplate(context.Background(), "tpl1",
@@ -215,13 +215,13 @@ func TestClient_RemoveGroupFromPermissionTemplate(t *testing.T) {
 
 func TestClient_SetDefaultPermissionTemplate(t *testing.T) {
 	sc := initClient()
-	httpmock.RegisterResponder("POST", "/permissions/set_default_template",
+	httpmock.RegisterResponder("POST", "/api/permissions/set_default_template",
 		httpmock.NewStringResponder(http.StatusOK, ""))
 	if err := sc.SetDefaultPermissionTemplate(context.Background(), "test1"); err != nil {
 		t.Fatal(err)
 	}
 
-	httpmock.RegisterResponder("POST", "/permissions/set_default_template",
+	httpmock.RegisterResponder("POST", "/api/permissions/set_default_template",
 		httpmock.NewStringResponder(http.StatusInternalServerError, "set default fatal"))
 
 	err := sc.SetDefaultPermissionTemplate(context.Background(), "test1")

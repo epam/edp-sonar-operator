@@ -480,15 +480,6 @@ linters-settings:
       - fieldalignment
     disable-all: false
 
-  depguard:
-    list-type: blacklist
-    include-go-root: false
-    packages:
-      - github.com/sirupsen/logrus
-    packages-with-error-message:
-      # specify an error message to output when a blacklisted package is used
-      - github.com/sirupsen/logrus: "logging is allowed only by logutils.Log"
-
   ifshort:
     # Maximum length of variable declaration measured in number of lines, after which linter won't suggest using short syntax.
     # Has higher priority than max-decl-chars.
@@ -779,9 +770,7 @@ linters:
     - containedctx
 #    - contextcheck
 #    - cyclop
-    - deadcode
     - decorder
-    - depguard
     - dogsled
     - dupl
     - durationcheck

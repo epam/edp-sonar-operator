@@ -14,15 +14,11 @@ import (
 	clientgoscheme "k8s.io/client-go/kubernetes/scheme"
 	"k8s.io/client-go/rest"
 	ctrl "sigs.k8s.io/controller-runtime"
-	//+kubebuilder:scaffold:imports
 	"sigs.k8s.io/controller-runtime/pkg/client/apiutil"
 	"sigs.k8s.io/controller-runtime/pkg/healthz"
 	"sigs.k8s.io/controller-runtime/pkg/log/zap"
 
 	buildInfo "github.com/epam/edp-common/pkg/config"
-	edpCompApi "github.com/epam/edp-component-operator/api/v1"
-	jenkinsApi "github.com/epam/edp-jenkins-operator/v2/pkg/apis/v2/v1"
-	keycloakApi "github.com/epam/edp-keycloak-operator/api/v1"
 
 	sonarApi "github.com/epam/edp-sonar-operator/api/v1alpha1"
 	"github.com/epam/edp-sonar-operator/controllers/group"
@@ -69,9 +65,6 @@ func main() {
 	utilruntime.Must(clientgoscheme.AddToScheme(scheme))
 	utilruntime.Must(sonarApi.AddToScheme(scheme))
 	utilruntime.Must(sonarApi.AddToScheme(scheme))
-	utilruntime.Must(edpCompApi.AddToScheme(scheme))
-	utilruntime.Must(jenkinsApi.AddToScheme(scheme))
-	utilruntime.Must(keycloakApi.AddToScheme(scheme))
 
 	v := buildInfo.Get()
 
@@ -113,18 +106,10 @@ func main() {
 
 	ctrlLog := ctrl.Log.WithName("controllers")
 
-	sonarCtrl, err := sonar.NewReconcileSonar(
+	if err = sonar.NewReconcileSonar(
 		mgr.GetClient(),
 		mgr.GetScheme(),
-		ctrlLog,
-		helper.GetPlatformTypeEnv(),
-	)
-	if err != nil {
-		setupLog.Error(err, "failed to create sonar reconcile")
-		os.Exit(1)
-	}
-
-	if err = sonarCtrl.SetupWithManager(mgr); err != nil {
+	).SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "failed to setup sonar reconcile")
 		os.Exit(1)
 	}

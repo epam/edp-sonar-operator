@@ -14,7 +14,7 @@ func TestSonarClient_CreateGroup(t *testing.T) {
 	httpmock.ActivateNonDefault(cs.resty.GetClient())
 	cs.resty.SetDisableWarn(true)
 
-	httpmock.RegisterResponder("POST", "/user_groups/create",
+	httpmock.RegisterResponder("POST", "/api/user_groups/create",
 		httpmock.NewJsonResponderOrPanic(http.StatusOK, createGroupResponse{Group: Group{ID: "id1"}}))
 
 	gr := Group{Name: "foo", Description: "bar"}
@@ -26,7 +26,7 @@ func TestSonarClient_CreateGroup(t *testing.T) {
 		t.Fatal("group id is not set")
 	}
 
-	httpmock.RegisterResponder("POST", "/user_groups/create",
+	httpmock.RegisterResponder("POST", "/api/user_groups/create",
 		httpmock.NewStringResponder(http.StatusInternalServerError, "create fatal"))
 	err := cs.CreateGroup(context.Background(), &gr)
 	require.Error(t, err)
@@ -40,7 +40,7 @@ func TestSonarClient_UpdateGroup(t *testing.T) {
 	cs := NewClient("", "", "")
 	httpmock.ActivateNonDefault(cs.resty.GetClient())
 	cs.resty.SetDisableWarn(true)
-	httpmock.RegisterResponder("POST", "/user_groups/update",
+	httpmock.RegisterResponder("POST", "/api/user_groups/update",
 		httpmock.NewStringResponder(http.StatusOK, ""))
 
 	if err := cs.UpdateGroup(context.Background(), "currentName",
@@ -48,7 +48,7 @@ func TestSonarClient_UpdateGroup(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	httpmock.RegisterResponder("POST", "/user_groups/update",
+	httpmock.RegisterResponder("POST", "/api/user_groups/update",
 		httpmock.NewStringResponder(http.StatusInternalServerError, "update fatal"))
 
 	err := cs.UpdateGroup(context.Background(), "currentName",
@@ -66,13 +66,13 @@ func TestSonarClient_DeleteGroup(t *testing.T) {
 	httpmock.ActivateNonDefault(cs.resty.GetClient())
 	cs.resty.SetDisableWarn(true)
 
-	httpmock.RegisterResponder("POST", "/user_groups/delete",
+	httpmock.RegisterResponder("POST", "/api/user_groups/delete",
 		httpmock.NewStringResponder(http.StatusOK, ""))
 	if err := cs.DeleteGroup(context.Background(), "groupName"); err != nil {
 		t.Fatal(err)
 	}
 
-	httpmock.RegisterResponder("POST", "/user_groups/delete",
+	httpmock.RegisterResponder("POST", "/api/user_groups/delete",
 		httpmock.NewStringResponder(http.StatusInternalServerError, "delete fatal"))
 
 	err := cs.DeleteGroup(context.Background(), "groupName")
@@ -88,14 +88,14 @@ func TestSonarClient_SearchGroups(t *testing.T) {
 	cs := NewClient("", "", "")
 	httpmock.ActivateNonDefault(cs.resty.GetClient())
 	cs.resty.SetDisableWarn(true)
-	httpmock.RegisterResponder("GET", "/user_groups/search?q=name&f=name",
+	httpmock.RegisterResponder("GET", "/api/user_groups/search?q=name&f=name",
 		httpmock.NewJsonResponderOrPanic(http.StatusOK, groupSearchResponse{}))
 
 	if _, err := cs.SearchGroups(context.Background(), "name"); err != nil {
 		t.Fatal(err)
 	}
 
-	httpmock.RegisterResponder("GET", "/user_groups/search?q=name&f=name",
+	httpmock.RegisterResponder("GET", "/api/user_groups/search?q=name&f=name",
 		httpmock.NewStringResponder(http.StatusInternalServerError, "search fatal"))
 
 	_, err := cs.SearchGroups(context.Background(), "name")
@@ -111,7 +111,7 @@ func TestSonarClient_GetGroup(t *testing.T) {
 
 	httpmock.ActivateNonDefault(cs.resty.GetClient())
 	cs.resty.SetDisableWarn(true)
-	httpmock.RegisterResponder("GET", "/user_groups/search?q=groupName&f=name",
+	httpmock.RegisterResponder("GET", "/api/user_groups/search?q=groupName&f=name",
 		httpmock.NewJsonResponderOrPanic(http.StatusOK, groupSearchResponse{Groups: []Group{
 			{Name: "groupName"},
 		}}))
@@ -120,7 +120,7 @@ func TestSonarClient_GetGroup(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	httpmock.RegisterResponder("GET", "/user_groups/search?q=groupNameNotFound&f=name",
+	httpmock.RegisterResponder("GET", "/api/user_groups/search?q=groupNameNotFound&f=name",
 		httpmock.NewJsonResponderOrPanic(http.StatusOK, groupSearchResponse{Groups: []Group{
 			{Name: "groupName"},
 		}}))
@@ -131,7 +131,7 @@ func TestSonarClient_GetGroup(t *testing.T) {
 		t.Fatalf("wrong error returned: %s", err.Error())
 	}
 
-	httpmock.RegisterResponder("GET", "/user_groups/search?q=groupNameNotFound&f=name",
+	httpmock.RegisterResponder("GET", "/api/user_groups/search?q=groupNameNotFound&f=name",
 		httpmock.NewStringResponder(http.StatusInternalServerError, "search fatal"))
 	_, err = cs.GetGroup(context.Background(), "groupNameNotFound")
 	require.Error(t, err)

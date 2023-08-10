@@ -415,42 +415,21 @@ SonarSpec defines the desired state of Sonar.
         <td><b>secret</b></td>
         <td>string</td>
         <td>
-          Secret is the name of the k8s object Secret related to sonar.<br/>
+          Secret is the name of the k8s object Secret related to sonar. Secret should contain a user field with a sonar username and a password field with a sonar password. Pass the token in the user field and leave the password field empty for token authentication.<br/>
         </td>
         <td>true</td>
       </tr><tr>
-        <td><b>basePath</b></td>
+        <td><b>url</b></td>
         <td>string</td>
         <td>
-          <br/>
+          Url is the url of sonar instance.<br/>
         </td>
-        <td>false</td>
+        <td>true</td>
       </tr><tr>
         <td><b>defaultPermissionTemplate</b></td>
         <td>string</td>
         <td>
-          <br/>
-        </td>
-        <td>false</td>
-      </tr><tr>
-        <td><b><a href="#sonarspecgroupsindex">groups</a></b></td>
-        <td>[]object</td>
-        <td>
-          Groups specify which groups should be created.<br/>
-        </td>
-        <td>false</td>
-      </tr><tr>
-        <td><b>plugins</b></td>
-        <td>[]string</td>
-        <td>
-          Plugins specify which plugins should be installed to sonar.<br/>
-        </td>
-        <td>false</td>
-      </tr><tr>
-        <td><b><a href="#sonarspecqualitygatesindex">qualityGates</a></b></td>
-        <td>[]object</td>
-        <td>
-          QualityGates specify which quality gates should be created.<br/>
+          DefaultPermissionTemplate is the name of the default permission template.<br/>
         </td>
         <td>false</td>
       </tr><tr>
@@ -458,143 +437,6 @@ SonarSpec defines the desired state of Sonar.
         <td>[]object</td>
         <td>
           Settings specify which settings should be configured.<br/>
-        </td>
-        <td>false</td>
-      </tr><tr>
-        <td><b>url</b></td>
-        <td>string</td>
-        <td>
-          Url is used to explicitly specify the url of sonar. It may not be needed if the sonar is deployed in the same cluster.<br/>
-        </td>
-        <td>false</td>
-      </tr><tr>
-        <td><b><a href="#sonarspecusersindex">users</a></b></td>
-        <td>[]object</td>
-        <td>
-          Users specify which users should be created.<br/>
-        </td>
-        <td>false</td>
-      </tr></tbody>
-</table>
-
-
-### Sonar.spec.groups[index]
-<sup><sup>[↩ Parent](#sonarspec)</sup></sup>
-
-
-
-
-
-<table>
-    <thead>
-        <tr>
-            <th>Name</th>
-            <th>Type</th>
-            <th>Description</th>
-            <th>Required</th>
-        </tr>
-    </thead>
-    <tbody><tr>
-        <td><b>name</b></td>
-        <td>string</td>
-        <td>
-          <br/>
-        </td>
-        <td>true</td>
-      </tr><tr>
-        <td><b>permissions</b></td>
-        <td>[]string</td>
-        <td>
-          <br/>
-        </td>
-        <td>false</td>
-      </tr></tbody>
-</table>
-
-
-### Sonar.spec.qualityGates[index]
-<sup><sup>[↩ Parent](#sonarspec)</sup></sup>
-
-
-
-
-
-<table>
-    <thead>
-        <tr>
-            <th>Name</th>
-            <th>Type</th>
-            <th>Description</th>
-            <th>Required</th>
-        </tr>
-    </thead>
-    <tbody><tr>
-        <td><b><a href="#sonarspecqualitygatesindexconditionsindex">conditions</a></b></td>
-        <td>[]object</td>
-        <td>
-          <br/>
-        </td>
-        <td>true</td>
-      </tr><tr>
-        <td><b>name</b></td>
-        <td>string</td>
-        <td>
-          <br/>
-        </td>
-        <td>true</td>
-      </tr><tr>
-        <td><b>setAsDefault</b></td>
-        <td>boolean</td>
-        <td>
-          <br/>
-        </td>
-        <td>false</td>
-      </tr></tbody>
-</table>
-
-
-### Sonar.spec.qualityGates[index].conditions[index]
-<sup><sup>[↩ Parent](#sonarspecqualitygatesindex)</sup></sup>
-
-
-
-
-
-<table>
-    <thead>
-        <tr>
-            <th>Name</th>
-            <th>Type</th>
-            <th>Description</th>
-            <th>Required</th>
-        </tr>
-    </thead>
-    <tbody><tr>
-        <td><b>error</b></td>
-        <td>string</td>
-        <td>
-          <br/>
-        </td>
-        <td>true</td>
-      </tr><tr>
-        <td><b>metric</b></td>
-        <td>string</td>
-        <td>
-          <br/>
-        </td>
-        <td>true</td>
-      </tr><tr>
-        <td><b>op</b></td>
-        <td>string</td>
-        <td>
-          <br/>
-        </td>
-        <td>true</td>
-      </tr><tr>
-        <td><b>period</b></td>
-        <td>string</td>
-        <td>
-          <br/>
         </td>
         <td>false</td>
       </tr></tbody>
@@ -606,7 +448,7 @@ SonarSpec defines the desired state of Sonar.
 
 
 
-
+SonarSetting defines the setting of sonar.
 
 <table>
     <thead>
@@ -621,69 +463,28 @@ SonarSpec defines the desired state of Sonar.
         <td><b>key</b></td>
         <td>string</td>
         <td>
-          <br/>
+          Key is the key of the setting.<br/>
         </td>
         <td>true</td>
+      </tr><tr>
+        <td><b>fieldValues</b></td>
+        <td>map[string]string</td>
+        <td>
+          Setting field values. To set several values, the parameter must be called once for each value.<br/>
+        </td>
+        <td>false</td>
       </tr><tr>
         <td><b>value</b></td>
         <td>string</td>
         <td>
-          <br/>
-        </td>
-        <td>true</td>
-      </tr><tr>
-        <td><b>valueType</b></td>
-        <td>string</td>
-        <td>
-          <br/>
-        </td>
-        <td>true</td>
-      </tr></tbody>
-</table>
-
-
-### Sonar.spec.users[index]
-<sup><sup>[↩ Parent](#sonarspec)</sup></sup>
-
-
-
-
-
-<table>
-    <thead>
-        <tr>
-            <th>Name</th>
-            <th>Type</th>
-            <th>Description</th>
-            <th>Required</th>
-        </tr>
-    </thead>
-    <tbody><tr>
-        <td><b>login</b></td>
-        <td>string</td>
-        <td>
-          <br/>
-        </td>
-        <td>true</td>
-      </tr><tr>
-        <td><b>username</b></td>
-        <td>string</td>
-        <td>
-          <br/>
-        </td>
-        <td>true</td>
-      </tr><tr>
-        <td><b>group</b></td>
-        <td>string</td>
-        <td>
-          <br/>
+          Value is the value of the setting.<br/>
         </td>
         <td>false</td>
       </tr><tr>
-        <td><b>permissions</b></td>
+        <td><b>values</b></td>
         <td>[]string</td>
         <td>
-          <br/>
+          Setting multi value. To set several values, the parameter must be called once for each value.<br/>
         </td>
         <td>false</td>
       </tr></tbody>
@@ -707,33 +508,31 @@ SonarStatus defines the observed state of Sonar.
         </tr>
     </thead>
     <tbody><tr>
-        <td><b>available</b></td>
+        <td><b>connected</b></td>
         <td>boolean</td>
         <td>
-          <br/>
+          Connected shows if operator is connected to sonar.<br/>
         </td>
         <td>false</td>
       </tr><tr>
-        <td><b>externalUrl</b></td>
+        <td><b>error</b></td>
         <td>string</td>
         <td>
-          <br/>
+          Error represents error message if something went wrong.<br/>
         </td>
         <td>false</td>
       </tr><tr>
-        <td><b>lastTimeUpdated</b></td>
+        <td><b>processedSettings</b></td>
         <td>string</td>
         <td>
-          <br/>
-          <br/>
-            <i>Format</i>: date-time<br/>
+          ProcessedSettings shows which settings were processed.<br/>
         </td>
         <td>false</td>
       </tr><tr>
-        <td><b>status</b></td>
+        <td><b>value</b></td>
         <td>string</td>
         <td>
-          <br/>
+          Value is status of sonar instance. Possible values: GREEN: SonarQube is fully operational YELLOW: SonarQube is usable, but it needs attention in order to be fully operational RED: SonarQube is not operational<br/>
         </td>
         <td>false</td>
       </tr></tbody>
@@ -1180,7 +979,7 @@ SonarSpec defines the desired state of Sonar.
         </td>
         <td>false</td>
       </tr><tr>
-        <td><b><a href="#sonarspecgroupsindex-1">groups</a></b></td>
+        <td><b><a href="#sonarspecgroupsindex">groups</a></b></td>
         <td>[]object</td>
         <td>
           Groups specify which groups should be created.<br/>
@@ -1194,7 +993,7 @@ SonarSpec defines the desired state of Sonar.
         </td>
         <td>false</td>
       </tr><tr>
-        <td><b><a href="#sonarspecqualitygatesindex-1">qualityGates</a></b></td>
+        <td><b><a href="#sonarspecqualitygatesindex">qualityGates</a></b></td>
         <td>[]object</td>
         <td>
           QualityGates specify which quality gates should be created.<br/>
@@ -1215,7 +1014,7 @@ SonarSpec defines the desired state of Sonar.
         </td>
         <td>false</td>
       </tr><tr>
-        <td><b><a href="#sonarspecusersindex-1">users</a></b></td>
+        <td><b><a href="#sonarspecusersindex">users</a></b></td>
         <td>[]object</td>
         <td>
           Users specify which users should be created.<br/>
@@ -1303,7 +1102,7 @@ SonarSpec defines the desired state of Sonar.
         </tr>
     </thead>
     <tbody><tr>
-        <td><b><a href="#sonarspecqualitygatesindexconditionsindex-1">conditions</a></b></td>
+        <td><b><a href="#sonarspecqualitygatesindexconditionsindex">conditions</a></b></td>
         <td>[]object</td>
         <td>
           <br/>
@@ -1328,7 +1127,7 @@ SonarSpec defines the desired state of Sonar.
 
 
 ### Sonar.spec.qualityGates[index].conditions[index]
-<sup><sup>[↩ Parent](#sonarspecqualitygatesindex-1)</sup></sup>
+<sup><sup>[↩ Parent](#sonarspecqualitygatesindex)</sup></sup>
 
 
 

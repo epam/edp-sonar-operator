@@ -1,0 +1,20 @@
+apiVersion: edp.epam.com/v1alpha1
+kind: Sonar
+metadata:
+  name: sonar
+spec:
+  url: https://sonar.com
+  secret: sonar-admin
+  defaultPermissionTemplate: test
+  settings:
+    - key: sonar.global.exclusions
+      values:
+        - "**/*.jsx"
+        - "**/*.tsx"
+    - key: sonar.issue.ignore.block
+      fieldValues:
+          beginBlockRegexp: ".*"
+          endBlockRegexp: ".*"
+    - key: sonar.dbcleaner.hoursBeforeKeepingOnlyOneSnapshotByDay
+      value: "20"
+

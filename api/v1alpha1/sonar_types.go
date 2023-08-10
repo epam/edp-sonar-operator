@@ -7,103 +7,75 @@ import (
 // SonarSpec defines the desired state of Sonar.
 type SonarSpec struct {
 	// Secret is the name of the k8s object Secret related to sonar.
+	// Secret should contain a user field with a sonar username and a password field with a sonar password.
+	// Pass the token in the user field and leave the password field empty for token authentication.
 	Secret string `json:"secret"`
 
-	// Url is used to explicitly specify the url of sonar. It may not be needed if the sonar is deployed in the same cluster.
-	Url string `json:"url,omitempty"`
-
-	// Users specify which users should be created.
-	// +optional
-	Users []User `json:"users,omitempty"`
-
-	// Groups specify which groups should be created.
-	// +optional
-	Groups []Group `json:"groups,omitempty"`
-
-	// Plugins specify which plugins should be installed to sonar.
-	// +optional
-	Plugins []string `json:"plugins,omitempty"`
-
-	// QualityGates specify which quality gates should be created.
-	// +optional
-	QualityGates []QualityGate `json:"qualityGates,omitempty"`
+	// Url is the url of sonar instance.
+	Url string `json:"url"`
 
 	// Settings specify which settings should be configured.
 	// +optional
 	Settings []SonarSetting `json:"settings,omitempty"`
 
+	// DefaultPermissionTemplate is the name of the default permission template.
 	// +optional
-	BasePath string `json:"basePath,omitempty"`
-
-	// +optional
+	// +kubebuilder:example="Default template for projects"
 	DefaultPermissionTemplate string `json:"defaultPermissionTemplate,omitempty"`
 }
 
-type QualityGate struct {
-	Name string `json:"name"`
-
-	Conditions []QualityGateCondition `json:"conditions"`
-
-	// +optional
-	SetAsDefault bool `json:"setAsDefault,omitempty"`
-}
-
-type QualityGateCondition struct {
-	Error string `json:"error"`
-
-	Metric string `json:"metric"`
-
-	OP string `json:"op"`
-
-	// +optional
-	Period string `json:"period,omitempty"`
-}
-
+// SonarSetting defines the setting of sonar.
 type SonarSetting struct {
+	// Key is the key of the setting.
+	// +kubebuilder:example=sonar.core.serverBaseURL
 	Key string `json:"key"`
 
-	Value string `json:"value"`
-
-	ValueType string `json:"valueType"`
-}
-
-type Group struct {
-	Name string `json:"name"`
-
+	// Value is the value of the setting.
 	// +optional
-	Permissions []string `json:"permissions,omitempty"`
-}
+	// +kubebuilder:validation:MaxLength=4000
+	// +kubebuilder:example="https://my-sonarqube-instance.com"
+	Value string `json:"value,omitempty"`
 
-type User struct {
-	Username string `json:"username"`
-
-	Login string `json:"login"`
-
+	// Setting multi value. To set several values, the parameter must be called once for each value.
 	// +optional
-	Group string `json:"group,omitempty"`
+	// +kubebuilder:example={**/vendor/**,**/tests/**}
+	Values []string `json:"values,omitempty"`
 
+	// Setting field values. To set several values, the parameter must be called once for each value.
 	// +optional
-	Permissions []string `json:"permissions,omitempty"`
+	// +kubebuilder:example={beginBlockRegexp: ".*", endBlockRegexp: ".*"}
+	FieldValues map[string]string `json:"fieldValues,omitempty"`
 }
 
 // SonarStatus defines the observed state of Sonar.
 type SonarStatus struct {
+	// Value is status of sonar instance.
+	// Possible values:
+	// GREEN: SonarQube is fully operational
+	// YELLOW: SonarQube is usable, but it needs attention in order to be fully operational
+	// RED: SonarQube is not operational
 	// +optional
-	Available bool `json:"available,omitempty"`
+	Value string `json:"value,omitempty"`
 
+	// Error represents error message if something went wrong.
 	// +optional
-	LastTimeUpdated metav1.Time `json:"lastTimeUpdated,omitempty"`
+	Error string `json:"error,omitempty"`
 
+	// Connected shows if operator is connected to sonar.
 	// +optional
-	Status string `json:"status,omitempty"`
+	Connected bool `json:"connected"`
 
+	// ProcessedSettings shows which settings were processed.
+	// It is used to compare the current settings with the settings that were processed
+	// to unset the settings that are not in the current settings.
 	// +optional
-	ExternalUrl string `json:"externalUrl,omitempty"`
+	ProcessedSettings string `json:"processedSettings,omitempty"`
 }
 
 // +kubebuilder:object:root=true
 // +kubebuilder:subresource:status
 // +kubebuilder:storageversion
+// +kubebuilder:printcolumn:name="Connected",type="boolean",JSONPath=".status.connected",description="Is connected to sonar"
 
 // Sonar is the Schema for the sonars API.
 type Sonar struct {

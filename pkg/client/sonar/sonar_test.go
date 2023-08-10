@@ -8,10 +8,10 @@ import (
 	"testing"
 	"time"
 
+	"github.com/go-resty/resty/v2"
 	"github.com/jarcoal/httpmock"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"gopkg.in/resty.v1"
 )
 
 const (
@@ -19,7 +19,7 @@ const (
 	valueType      = "string"
 	gID            = "1"
 	name           = "name"
-	url            = "https://domain"
+	testUrl        = "https://domain"
 	user           = "user"
 	password       = "pwd"
 	visibility     = "all"
@@ -73,7 +73,7 @@ func createProfileResp(profileName string, isDefault bool) QualityProfilesSearch
 }
 
 func CreateMockResty() *resty.Client {
-	restyClient := resty.SetHostURL(url).SetBasicAuth(user, password).SetHeaders(map[string]string{
+	restyClient := resty.New().SetBaseURL(testUrl).SetBasicAuth(user, password).SetHeaders(map[string]string{
 		"Content-Type": "application/json",
 		"Accept":       "application/json",
 	})
@@ -320,7 +320,7 @@ func TestClient_SetProjectsDefaultVisibility(t *testing.T) {
 func TestClient_AddWebhook_checkWebhookExistErr(t *testing.T) {
 	restClient := CreateMockResty()
 	client := Client{resty: restClient}
-	err := client.AddWebhook(name, url)
+	err := client.AddWebhook(name, testUrl)
 	assert.Error(t, err)
 }
 
@@ -334,7 +334,7 @@ func TestClient_AddWebhook_ExistWebHook(t *testing.T) {
 	httpmock.RegisterResponder(http.MethodGet, "https://domain/webhooks/list", httpmock.NewBytesResponder(http.StatusOK, raw))
 
 	client := Client{resty: restClient}
-	err = client.AddWebhook(name, url)
+	err = client.AddWebhook(name, testUrl)
 	assert.NoError(t, err)
 }
 
@@ -347,7 +347,7 @@ func TestClient_AddWebhook_PostErr(t *testing.T) {
 	httpmock.RegisterResponder(http.MethodGet, "https://domain/webhooks/list", httpmock.NewBytesResponder(http.StatusOK, raw))
 
 	client := Client{resty: restClient}
-	err = client.AddWebhook(name, url)
+	err = client.AddWebhook(name, testUrl)
 	assert.Error(t, err)
 	assert.Contains(t, err.Error(), "no responder found")
 }
@@ -362,7 +362,7 @@ func TestClient_AddWebhook_BadStatus(t *testing.T) {
 	httpmock.RegisterResponder(http.MethodPost, "https://domain/webhooks/create?name=name&url=https%3A%2F%2Fdomain", httpmock.NewStringResponder(http.StatusNotFound, ""))
 
 	client := Client{resty: restClient}
-	err = client.AddWebhook(name, url)
+	err = client.AddWebhook(name, testUrl)
 	assert.Error(t, err)
 	assert.Contains(t, err.Error(), "failed to add webhook")
 }
@@ -377,7 +377,7 @@ func TestClient_AddWebhook(t *testing.T) {
 	httpmock.RegisterResponder(http.MethodPost, "https://domain/webhooks/create?name=name&url=https%3A%2F%2Fdomain", httpmock.NewStringResponder(http.StatusOK, ""))
 
 	client := Client{resty: restClient}
-	err = client.AddWebhook(name, url)
+	err = client.AddWebhook(name, testUrl)
 	assert.NoError(t, err)
 }
 
@@ -890,14 +890,14 @@ func TestClient_ChangePassword(t *testing.T) {
 	sc := initClient()
 
 	systemHealthResponse := SystemHealthResponse{Health: "GREEN", Causes: []any{}, Nodes: []any{}}
-	httpmock.RegisterResponder("GET", "/system/health", httpmock.NewJsonResponderOrPanic(http.StatusOK, systemHealthResponse))
-	httpmock.RegisterResponder("POST", "/users/change_password", httpmock.NewStringResponder(http.StatusOK, ""))
+	httpmock.RegisterResponder("GET", "/api/system/health", httpmock.NewJsonResponderOrPanic(http.StatusOK, systemHealthResponse))
+	httpmock.RegisterResponder("POST", "/api/users/change_password", httpmock.NewStringResponder(http.StatusOK, ""))
 
 	if err := sc.ChangePassword(context.Background(), "foo", "bar", "baz"); err != nil {
 		t.Fatal(err)
 	}
 
-	httpmock.RegisterResponder("GET", "/system/health",
+	httpmock.RegisterResponder("GET", "/api/system/health",
 		httpmock.NewStringResponder(http.StatusUnauthorized, ""))
 
 	if err := sc.ChangePassword(context.Background(),
@@ -905,8 +905,8 @@ func TestClient_ChangePassword(t *testing.T) {
 		t.Fatal("no error or wrong type")
 	}
 
-	httpmock.RegisterResponder("GET", "/system/health", httpmock.NewJsonResponderOrPanic(http.StatusOK, systemHealthResponse))
-	httpmock.RegisterResponder("POST", "/users/change_password", httpmock.NewStringResponder(http.StatusInternalServerError, ""))
+	httpmock.RegisterResponder("GET", "/api/system/health", httpmock.NewJsonResponderOrPanic(http.StatusOK, systemHealthResponse))
+	httpmock.RegisterResponder("POST", "/api/users/change_password", httpmock.NewStringResponder(http.StatusInternalServerError, ""))
 
 	if err := sc.ChangePassword(context.Background(),
 		"foo", "bar", "baz"); !IsHTTPErrorCode(err, http.StatusInternalServerError) {

@@ -3,8 +3,7 @@ apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   annotations:
-    controller-gen.kubebuilder.io/version: v0.9.2
-  creationTimestamp: null
+    controller-gen.kubebuilder.io/version: v0.12.1
   name: sonars.edp.epam.com
 spec:
   group: edp.epam.com
@@ -15,7 +14,12 @@ spec:
     singular: sonar
   scope: Namespaced
   versions:
-  - name: v1alpha1
+  - additionalPrinterColumns:
+    - description: Is connected to sonar
+      jsonPath: .status.connected
+      name: Connected
+      type: boolean
+    name: v1alpha1
     schema:
       openAPIV3Schema:
         description: Sonar is the Schema for the sonars API.
@@ -35,117 +39,77 @@ spec:
           spec:
             description: SonarSpec defines the desired state of Sonar.
             properties:
-              basePath:
-                type: string
               defaultPermissionTemplate:
+                description: DefaultPermissionTemplate is the name of the default
+                  permission template.
+                example: Default template for projects
                 type: string
-              groups:
-                description: Groups specify which groups should be created.
-                items:
-                  properties:
-                    name:
-                      type: string
-                    permissions:
-                      items:
-                        type: string
-                      type: array
-                  required:
-                  - name
-                  type: object
-                type: array
-              plugins:
-                description: Plugins specify which plugins should be installed to
-                  sonar.
-                items:
-                  type: string
-                type: array
-              qualityGates:
-                description: QualityGates specify which quality gates should be created.
-                items:
-                  properties:
-                    conditions:
-                      items:
-                        properties:
-                          error:
-                            type: string
-                          metric:
-                            type: string
-                          op:
-                            type: string
-                          period:
-                            type: string
-                        required:
-                        - error
-                        - metric
-                        - op
-                        type: object
-                      type: array
-                    name:
-                      type: string
-                    setAsDefault:
-                      type: boolean
-                  required:
-                  - conditions
-                  - name
-                  type: object
-                type: array
               secret:
                 description: Secret is the name of the k8s object Secret related to
-                  sonar.
+                  sonar. Secret should contain a user field with a sonar username
+                  and a password field with a sonar password. Pass the token in the
+                  user field and leave the password field empty for token authentication.
                 type: string
               settings:
                 description: Settings specify which settings should be configured.
                 items:
+                  description: SonarSetting defines the setting of sonar.
                   properties:
+                    fieldValues:
+                      additionalProperties:
+                        type: string
+                      description: Setting field values. To set several values, the
+                        parameter must be called once for each value.
+                      example:
+                        beginBlockRegexp: .*
+                        endBlockRegexp: .*
+                      type: object
                     key:
+                      description: Key is the key of the setting.
+                      example: sonar.core.serverBaseURL
                       type: string
                     value:
+                      description: Value is the value of the setting.
+                      example: https://my-sonarqube-instance.com
+                      maxLength: 4000
                       type: string
-                    valueType:
-                      type: string
-                  required:
-                  - key
-                  - value
-                  - valueType
-                  type: object
-                type: array
-              url:
-                description: Url is used to explicitly specify the url of sonar. It
-                  may not be needed if the sonar is deployed in the same cluster.
-                type: string
-              users:
-                description: Users specify which users should be created.
-                items:
-                  properties:
-                    group:
-                      type: string
-                    login:
-                      type: string
-                    permissions:
+                    values:
+                      description: Setting multi value. To set several values, the
+                        parameter must be called once for each value.
+                      example:
+                      - '**/vendor/**'
+                      - '**/tests/**'
                       items:
                         type: string
                       type: array
-                    username:
-                      type: string
                   required:
-                  - login
-                  - username
+                  - key
                   type: object
                 type: array
+              url:
+                description: Url is the url of sonar instance.
+                type: string
             required:
             - secret
+            - url
             type: object
           status:
             description: SonarStatus defines the observed state of Sonar.
             properties:
-              available:
+              connected:
+                description: Connected shows if operator is connected to sonar.
                 type: boolean
-              externalUrl:
+              error:
+                description: Error represents error message if something went wrong.
                 type: string
-              lastTimeUpdated:
-                format: date-time
+              processedSettings:
+                description: ProcessedSettings shows which settings were processed.
                 type: string
-              status:
+              value:
+                description: 'Value is status of sonar instance. Possible values:
+                  GREEN: SonarQube is fully operational YELLOW: SonarQube is usable,
+                  but it needs attention in order to be fully operational RED: SonarQube
+                  is not operational'
                 type: string
             type: object
         type: object

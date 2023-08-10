@@ -2,8 +2,12 @@ package sonar
 
 import (
 	"context"
+	"net/url"
 )
 
+// ClientInterface is an interface for Sonar client.
+//
+//go:generate mockery --name ClientInterface --filename client_mock.go
 type ClientInterface interface {
 	ConfigureGeneralSettings(settings ...SettingRequest) error
 	CreateQualityGates(qualityGates QualityGates) error
@@ -13,6 +17,8 @@ type ClientInterface interface {
 	UserInterface
 	GroupInterface
 	PermissionTemplateInterface
+	Settings
+	System
 }
 
 type UserInterface interface {
@@ -41,4 +47,13 @@ type PermissionTemplateInterface interface {
 	GetPermissionTemplateGroups(ctx context.Context, templateID string) ([]PermissionTemplateGroup, error)
 	RemoveGroupFromPermissionTemplate(ctx context.Context, templateID string, permGroup *PermissionTemplateGroup) error
 	SetDefaultPermissionTemplate(ctx context.Context, name string) error
+}
+
+type Settings interface {
+	SetSetting(ctx context.Context, setting url.Values) error
+	ResetSettings(ctx context.Context, settingsKeys []string) error
+}
+
+type System interface {
+	Health(ctx context.Context) (*SystemHealth, error)
 }

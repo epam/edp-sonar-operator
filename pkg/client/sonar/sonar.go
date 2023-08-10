@@ -4,15 +4,15 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"net/http"
+	"net/url"
 	"reflect"
 	"strings"
 	"time"
 
+	"github.com/go-resty/resty/v2"
 	"github.com/pkg/errors"
 	"golang.org/x/text/cases"
 	"golang.org/x/text/language"
-	"gopkg.in/resty.v1"
 	ctrl "sigs.k8s.io/controller-runtime"
 
 	"github.com/epam/edp-sonar-operator/pkg/helper"
@@ -46,32 +46,14 @@ type Client struct {
 }
 
 func NewClient(url string, user string, password string) *Client {
-	return &Client{
-		resty: resty.SetHostURL(url).SetBasicAuth(user, password),
-	}
-}
-
-func NewClientFromToken(ctx context.Context, url, token string) (*Client, error) {
-	restClient := resty.New()
-	restClient.SetHostURL(url)
-	restClient.SetBasicAuth(token, "")
-
-	resp, err := restClient.R().
-		SetContext(ctx).
-		Get("/server/version")
-	if err != nil || resp.IsError() {
-		log.Error(err, "failed to test Sonar connection")
-
-		return nil, fmt.Errorf("failed to test Sonar connection: %w", err)
-	}
-
-	if resp.StatusCode() != http.StatusOK {
-		return nil, fmt.Errorf("failed to authenthicate to Sonar: %w", err)
+	u := strings.TrimSuffix(url, "/")
+	if !strings.HasSuffix(url, "api") {
+		u = fmt.Sprintf("%s/api", u)
 	}
 
 	return &Client{
-		resty: restClient,
-	}, nil
+		resty: resty.New().SetBaseURL(u).SetBasicAuth(user, password),
+	}
 }
 
 func (sc *Client) jsonTypeRequest() *resty.Request {
@@ -173,22 +155,18 @@ func (sc *Client) WaitForStatusIsUp(retryCount int, timeout time.Duration) error
 	sc.resty.SetRetryCount(retryCount).
 		SetRetryWaitTime(timeout).
 		AddRetryCondition(
-			func(response *resty.Response) (bool, error) {
+			func(response *resty.Response, err error) bool {
 				if response.IsError() || !response.IsSuccess() {
-					return response.IsError(), nil
+					return response.IsError()
 				}
 
 				if err := json.Unmarshal([]byte(response.String()), &systemStatusResponse); err != nil {
-					return true, errors.Wrap(err, response.String())
+					return true
 				}
 
 				log.Info(fmt.Sprintf("Current Sonar status - %s", systemStatusResponse.Status))
 
-				if systemStatusResponse.Status == "UP" {
-					return false, nil
-				}
-
-				return true, nil
+				return systemStatusResponse.Status != "UP"
 			},
 		)
 	defer sc.resty.SetRetryCount(0)
@@ -884,5 +862,31 @@ func (sc Client) SetProjectsDefaultVisibility(visibility string) error {
 		errMsg := fmt.Sprintf("setting project visibility failed. Response - %s", resp.Status())
 		return errors.New(errMsg)
 	}
+	return nil
+}
+
+func (sc *Client) SetSetting(ctx context.Context, setting url.Values) error {
+	rsp, err := sc.startRequest(ctx).
+		SetFormDataFromValues(setting).
+		Post("/settings/set")
+
+	if err = sc.checkError(rsp, err); err != nil {
+		return fmt.Errorf("failed to set setting: %w", err)
+	}
+
+	return nil
+}
+func (sc *Client) ResetSettings(ctx context.Context, settingsKeys []string) error {
+	keys := strings.Join(settingsKeys, ",")
+	rsp, err := sc.startRequest(ctx).
+		SetFormData(map[string]string{
+			"keys": keys,
+		}).
+		Post("/settings/reset")
+
+	if err = sc.checkError(rsp, err); err != nil {
+		return fmt.Errorf("failed to reset settings %s: %w", keys, err)
+	}
+
 	return nil
 }
