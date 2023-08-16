@@ -123,7 +123,7 @@ func TestK8SService_CreateSecret_GetErr(t *testing.T) {
 	coreClient := kMock.K8SClusterClient{}
 	secrets := &kMock.SecretInterface{}
 	coreClient.On("Secrets", namespace).Return(secrets)
-	secrets.On("Get", context.Background(), secretName, metav1.GetOptions{}).Return(nil, errTest)
+	secrets.On("Get", context.TODO(), secretName, metav1.GetOptions{}).Return(nil, errTest)
 	service := K8SService{
 		k8sClusterClient: &coreClient,
 	}
@@ -141,7 +141,7 @@ func TestK8SService_CreateSecret_CreateErr(t *testing.T) {
 	coreClient := kMock.K8SClusterClient{}
 	secrets := &kMock.SecretInterface{}
 	coreClient.On("Secrets", namespace).Return(secrets)
-	secrets.On("Get", context.Background(), secretName, metav1.GetOptions{}).Return(nil, k8errors.NewNotFound(schema.GroupResource{}, name))
+	secrets.On("Get", context.TODO(), secretName, metav1.GetOptions{}).Return(nil, k8errors.NewNotFound(schema.GroupResource{}, name))
 	secrets.On("Create", context.Background(), secret, metav1.CreateOptions{}).Return(nil, errTest)
 	service := K8SService{
 		k8sClusterClient: &coreClient,
@@ -161,7 +161,7 @@ func TestK8SService_CreateSecret_AlreadyExist(t *testing.T) {
 	coreClient := kMock.K8SClusterClient{}
 	secrets := &kMock.SecretInterface{}
 	coreClient.On("Secrets", namespace).Return(secrets)
-	secrets.On("Get", context.Background(), secretName, metav1.GetOptions{}).Return(&existedSecret, nil)
+	secrets.On("Get", context.TODO(), secretName, metav1.GetOptions{}).Return(&existedSecret, nil)
 	service := K8SService{
 		k8sClusterClient: &coreClient,
 	}
@@ -178,7 +178,7 @@ func TestK8SService_CreateSecret(t *testing.T) {
 	coreClient := kMock.K8SClusterClient{}
 	secrets := &kMock.SecretInterface{}
 	coreClient.On("Secrets", namespace).Return(secrets)
-	secrets.On("Get", context.Background(), secretName, metav1.GetOptions{}).Return(nil, k8errors.NewNotFound(schema.GroupResource{}, name))
+	secrets.On("Get", context.TODO(), secretName, metav1.GetOptions{}).Return(nil, k8errors.NewNotFound(schema.GroupResource{}, name))
 	secrets.On("Create", context.Background(), secret, metav1.CreateOptions{}).Return(secret, nil)
 	service := K8SService{
 		k8sClusterClient: &coreClient,
