@@ -5,10 +5,8 @@ import (
 	"fmt"
 	"time"
 
-	corev1 "k8s.io/api/core/v1"
 	k8sErrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/runtime"
-	"k8s.io/apimachinery/pkg/types"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
@@ -23,19 +21,26 @@ const (
 	successRequeueTime = time.Minute * 10
 )
 
+type apiClientProvider interface {
+	GetSonarApiClientFromSonar(ctx context.Context, sonar *sonarApi.Sonar) (*sonarclient.Client, error)
+}
+
 func NewReconcileSonar(
 	client client.Client,
 	scheme *runtime.Scheme,
+	apiClientProvider apiClientProvider,
 ) *ReconcileSonar {
 	return &ReconcileSonar{
-		client: client,
-		scheme: scheme,
+		client:            client,
+		scheme:            scheme,
+		apiClientProvider: apiClientProvider,
 	}
 }
 
 type ReconcileSonar struct {
-	client client.Client
-	scheme *runtime.Scheme
+	client            client.Client
+	scheme            *runtime.Scheme
+	apiClientProvider apiClientProvider
 }
 
 func (r *ReconcileSonar) SetupWithManager(mgr ctrl.Manager) error {
@@ -63,7 +68,7 @@ func (r *ReconcileSonar) Reconcile(ctx context.Context, request reconcile.Reques
 
 	oldStatus := sonar.Status
 
-	sonarApiClient, err := r.getSonarApiClient(ctx, sonar)
+	sonarApiClient, err := r.apiClientProvider.GetSonarApiClientFromSonar(ctx, sonar)
 	if err != nil {
 		sonar.Status.Error = err.Error()
 		sonar.Status.Connected = false
@@ -99,34 +104,13 @@ func (r *ReconcileSonar) Reconcile(ctx context.Context, request reconcile.Reques
 	}, nil
 }
 
-func (r *ReconcileSonar) getSonarApiClient(ctx context.Context, sonar *sonarApi.Sonar) (sonarclient.ClientInterface, error) {
-	secret := corev1.Secret{}
-	if err := r.client.Get(ctx, types.NamespacedName{
-		Name:      sonar.Spec.Secret,
-		Namespace: sonar.Namespace,
-	}, &secret); err != nil {
-		return nil, fmt.Errorf("failed to get sonar secret: %w", err)
-	}
-
-	if secret.Data["user"] == nil {
-		return nil, fmt.Errorf("sonar secret doesn't contain user")
-	}
-
-	password := ""
-	if secret.Data["password"] != nil {
-		password = string(secret.Data["password"])
-	}
-
-	return sonarclient.NewClient(sonar.Spec.Url, string(secret.Data["user"]), password), nil
-}
-
 func (r *ReconcileSonar) updateSonarStatus(ctx context.Context, sonar *sonarApi.Sonar, oldStatus sonarApi.SonarStatus) error {
 	if sonar.Status == oldStatus {
 		return nil
 	}
 
 	if err := r.client.Status().Update(ctx, sonar); err != nil {
-		return fmt.Errorf("failed to update sonar oldStatus: %w", err)
+		return fmt.Errorf("failed to update Sonar status: %w", err)
 	}
 
 	return nil

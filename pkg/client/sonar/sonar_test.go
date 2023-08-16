@@ -211,7 +211,7 @@ func TestClient_InstallPlugins(t *testing.T) {
 func TestClient_AddUserToGroup_PostErr(t *testing.T) {
 	restClient := CreateMockResty()
 	client := Client{resty: restClient}
-	err := client.AddUserToGroup(name, user)
+	err := client.AddUserToGroup(context.Background(), name, user)
 	assert.Error(t, err)
 	assert.Contains(t, err.Error(), "no responder found")
 }
@@ -221,7 +221,7 @@ func TestClient_AddUserToGroup_BadStatus(t *testing.T) {
 	client := Client{resty: restClient}
 	httpmock.RegisterResponder(http.MethodPost, "https://domain/user_groups/add_user?login=user&name=name", httpmock.NewStringResponder(http.StatusNotFound, ""))
 
-	err := client.AddUserToGroup(name, user)
+	err := client.AddUserToGroup(context.Background(), user, name)
 	assert.Error(t, err)
 	assert.Contains(t, err.Error(), "failed to add user user")
 }
@@ -231,14 +231,14 @@ func TestClient_AddUserToGroup(t *testing.T) {
 	client := Client{resty: restClient}
 	httpmock.RegisterResponder(http.MethodPost, "https://domain/user_groups/add_user?login=user&name=name", httpmock.NewStringResponder(http.StatusOK, ""))
 
-	err := client.AddUserToGroup(name, user)
+	err := client.AddUserToGroup(context.Background(), user, name)
 	assert.NoError(t, err)
 }
 
 func TestClient_AddPermissionsToUser_PostErr(t *testing.T) {
 	restClient := CreateMockResty()
 	client := Client{resty: restClient}
-	err := client.AddPermissionToUser(name, user)
+	err := client.AddPermissionToUser(context.Background(), name, user)
 	assert.Error(t, err)
 	assert.Contains(t, err.Error(), "no responder found")
 }
@@ -246,19 +246,23 @@ func TestClient_AddPermissionsToUser_PostErr(t *testing.T) {
 func TestClient_AddPermissionsToUser_BadStatus(t *testing.T) {
 	restClient := CreateMockResty()
 	client := Client{resty: restClient}
-	httpmock.RegisterResponder(http.MethodPost, "https://domain/permissions/add_user?login=name&permission=user", httpmock.NewStringResponder(http.StatusNotFound, ""))
+	httpmock.RegisterResponder(
+		http.MethodPost,
+		"https://domain/permissions/add_user",
+		httpmock.NewStringResponder(http.StatusNotFound, "failed"),
+	)
 
-	err := client.AddPermissionToUser(name, user)
+	err := client.AddPermissionToUser(context.Background(), name, user)
 	assert.Error(t, err)
-	assert.Contains(t, err.Error(), "Adding permission")
+	assert.Contains(t, err.Error(), "failed")
 }
 
 func TestClient_AddPermissionsToUser(t *testing.T) {
 	restClient := CreateMockResty()
 	client := Client{resty: restClient}
-	httpmock.RegisterResponder(http.MethodPost, "https://domain/permissions/add_user?login=name&permission=user", httpmock.NewStringResponder(http.StatusOK, ""))
+	httpmock.RegisterResponder(http.MethodPost, "https://domain/permissions/add_user", httpmock.NewStringResponder(http.StatusOK, ""))
 
-	err := client.AddPermissionToUser(name, user)
+	err := client.AddPermissionToUser(context.Background(), name, user)
 	assert.NoError(t, err)
 }
 

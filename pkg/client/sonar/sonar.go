@@ -566,51 +566,6 @@ func (sc Client) setDefaultProfile(language string, profileName string) error {
 	return nil
 }
 
-func (sc Client) AddUserToGroup(groupName string, user string) error {
-	log.Info(fmt.Sprintf("Start adding user %v to group %v in Sonar", user, groupName))
-
-	resp, err := sc.jsonTypeRequest().
-		SetQueryParams(map[string]string{
-			nameField:  groupName,
-			loginField: user,
-		}).
-		Post("/user_groups/add_user")
-	if err != nil {
-		return fmt.Errorf("failed to send requst to add user in group! : %w", err)
-	}
-
-	if resp.IsError() {
-		return fmt.Errorf("failed to add user %s to group %s, response: %s", user, groupName, resp.Status())
-	}
-
-	log.Info(fmt.Sprintf("User %v has been added to group %v in Sonar", user, groupName))
-
-	return nil
-}
-
-func (sc Client) AddPermissionToUser(user string, permission string) error {
-	log.Info(fmt.Sprintf("Start adding permission %v to user %v", permission, user))
-
-	resp, err := sc.jsonTypeRequest().
-		SetQueryParams(map[string]string{
-			loginField:   user,
-			"permission": permission,
-		}).
-		Post("/permissions/add_user")
-	if err != nil {
-		return fmt.Errorf("failed to send request to add permission to user: %w", err)
-	}
-
-	if resp.IsError() {
-		errMsg := fmt.Sprintf("Adding permission %s to user %s failed. Response - %s", permission, user, resp.Status())
-		return errors.New(errMsg)
-	}
-
-	log.Info(fmt.Sprintf("Permissions %v to user %v has been added", permission, user))
-
-	return nil
-}
-
 func (sc Client) AddPermissionsToGroup(groupName string, permissions string) error {
 	log.Info(fmt.Sprintf("Start adding permissions %v to group %v", permissions, groupName))
 	resp, err := sc.jsonTypeRequest().

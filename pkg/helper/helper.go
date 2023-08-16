@@ -3,10 +3,7 @@ package helper
 import (
 	"fmt"
 	"os"
-	"path/filepath"
 	"strconv"
-
-	ctrl "sigs.k8s.io/controller-runtime"
 )
 
 const (
@@ -15,24 +12,6 @@ const (
 	inClusterNamespacePath = "/var/run/secrets/kubernetes.io/serviceaccount/namespace"
 	platformType           = "PLATFORM_TYPE"
 )
-
-var log = ctrl.Log.WithName("helper_sonar")
-
-func GetExecutableFilePath() string {
-	executableFilePath, err := os.Executable()
-	if err != nil {
-		log.Error(err, "Couldn't get executable path")
-	}
-
-	return filepath.Dir(executableFilePath)
-}
-
-// GenerateLabels returns map with labels for k8s objects.
-func GenerateLabels(name string) map[string]string {
-	return map[string]string{
-		"app": name,
-	}
-}
 
 func GetPlatformTypeEnv() string {
 	return os.Getenv(platformType)
@@ -86,4 +65,15 @@ func CheckPluginInstalled(pluginsList []string, plugin string) bool {
 	}
 
 	return false
+}
+
+// SliceToMap converts slice to map.
+func SliceToMap[T comparable](s []T) map[T]struct{} {
+	m := make(map[T]struct{}, len(s))
+
+	for _, v := range s {
+		m[v] = struct{}{}
+	}
+
+	return m
 }

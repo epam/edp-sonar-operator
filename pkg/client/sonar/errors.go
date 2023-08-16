@@ -5,6 +5,8 @@ import (
 	"fmt"
 )
 
+var ErrNotFound = errors.New("not found")
+
 type NotFoundError string
 
 func (e NotFoundError) Error() string {

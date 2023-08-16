@@ -3,6 +3,7 @@ package sonar
 import (
 	"context"
 	"net/http"
+	"regexp"
 	"testing"
 
 	"github.com/jarcoal/httpmock"
@@ -34,14 +35,15 @@ func TestSonarClient_CreateUser(t *testing.T) {
 
 func TestSonarClient_SearchUsers(t *testing.T) {
 	cs := initClient()
-	httpmock.RegisterResponder("GET", "/api/users/search?q=name",
+	httpmock.RegisterRegexpResponder("GET", regexp.MustCompile("/api/users/search.*"),
 		httpmock.NewJsonResponderOrPanic(http.StatusOK, userSearchResponse{}))
 
 	if _, err := cs.SearchUsers(context.Background(), "name"); err != nil {
 		t.Fatal(err)
 	}
 
-	httpmock.RegisterResponder("GET", "/api/users/search?q=name",
+	httpmock.Reset()
+	httpmock.RegisterRegexpResponder("GET", regexp.MustCompile("/api/users/search.*"),
 		httpmock.NewStringResponder(http.StatusInternalServerError, "search fatal"))
 
 	_, err := cs.SearchUsers(context.Background(), "name")
@@ -54,32 +56,30 @@ func TestSonarClient_SearchUsers(t *testing.T) {
 
 func TestSonarClient_GetUser(t *testing.T) {
 	cs := initClient()
-	httpmock.RegisterResponder("GET", "/api/users/search?q=loginName",
+	httpmock.RegisterRegexpResponder("GET", regexp.MustCompile("/api/users/search.*"),
 		httpmock.NewJsonResponderOrPanic(http.StatusOK, userSearchResponse{Users: []User{
 			{Name: "userName", Login: "loginName"},
 		}}))
 
-	if _, err := cs.GetUser(context.Background(), "loginName"); err != nil {
+	if _, err := cs.GetUserByLogin(context.Background(), "loginName"); err != nil {
 		t.Fatal(err)
 	}
 
-	httpmock.RegisterResponder("GET", "/api/users/search?q=userNameNotFound",
+	httpmock.Reset()
+	httpmock.RegisterRegexpResponder("GET", regexp.MustCompile("/api/users/search.*"),
 		httpmock.NewJsonResponderOrPanic(http.StatusOK, userSearchResponse{Users: []User{
 			{Name: "userName", Login: "loginName"},
 		}}))
-	_, err := cs.GetUser(context.Background(), "userNameNotFound")
+	_, err := cs.GetUserByLogin(context.Background(), "userNameNotFound")
 	require.Error(t, err)
+	require.ErrorIs(t, err, ErrNotFound)
 
-	if !IsErrNotFound(err) {
-		t.Fatalf("wrong error returned: %s", err.Error())
-	}
-
-	httpmock.RegisterResponder("GET", "/api/users/search?q=userNameNotFound",
+	httpmock.Reset()
+	httpmock.RegisterRegexpResponder("GET", regexp.MustCompile("/api/users/search.*"),
 		httpmock.NewStringResponder(http.StatusInternalServerError, "search fatal"))
 
-	_, err = cs.GetUser(context.Background(), "userNameNotFound")
+	_, err = cs.GetUserByLogin(context.Background(), "userNameNotFound")
 	require.Error(t, err)
-
 	assert.Equal(t, "failed to search for users: failed to search for users: status: 500, body: search fatal", err.Error())
 }
 

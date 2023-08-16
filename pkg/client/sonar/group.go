@@ -93,3 +93,39 @@ func (sc *Client) DeleteGroup(ctx context.Context, groupName string) error {
 
 	return nil
 }
+
+func (sc *Client) AddUserToGroup(ctx context.Context, user, groupName string) error {
+	resp, err := sc.startRequest(ctx).
+		SetQueryParams(map[string]string{
+			nameField:  groupName,
+			loginField: user,
+		}).
+		Post("/user_groups/add_user")
+	if err != nil {
+		return fmt.Errorf("failed to send requst to add user in group: %w", err)
+	}
+
+	if resp.IsError() {
+		return fmt.Errorf("failed to add user %s to group %s, response: %s", user, groupName, resp.String())
+	}
+
+	return nil
+}
+
+func (sc *Client) RemoveUserFromGroup(ctx context.Context, user, groupName string) error {
+	resp, err := sc.startRequest(ctx).
+		SetQueryParams(map[string]string{
+			nameField:  groupName,
+			loginField: user,
+		}).
+		Post("/user_groups/remove_user")
+	if err != nil {
+		return fmt.Errorf("failed to send requst to remove user from group: %w", err)
+	}
+
+	if resp.IsError() {
+		return fmt.Errorf("failed to remove user %s from group %s, response: %s", user, groupName, resp.String())
+	}
+
+	return nil
+}

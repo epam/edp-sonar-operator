@@ -2,16 +2,18 @@ package chain
 
 import (
 	"context"
-	sonarApi "github.com/epam/edp-sonar-operator/api/v1alpha1"
-	"github.com/epam/edp-sonar-operator/pkg/client/sonar"
-	"github.com/epam/edp-sonar-operator/pkg/client/sonar/mocks"
+	"testing"
+
 	"github.com/go-logr/logr"
 	"github.com/pkg/errors"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	ctrl "sigs.k8s.io/controller-runtime"
-	"testing"
+
+	sonarApi "github.com/epam/edp-sonar-operator/api/v1alpha1"
+	"github.com/epam/edp-sonar-operator/pkg/client/sonar"
+	"github.com/epam/edp-sonar-operator/pkg/client/sonar/mocks"
 )
 
 func TestSetDefaultPermissionTemplate_ServeRequest(t *testing.T) {

@@ -36,6 +36,13 @@ type searchPermissionTemplatesResponse struct {
 	PermissionTemplates []PermissionTemplate `json:"permissionTemplates"`
 }
 
+type getUserPermissionResponse struct {
+	Users []struct {
+		Login       string   `json:"login"`
+		Permissions []string `json:"permissions"`
+	} `json:"users"`
+}
+
 func (sc *Client) CreatePermissionTemplate(ctx context.Context, tpl *PermissionTemplateData) (string, error) {
 	var result createPermissionTemplateResponse
 	rsp, err := sc.startRequest(ctx).SetResult(&result).SetFormData(map[string]string{
@@ -165,6 +172,63 @@ func (sc *Client) SetDefaultPermissionTemplate(ctx context.Context, name string)
 
 	if err = sc.checkError(rsp, err); err != nil {
 		return fmt.Errorf("failed to set default permission template: %w", err)
+	}
+
+	return nil
+}
+
+// GetUserPermissions returns user permissions.
+// Warning: this is a sonar internal endpoint, which may be changed in future versions.
+func (sc *Client) GetUserPermissions(ctx context.Context, userLogin string) ([]string, error) {
+	response := getUserPermissionResponse{}
+	rsp, err := sc.startRequest(ctx).
+		SetResult(&response).
+		SetQueryParams(map[string]string{
+			"q":  userLogin,
+			"ps": "100",
+		}).
+		Get("/permissions/users")
+
+	if err = sc.checkError(rsp, err); err != nil {
+		return nil, fmt.Errorf("failed to get user %s permission: %w", userLogin, err)
+	}
+
+	for _, u := range response.Users {
+		if u.Login == userLogin {
+			return u.Permissions, nil
+		}
+	}
+
+	return nil, fmt.Errorf("user %s not found: %w", userLogin, ErrNotFound)
+}
+
+// AddPermissionToUser adds permission to user.
+func (sc *Client) AddPermissionToUser(ctx context.Context, userLogin, permission string) error {
+	rsp, err := sc.startRequest(ctx).
+		SetFormData(map[string]string{
+			"login":      userLogin,
+			"permission": permission,
+		}).
+		Post("/permissions/add_user")
+
+	if err = sc.checkError(rsp, err); err != nil {
+		return fmt.Errorf("failed to add permission %s to user %s: %w", permission, userLogin, err)
+	}
+
+	return nil
+}
+
+// RemovePermissionFromUser removes permission from user.
+func (sc *Client) RemovePermissionFromUser(ctx context.Context, userLogin, permission string) error {
+	rsp, err := sc.startRequest(ctx).
+		SetFormData(map[string]string{
+			"login":      userLogin,
+			"permission": permission,
+		}).
+		Post("/permissions/remove_user")
+
+	if err = sc.checkError(rsp, err); err != nil {
+		return fmt.Errorf("failed to remove permission %s from user %s: %w", permission, userLogin, err)
 	}
 
 	return nil

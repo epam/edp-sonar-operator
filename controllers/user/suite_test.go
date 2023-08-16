@@ -1,16 +1,19 @@
-package sonar
+package user
 
 import (
 	"context"
 	"os"
 	"path/filepath"
 	"testing"
+	"time"
 
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 
 	corev1 "k8s.io/api/core/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/client-go/rest"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -19,7 +22,16 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/log/zap"
 
 	sonarApi "github.com/epam/edp-sonar-operator/api/v1alpha1"
+	"github.com/epam/edp-sonar-operator/controllers/sonar"
 	sonarclient "github.com/epam/edp-sonar-operator/pkg/client/sonar"
+)
+
+const (
+	sonarName = "test-sonar"
+	namespace = "test-sonar-user"
+
+	timeout  = time.Second * 10
+	interval = time.Millisecond * 250
 )
 
 var (
@@ -33,14 +45,14 @@ var (
 	sonarPassword string
 )
 
-func TestSonar(t *testing.T) {
+func TestSonarUser(t *testing.T) {
 	RegisterFailHandler(Fail)
 
 	if os.Getenv("TEST_SONAR_URL") == "" {
 		t.Skip("TEST_SONAR_URL is not set")
 	}
 
-	RunSpecs(t, "Sonar Controller Suite")
+	RunSpecs(t, "SonarUser Controller Suite")
 }
 
 var _ = BeforeSuite(func() {
@@ -76,7 +88,15 @@ var _ = BeforeSuite(func() {
 	})
 	Expect(err).ToNot(HaveOccurred())
 
-	err = NewReconcileSonar(
+	err = sonar.NewReconcileSonar(
+		k8sManager.GetClient(),
+		k8sManager.GetScheme(),
+		sonarclient.NewApiClientProvider(k8sManager.GetClient()),
+	).
+		SetupWithManager(k8sManager)
+	Expect(err).ToNot(HaveOccurred())
+
+	err = NewSonarUserReconciler(
 		k8sManager.GetClient(),
 		k8sManager.GetScheme(),
 		sonarclient.NewApiClientProvider(k8sManager.GetClient()),
@@ -90,6 +110,45 @@ var _ = BeforeSuite(func() {
 		Expect(err).ToNot(HaveOccurred(), "failed to run manager")
 	}()
 
+	By("By creating namespace")
+	Expect(k8sClient.Create(ctx, &corev1.Namespace{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: namespace,
+		},
+	})).Should(Succeed())
+	By("By creating a secret")
+	secret := &corev1.Secret{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "sonar-auth-secret",
+			Namespace: namespace,
+		},
+		Data: map[string][]byte{
+			"user":     []byte(sonarUser),
+			"password": []byte(sonarPassword),
+		},
+	}
+	Expect(k8sClient.Create(ctx, secret)).Should(Succeed())
+	By("By creating a new Sonar object")
+	newSonar := &sonarApi.Sonar{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      sonarName,
+			Namespace: namespace,
+		},
+		Spec: sonarApi.SonarSpec{
+			Url:    sonarUrl,
+			Secret: secret.Name,
+		},
+	}
+	Expect(k8sClient.Create(ctx, newSonar)).Should(Succeed())
+	Eventually(func() bool {
+		createdSonar := &sonarApi.Sonar{}
+		err := k8sClient.Get(ctx, types.NamespacedName{Name: sonarName, Namespace: namespace}, createdSonar)
+		if err != nil {
+			return false
+		}
+		return createdSonar.Status.Connected
+
+	}, timeout, interval).Should(BeTrue())
 })
 
 var _ = AfterSuite(func() {

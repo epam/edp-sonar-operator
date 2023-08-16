@@ -24,6 +24,8 @@ import (
 	"github.com/epam/edp-sonar-operator/controllers/group"
 	"github.com/epam/edp-sonar-operator/controllers/permission_template"
 	"github.com/epam/edp-sonar-operator/controllers/sonar"
+	sonaruser "github.com/epam/edp-sonar-operator/controllers/user"
+	sonarclient "github.com/epam/edp-sonar-operator/pkg/client/sonar"
 	"github.com/epam/edp-sonar-operator/pkg/helper"
 )
 
@@ -106,11 +108,23 @@ func main() {
 
 	ctrlLog := ctrl.Log.WithName("controllers")
 
+	apiClientProvider := sonarclient.NewApiClientProvider(mgr.GetClient())
+
 	if err = sonar.NewReconcileSonar(
 		mgr.GetClient(),
 		mgr.GetScheme(),
+		apiClientProvider,
 	).SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "failed to setup sonar reconcile")
+		os.Exit(1)
+	}
+
+	if err = sonaruser.NewSonarUserReconciler(
+		mgr.GetClient(),
+		mgr.GetScheme(),
+		apiClientProvider,
+	).SetupWithManager(mgr); err != nil {
+		setupLog.Error(err, "failed to setup sonar user reconcile")
 		os.Exit(1)
 	}
 
@@ -136,6 +150,8 @@ func main() {
 		setupLog.Error(err, "failed to setup sonar group reconcile")
 		os.Exit(1)
 	}
+
+	//+kubebuilder:scaffold:builder
 
 	if err = mgr.AddHealthzCheck("healthz", healthz.Ping); err != nil {
 		setupLog.Error(err, "failed to set up health check")

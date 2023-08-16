@@ -22,12 +22,13 @@ type ClientInterface interface {
 }
 
 type UserInterface interface {
-	AddPermissionToUser(user string, permissions string) error
-	AddUserToGroup(groupName string, user string) error
 	CreateUser(ctx context.Context, u *User) error
+	UpdateUser(ctx context.Context, u *User) error
 	GenerateUserToken(userName string) (*string, error)
-	GetUser(ctx context.Context, userName string) (*User, error)
+	GetUserByLogin(ctx context.Context, userLogin string) (*User, error)
 	GetUserToken(ctx context.Context, userLogin, tokenName string) (*UserToken, error)
+	GetUserGroups(ctx context.Context, userLogin string) ([]Group, error)
+	DeactivateUser(ctx context.Context, userLogin string) error
 }
 
 type GroupInterface interface {
@@ -36,6 +37,8 @@ type GroupInterface interface {
 	CreateGroup(ctx context.Context, gr *Group) error
 	UpdateGroup(ctx context.Context, currentName string, group *Group) error
 	DeleteGroup(ctx context.Context, groupName string) error
+	AddUserToGroup(ctx context.Context, userLogin, groupName string) error
+	RemoveUserFromGroup(ctx context.Context, userLogin, groupName string) error
 }
 
 type PermissionTemplateInterface interface {
@@ -47,6 +50,9 @@ type PermissionTemplateInterface interface {
 	GetPermissionTemplateGroups(ctx context.Context, templateID string) ([]PermissionTemplateGroup, error)
 	RemoveGroupFromPermissionTemplate(ctx context.Context, templateID string, permGroup *PermissionTemplateGroup) error
 	SetDefaultPermissionTemplate(ctx context.Context, name string) error
+	GetUserPermissions(ctx context.Context, userLogin string) ([]string, error)
+	AddPermissionToUser(ctx context.Context, userLogin, permission string) error
+	RemovePermissionFromUser(ctx context.Context, userLogin, permission string) error
 }
 
 type Settings interface {

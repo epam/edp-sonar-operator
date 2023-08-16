@@ -1,0 +1,15 @@
+apiVersion: edp.epam.com/v1alpha1
+kind: SonarUser
+metadata:
+  name: sonaruser-sample
+spec:
+  secret: sonaruser-secret
+  login: sonaruser
+  name: sonar user
+  email: sonaruser@mail.com
+  groups:
+    - sonar-administrators
+  permissions:
+    - scan
+  sonarRef:
+    name: sonar-sample

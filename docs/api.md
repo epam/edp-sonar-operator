@@ -16,6 +16,8 @@ Resource Types:
 
 - [Sonar](#sonar)
 
+- [SonarUser](#sonaruser)
+
 
 
 
@@ -525,7 +527,7 @@ SonarStatus defines the observed state of Sonar.
         <td><b>processedSettings</b></td>
         <td>string</td>
         <td>
-          ProcessedSettings shows which settings were processed.<br/>
+          ProcessedSettings shows which settings were processed. It is used to compare the current settings with the settings that were processed to unset the settings that are not in the current settings.<br/>
         </td>
         <td>false</td>
       </tr><tr>
@@ -533,6 +535,198 @@ SonarStatus defines the observed state of Sonar.
         <td>string</td>
         <td>
           Value is status of sonar instance. Possible values: GREEN: SonarQube is fully operational YELLOW: SonarQube is usable, but it needs attention in order to be fully operational RED: SonarQube is not operational<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+## SonarUser
+<sup><sup>[↩ Parent](#edpepamcomv1alpha1 )</sup></sup>
+
+
+
+
+
+
+SonarUser is the Schema for the sonarusers API
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+      <td><b>apiVersion</b></td>
+      <td>string</td>
+      <td>edp.epam.com/v1alpha1</td>
+      <td>true</td>
+      </tr>
+      <tr>
+      <td><b>kind</b></td>
+      <td>string</td>
+      <td>SonarUser</td>
+      <td>true</td>
+      </tr>
+      <tr>
+      <td><b><a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.20/#objectmeta-v1-meta">metadata</a></b></td>
+      <td>object</td>
+      <td>Refer to the Kubernetes API documentation for the fields of the `metadata` field.</td>
+      <td>true</td>
+      </tr><tr>
+        <td><b><a href="#sonaruserspec">spec</a></b></td>
+        <td>object</td>
+        <td>
+          SonarUserSpec defines the desired state of SonarUser<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b><a href="#sonaruserstatus">status</a></b></td>
+        <td>object</td>
+        <td>
+          SonarUserStatus defines the observed state of SonarUser<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### SonarUser.spec
+<sup><sup>[↩ Parent](#sonaruser)</sup></sup>
+
+
+
+SonarUserSpec defines the desired state of SonarUser
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>login</b></td>
+        <td>string</td>
+        <td>
+          Login is a user login. Do not edit this field after creation. Otherwise, the user will be recreated.<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>name</b></td>
+        <td>string</td>
+        <td>
+          Name is a username.<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>secret</b></td>
+        <td>string</td>
+        <td>
+          Secret is the name of the secret with the user password. It should contain a password field with a user password. User password can't be updated.<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b><a href="#sonaruserspecsonarref">sonarRef</a></b></td>
+        <td>object</td>
+        <td>
+          SonarRef is a reference to Sonar custom resource.<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>email</b></td>
+        <td>string</td>
+        <td>
+          Email is a user email.<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>groups</b></td>
+        <td>[]string</td>
+        <td>
+          Groups is a list of groups assigned to user.<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>permissions</b></td>
+        <td>[]string</td>
+        <td>
+          Permissions is a list of permissions assigned to user.<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### SonarUser.spec.sonarRef
+<sup><sup>[↩ Parent](#sonaruserspec)</sup></sup>
+
+
+
+SonarRef is a reference to Sonar custom resource.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>name</b></td>
+        <td>string</td>
+        <td>
+          Name specifies the name of the Sonar resource.<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>kind</b></td>
+        <td>string</td>
+        <td>
+          Kind specifies the kind of the Sonar resource.<br/>
+          <br/>
+            <i>Default</i>: Sonar<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### SonarUser.status
+<sup><sup>[↩ Parent](#sonaruser)</sup></sup>
+
+
+
+SonarUserStatus defines the observed state of SonarUser
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>error</b></td>
+        <td>string</td>
+        <td>
+          Error is an error message if something went wrong.<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>value</b></td>
+        <td>string</td>
+        <td>
+          Value is a status of the user.<br/>
         </td>
         <td>false</td>
       </tr></tbody>

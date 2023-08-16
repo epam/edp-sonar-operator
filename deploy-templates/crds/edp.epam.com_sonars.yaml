@@ -104,6 +104,9 @@ spec:
                 type: string
               processedSettings:
                 description: ProcessedSettings shows which settings were processed.
+                  It is used to compare the current settings with the settings that
+                  were processed to unset the settings that are not in the current
+                  settings.
                 type: string
               value:
                 description: 'Value is status of sonar instance. Possible values:

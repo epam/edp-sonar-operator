@@ -1,5 +1,37 @@
 ---
 apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: manager-role
+rules:
+- apiGroups:
+  - edp.epam.com
+  resources:
+  - sonarusers
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - edp.epam.com
+  resources:
+  - sonarusers/finalizers
+  verbs:
+  - update
+- apiGroups:
+  - edp.epam.com
+  resources:
+  - sonarusers/status
+  verbs:
+  - get
+  - patch
+  - update
+---
+apiVersion: rbac.authorization.k8s.io/v1
 kind: Role
 metadata:
   name: manager-role
