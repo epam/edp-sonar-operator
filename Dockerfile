@@ -1,4 +1,4 @@
-FROM alpine:3.18.2
+FROM alpine:3.18.3
 
 ENV OPERATOR=/usr/local/bin/sonar-operator \
     USER_UID=1001 \

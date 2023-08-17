@@ -101,9 +101,9 @@ clean:  ## clean up
 .PHONY: changelog
 changelog: git-chglog	## generate changelog
 ifneq (${NEXT_RELEASE_TAG},)
-	$(GITCHGLOG) --next-tag v${NEXT_RELEASE_TAG} -o CHANGELOG.md v2.7.0..
+	$(GITCHGLOG) --next-tag v${NEXT_RELEASE_TAG} -o CHANGELOG.md v2.14.1..
 else
-	$(GITCHGLOG) -o CHANGELOG.md v2.7.0..
+	$(GITCHGLOG) -o CHANGELOG.md v2.14.1..
 endif
 
 .PHONY: api-docs

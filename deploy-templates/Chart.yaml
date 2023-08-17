@@ -23,18 +23,18 @@ annotations:
   artifacthub.io/license: Apache-2.0
   artifacthub.io/operator: "true"
   artifacthub.io/images: |
-    - name: sonar-operator:2.14.0
-      image: epamedp/sonar-operator:2.14.0
-    - name: sonarqube:8.9.9-community
-      image: sonarqube:8.9.9-community
+    - name: sonar-operator:2.14.1
+      image: epamedp/sonar-operator:2.14.1
+    - name: sonarqube:8.9.10-community
+      image: sonarqube:8.9.10-community
     - name: postgres:9.6
       image: postgres:9.6
     - name: epamedp/alpine-wget:1.0.3
       image: epamedp/alpine-wget:1.0.3
     - name: busybox:1.35.0
       image: busybox:1.35.0
-    - name: alpine:3.18.2
-      image: alpine:3.18.2
+    - name: alpine:3.18.3
+      image: alpine:3.18.3
   artifacthub.io/operatorCapabilities: Full Lifecycle
   artifacthub.io/crds: |
     - kind: Sonar
