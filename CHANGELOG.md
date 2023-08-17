@@ -2,8 +2,26 @@
 ## [Unreleased]
 
 
+<a name="v2.14.1"></a>
+## [v2.14.1] - 2023-08-16
+### Features
+
+- Do not deploy Sonar resources if Sonar disabled [EPMDEDP-12318](https://jiraeu.epam.com/browse/EPMDEDP-12318)
+
+### Bug Fixes
+
+- Remove recurring rules [EPMDEDP-12375](https://jiraeu.epam.com/browse/EPMDEDP-12375)
+
+### Routine
+
+- Upgrade alpine image version to 3.18.0 [EPMDEDP-12085](https://jiraeu.epam.com/browse/EPMDEDP-12085)
+- Update deprecated quality rules [EPMDEDP-12375](https://jiraeu.epam.com/browse/EPMDEDP-12375)
+- Bump alpine docker image to 3.18.3 [EPMDEDP-12461](https://jiraeu.epam.com/browse/EPMDEDP-12461)
+- Add label for created secrets [EPMDEDP-12471](https://jiraeu.epam.com/browse/EPMDEDP-12471)
+
+
 <a name="v2.14.0"></a>
-## [v2.14.0] - 2023-03-24
+## [v2.14.0] - 2023-03-25
 ### Features
 
 - Updated project skeleton [EPMDEDP-11166](https://jiraeu.epam.com/browse/EPMDEDP-11166)
@@ -242,7 +260,8 @@ Ensure keycloak role is aligned when migrating from
 <a name="v2.7.0"></a>
 ## [v2.7.0] - 2021-12-03
 
-[Unreleased]: https://github.com/epam/edp-sonar-operator/compare/v2.14.0...HEAD
+[Unreleased]: https://github.com/epam/edp-sonar-operator/compare/v2.14.1...HEAD
+[v2.14.1]: https://github.com/epam/edp-sonar-operator/compare/v2.14.0...v2.14.1
 [v2.14.0]: https://github.com/epam/edp-sonar-operator/compare/v2.13.0...v2.14.0
 [v2.13.0]: https://github.com/epam/edp-sonar-operator/compare/v2.12.0...v2.13.0
 [v2.12.0]: https://github.com/epam/edp-sonar-operator/compare/v2.11.0...v2.12.0
