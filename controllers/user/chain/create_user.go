@@ -2,7 +2,6 @@ package chain
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"reflect"
 
@@ -47,7 +46,7 @@ func (h CreateUser) ServeRequest(ctx context.Context, user *sonarApi.SonarUser) 
 
 	existingUser, err := h.sonarApiClient.GetUserByLogin(ctx, user.Spec.Login)
 	if err != nil {
-		if !errors.Is(err, sonar.ErrNotFound) {
+		if !sonar.IsErrNotFound(err) {
 			return fmt.Errorf("failed to get user: %w", err)
 		}
 

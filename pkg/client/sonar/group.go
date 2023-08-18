@@ -3,6 +3,7 @@ package sonar
 import (
 	"context"
 	"fmt"
+	"net/http"
 )
 
 type Group struct {
@@ -39,7 +40,7 @@ func (sc Client) GetGroup(ctx context.Context, groupName string) (*Group, error)
 		}
 	}
 
-	return nil, NotFoundError("group not found")
+	return nil, NewHTTPError(http.StatusNotFound, fmt.Sprintf("group %s not found", groupName))
 }
 
 type createGroupResponse struct {

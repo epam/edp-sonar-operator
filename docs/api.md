@@ -14,6 +14,8 @@ Resource Types:
 
 - [SonarPermissionTemplate](#sonarpermissiontemplate)
 
+- [SonarQualityGate](#sonarqualitygate)
+
 - [Sonar](#sonar)
 
 - [SonarUser](#sonaruser)
@@ -338,6 +340,213 @@ SonarPermissionTemplateStatus defines the observed state of SonarPermissionTempl
         <td>string</td>
         <td>
           <br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+## SonarQualityGate
+<sup><sup>[↩ Parent](#edpepamcomv1alpha1 )</sup></sup>
+
+
+
+
+
+
+SonarQualityGate is the Schema for the sonarqualitygates API
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+      <td><b>apiVersion</b></td>
+      <td>string</td>
+      <td>edp.epam.com/v1alpha1</td>
+      <td>true</td>
+      </tr>
+      <tr>
+      <td><b>kind</b></td>
+      <td>string</td>
+      <td>SonarQualityGate</td>
+      <td>true</td>
+      </tr>
+      <tr>
+      <td><b><a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.20/#objectmeta-v1-meta">metadata</a></b></td>
+      <td>object</td>
+      <td>Refer to the Kubernetes API documentation for the fields of the `metadata` field.</td>
+      <td>true</td>
+      </tr><tr>
+        <td><b><a href="#sonarqualitygatespec">spec</a></b></td>
+        <td>object</td>
+        <td>
+          SonarQualityGateSpec defines the desired state of SonarQualityGate<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b><a href="#sonarqualitygatestatus">status</a></b></td>
+        <td>object</td>
+        <td>
+          SonarQualityGateStatus defines the observed state of SonarQualityGate<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### SonarQualityGate.spec
+<sup><sup>[↩ Parent](#sonarqualitygate)</sup></sup>
+
+
+
+SonarQualityGateSpec defines the desired state of SonarQualityGate
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>name</b></td>
+        <td>string</td>
+        <td>
+          Name is a name of quality gate. Name should be unique across all quality gates. Don't change this field after creation otherwise quality gate will be recreated.<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b><a href="#sonarqualitygatespecsonarref">sonarRef</a></b></td>
+        <td>object</td>
+        <td>
+          SonarRef is a reference to Sonar custom resource.<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b><a href="#sonarqualitygatespecconditionskey">conditions</a></b></td>
+        <td>map[string]object</td>
+        <td>
+          Conditions is a list of conditions for quality gate. Key is a metric name, value is a condition.<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>default</b></td>
+        <td>boolean</td>
+        <td>
+          Default is a flag to set quality gate as default. Only one quality gate can be default. If several quality gates have default flag, the random one will be chosen. Default quality gate can't be deleted. You need to set another quality gate as default before.<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### SonarQualityGate.spec.sonarRef
+<sup><sup>[↩ Parent](#sonarqualitygatespec)</sup></sup>
+
+
+
+SonarRef is a reference to Sonar custom resource.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>name</b></td>
+        <td>string</td>
+        <td>
+          Name specifies the name of the Sonar resource.<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>kind</b></td>
+        <td>string</td>
+        <td>
+          Kind specifies the kind of the Sonar resource.<br/>
+          <br/>
+            <i>Default</i>: Sonar<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### SonarQualityGate.spec.conditions[key]
+<sup><sup>[↩ Parent](#sonarqualitygatespec)</sup></sup>
+
+
+
+Condition defines the condition for quality gate.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>error</b></td>
+        <td>string</td>
+        <td>
+          Error is condition error threshold.<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>op</b></td>
+        <td>enum</td>
+        <td>
+          Op is condition operator. LT = is lower than GT = is greater than<br/>
+          <br/>
+            <i>Enum</i>: LT, GT<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### SonarQualityGate.status
+<sup><sup>[↩ Parent](#sonarqualitygate)</sup></sup>
+
+
+
+SonarQualityGateStatus defines the observed state of SonarQualityGate
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>error</b></td>
+        <td>string</td>
+        <td>
+          Error is an error message if something went wrong.<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>value</b></td>
+        <td>string</td>
+        <td>
+          Value is a status of the user.<br/>
         </td>
         <td>false</td>
       </tr></tbody>

@@ -3,25 +3,21 @@ package sonar
 import (
 	"errors"
 	"fmt"
+	"net/http"
 )
 
-var ErrNotFound = errors.New("not found")
-
-type NotFoundError string
-
-func (e NotFoundError) Error() string {
-	return string(e)
-}
-
 func IsErrNotFound(err error) bool {
-	errNotFound := NotFoundError("")
-	ok := errors.As(err, &errNotFound)
-	return ok
+	return IsHTTPErrorCode(err, http.StatusNotFound)
 }
 
 type HTTPError struct {
 	code    int
 	message string
+}
+
+// NewHTTPError creates a new HTTPError instance.
+func NewHTTPError(code int, message string) HTTPError {
+	return HTTPError{code: code, message: message}
 }
 
 func (e HTTPError) Error() string {

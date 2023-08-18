@@ -1,0 +1,13 @@
+apiVersion: edp.epam.com/v1alpha1
+kind: SonarQualityGate
+metadata:
+  name: sonarqualitygate-sample
+spec:
+  sonarRef:
+    name: sonar-sample
+  name: sonarqualitygate-sample
+  default: true
+  conditions:
+    new_duplicated_lines_density:
+      error: "1"
+      op: GT

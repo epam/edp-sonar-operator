@@ -3,6 +3,7 @@ package sonar
 import (
 	"context"
 	"fmt"
+	"net/http"
 )
 
 type User struct {
@@ -62,7 +63,7 @@ func (sc Client) GetUserByLogin(ctx context.Context, userLogin string) (*User, e
 		}
 	}
 
-	return nil, ErrNotFound
+	return nil, NewHTTPError(http.StatusNotFound, fmt.Sprintf("user %s not found", userLogin))
 }
 
 func (sc *Client) CreateUser(ctx context.Context, user *User) error {
@@ -123,7 +124,7 @@ func (sc Client) GetUserToken(ctx context.Context, userLogin, tokenName string) 
 		}
 	}
 
-	return nil, NotFoundError("Token not found")
+	return nil, NewHTTPError(http.StatusNotFound, "user token not found")
 }
 
 // GetUserGroups returns all groups that the user is a member of.

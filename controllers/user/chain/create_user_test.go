@@ -3,6 +3,7 @@ package chain
 import (
 	"context"
 	"errors"
+	"net/http"
 	"testing"
 
 	"github.com/go-logr/logr"
@@ -57,7 +58,7 @@ func TestCreateUser_ServeRequest(t *testing.T) {
 			sonarApiClient: func(t *testing.T) sonar.UserInterface {
 				m := mocks.NewClientInterface(t)
 				m.On("GetUserByLogin", mock.Anything, "test-user").
-					Return(nil, sonar.ErrNotFound)
+					Return(nil, sonar.NewHTTPError(http.StatusNotFound, ""))
 				m.On("CreateUser", mock.Anything, mock.Anything).
 					Return(nil)
 
@@ -210,7 +211,7 @@ func TestCreateUser_ServeRequest(t *testing.T) {
 			sonarApiClient: func(t *testing.T) sonar.UserInterface {
 				m := mocks.NewClientInterface(t)
 				m.On("GetUserByLogin", mock.Anything, "test-user").
-					Return(nil, sonar.ErrNotFound)
+					Return(nil, sonar.NewHTTPError(http.StatusNotFound, ""))
 				m.On("CreateUser", mock.Anything, mock.Anything).
 					Return(errors.New("failed to create user"))
 

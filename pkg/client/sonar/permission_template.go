@@ -3,6 +3,7 @@ package sonar
 import (
 	"context"
 	"fmt"
+	"net/http"
 )
 
 const templateIdName = "templateId"
@@ -108,7 +109,7 @@ func (sc *Client) GetPermissionTemplate(ctx context.Context, name string) (*Perm
 		}
 	}
 
-	return nil, NotFoundError("permission template not found")
+	return nil, NewHTTPError(http.StatusNotFound, fmt.Sprintf("permission template %s not found", name))
 }
 
 func (sc *Client) AddGroupToPermissionTemplate(ctx context.Context, templateID string,
@@ -199,7 +200,7 @@ func (sc *Client) GetUserPermissions(ctx context.Context, userLogin string) ([]s
 		}
 	}
 
-	return nil, fmt.Errorf("user %s not found: %w", userLogin, ErrNotFound)
+	return nil, NewHTTPError(http.StatusNotFound, fmt.Sprintf("user %s not found", userLogin))
 }
 
 // AddPermissionToUser adds permission to user.

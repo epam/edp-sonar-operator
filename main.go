@@ -23,6 +23,7 @@ import (
 	sonarApi "github.com/epam/edp-sonar-operator/api/v1alpha1"
 	"github.com/epam/edp-sonar-operator/controllers/group"
 	"github.com/epam/edp-sonar-operator/controllers/permission_template"
+	"github.com/epam/edp-sonar-operator/controllers/qualitygate"
 	"github.com/epam/edp-sonar-operator/controllers/sonar"
 	sonaruser "github.com/epam/edp-sonar-operator/controllers/user"
 	sonarclient "github.com/epam/edp-sonar-operator/pkg/client/sonar"
@@ -151,6 +152,11 @@ func main() {
 		os.Exit(1)
 	}
 
+	if err = qualitygate.NewSonarQualityGateReconciler(mgr.GetClient(), mgr.GetScheme(), apiClientProvider).
+		SetupWithManager(mgr); err != nil {
+		setupLog.Error(err, "unable to create controller", "controller", "SonarQualityGate")
+		os.Exit(1)
+	}
 	//+kubebuilder:scaffold:builder
 
 	if err = mgr.AddHealthzCheck("healthz", healthz.Ping); err != nil {

@@ -3,6 +3,7 @@ package sonar
 import (
 	"context"
 	"fmt"
+	"net/http"
 	"strings"
 )
 
@@ -31,5 +32,5 @@ func (sc Client) GetQualityProfile(ctx context.Context, name string) (*QualityPr
 		}
 	}
 
-	return nil, NotFoundError("quality profile not found")
+	return nil, NewHTTPError(http.StatusNotFound, fmt.Sprintf("quality profile %s not found", name))
 }

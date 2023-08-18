@@ -10,7 +10,6 @@ import (
 //go:generate mockery --name ClientInterface --filename client_mock.go
 type ClientInterface interface {
 	ConfigureGeneralSettings(settings ...SettingRequest) error
-	CreateQualityGates(qualityGates QualityGates) error
 	InstallPlugins(plugins []string) error
 	SetProjectsDefaultVisibility(visibility string) error
 
@@ -19,6 +18,7 @@ type ClientInterface interface {
 	PermissionTemplateInterface
 	Settings
 	System
+	QualityGateClient
 }
 
 type UserInterface interface {
@@ -62,4 +62,14 @@ type Settings interface {
 
 type System interface {
 	Health(ctx context.Context) (*SystemHealth, error)
+}
+
+type QualityGateClient interface {
+	CreateQualityGate(ctx context.Context, name string) (*QualityGate, error)
+	GetQualityGate(ctx context.Context, name string) (*QualityGate, error)
+	DeleteQualityGate(ctx context.Context, name string) error
+	SetAsDefaultQualityGate(ctx context.Context, name string) error
+	CreateQualityGateCondition(ctx context.Context, gate string, condition QualityGateCondition) error
+	UpdateQualityGateCondition(ctx context.Context, condition QualityGateCondition) error
+	DeleteQualityGateCondition(ctx context.Context, conditionId string) error
 }

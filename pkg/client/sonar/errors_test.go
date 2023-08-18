@@ -11,11 +11,6 @@ func TestIsErrNotFoundFalse(t *testing.T) {
 	assert.False(t, IsErrNotFound(nil))
 }
 
-func TestIsErrNotFoundTrue(t *testing.T) {
-	err := NotFoundError("test")
-	assert.True(t, IsErrNotFound(err))
-}
-
 func TestIsHTTPErrorCodeFalse(t *testing.T) {
 	assert.False(t, IsHTTPErrorCode(nil, http.StatusOK))
 }

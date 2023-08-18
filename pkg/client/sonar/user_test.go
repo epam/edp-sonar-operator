@@ -72,7 +72,8 @@ func TestSonarClient_GetUser(t *testing.T) {
 		}}))
 	_, err := cs.GetUserByLogin(context.Background(), "userNameNotFound")
 	require.Error(t, err)
-	require.ErrorIs(t, err, ErrNotFound)
+	e := NewHTTPError(http.StatusNotFound, "")
+	require.ErrorAs(t, err, &e)
 
 	httpmock.Reset()
 	httpmock.RegisterRegexpResponder("GET", regexp.MustCompile("/api/users/search.*"),

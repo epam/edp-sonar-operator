@@ -58,13 +58,13 @@ func (_m *ClientInterface) AddPermissionsToGroup(groupName string, permissions s
 	return r0
 }
 
-// AddUserToGroup provides a mock function with given fields: ctx, groupName, userLogin
-func (_m *ClientInterface) AddUserToGroup(ctx context.Context, groupName string, userLogin string) error {
-	ret := _m.Called(ctx, groupName, userLogin)
+// AddUserToGroup provides a mock function with given fields: ctx, userLogin, groupName
+func (_m *ClientInterface) AddUserToGroup(ctx context.Context, userLogin string, groupName string) error {
+	ret := _m.Called(ctx, userLogin, groupName)
 
 	var r0 error
 	if rf, ok := ret.Get(0).(func(context.Context, string, string) error); ok {
-		r0 = rf(ctx, groupName, userLogin)
+		r0 = rf(ctx, userLogin, groupName)
 	} else {
 		r0 = ret.Error(0)
 	}
@@ -130,13 +130,39 @@ func (_m *ClientInterface) CreatePermissionTemplate(ctx context.Context, tpl *so
 	return r0, r1
 }
 
-// CreateQualityGates provides a mock function with given fields: qualityGates
-func (_m *ClientInterface) CreateQualityGates(qualityGates sonar.QualityGates) error {
-	ret := _m.Called(qualityGates)
+// CreateQualityGate provides a mock function with given fields: ctx, name
+func (_m *ClientInterface) CreateQualityGate(ctx context.Context, name string) (*sonar.QualityGate, error) {
+	ret := _m.Called(ctx, name)
+
+	var r0 *sonar.QualityGate
+	var r1 error
+	if rf, ok := ret.Get(0).(func(context.Context, string) (*sonar.QualityGate, error)); ok {
+		return rf(ctx, name)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context, string) *sonar.QualityGate); ok {
+		r0 = rf(ctx, name)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*sonar.QualityGate)
+		}
+	}
+
+	if rf, ok := ret.Get(1).(func(context.Context, string) error); ok {
+		r1 = rf(ctx, name)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// CreateQualityGateCondition provides a mock function with given fields: ctx, gate, condition
+func (_m *ClientInterface) CreateQualityGateCondition(ctx context.Context, gate string, condition sonar.QualityGateCondition) error {
+	ret := _m.Called(ctx, gate, condition)
 
 	var r0 error
-	if rf, ok := ret.Get(0).(func(sonar.QualityGates) error); ok {
-		r0 = rf(qualityGates)
+	if rf, ok := ret.Get(0).(func(context.Context, string, sonar.QualityGateCondition) error); ok {
+		r0 = rf(ctx, gate, condition)
 	} else {
 		r0 = ret.Error(0)
 	}
@@ -193,6 +219,34 @@ func (_m *ClientInterface) DeletePermissionTemplate(ctx context.Context, id stri
 	var r0 error
 	if rf, ok := ret.Get(0).(func(context.Context, string) error); ok {
 		r0 = rf(ctx, id)
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	return r0
+}
+
+// DeleteQualityGate provides a mock function with given fields: ctx, name
+func (_m *ClientInterface) DeleteQualityGate(ctx context.Context, name string) error {
+	ret := _m.Called(ctx, name)
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func(context.Context, string) error); ok {
+		r0 = rf(ctx, name)
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	return r0
+}
+
+// DeleteQualityGateCondition provides a mock function with given fields: ctx, conditionId
+func (_m *ClientInterface) DeleteQualityGateCondition(ctx context.Context, conditionId string) error {
+	ret := _m.Called(ctx, conditionId)
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func(context.Context, string) error); ok {
+		r0 = rf(ctx, conditionId)
 	} else {
 		r0 = ret.Error(0)
 	}
@@ -297,6 +351,32 @@ func (_m *ClientInterface) GetPermissionTemplateGroups(ctx context.Context, temp
 
 	if rf, ok := ret.Get(1).(func(context.Context, string) error); ok {
 		r1 = rf(ctx, templateID)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// GetQualityGate provides a mock function with given fields: ctx, name
+func (_m *ClientInterface) GetQualityGate(ctx context.Context, name string) (*sonar.QualityGate, error) {
+	ret := _m.Called(ctx, name)
+
+	var r0 *sonar.QualityGate
+	var r1 error
+	if rf, ok := ret.Get(0).(func(context.Context, string) (*sonar.QualityGate, error)); ok {
+		return rf(ctx, name)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context, string) *sonar.QualityGate); ok {
+		r0 = rf(ctx, name)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*sonar.QualityGate)
+		}
+	}
+
+	if rf, ok := ret.Get(1).(func(context.Context, string) error); ok {
+		r1 = rf(ctx, name)
 	} else {
 		r1 = ret.Error(1)
 	}
@@ -476,13 +556,13 @@ func (_m *ClientInterface) RemovePermissionFromUser(ctx context.Context, userLog
 	return r0
 }
 
-// RemoveUserFromGroup provides a mock function with given fields: ctx, groupName, userLogin
-func (_m *ClientInterface) RemoveUserFromGroup(ctx context.Context, groupName string, userLogin string) error {
-	ret := _m.Called(ctx, groupName, userLogin)
+// RemoveUserFromGroup provides a mock function with given fields: ctx, userLogin, groupName
+func (_m *ClientInterface) RemoveUserFromGroup(ctx context.Context, userLogin string, groupName string) error {
+	ret := _m.Called(ctx, userLogin, groupName)
 
 	var r0 error
 	if rf, ok := ret.Get(0).(func(context.Context, string, string) error); ok {
-		r0 = rf(ctx, groupName, userLogin)
+		r0 = rf(ctx, userLogin, groupName)
 	} else {
 		r0 = ret.Error(0)
 	}
@@ -497,6 +577,20 @@ func (_m *ClientInterface) ResetSettings(ctx context.Context, settingsKeys []str
 	var r0 error
 	if rf, ok := ret.Get(0).(func(context.Context, []string) error); ok {
 		r0 = rf(ctx, settingsKeys)
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	return r0
+}
+
+// SetAsDefaultQualityGate provides a mock function with given fields: ctx, name
+func (_m *ClientInterface) SetAsDefaultQualityGate(ctx context.Context, name string) error {
+	ret := _m.Called(ctx, name)
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func(context.Context, string) error); ok {
+		r0 = rf(ctx, name)
 	} else {
 		r0 = ret.Error(0)
 	}
@@ -567,6 +661,20 @@ func (_m *ClientInterface) UpdatePermissionTemplate(ctx context.Context, tpl *so
 	var r0 error
 	if rf, ok := ret.Get(0).(func(context.Context, *sonar.PermissionTemplate) error); ok {
 		r0 = rf(ctx, tpl)
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	return r0
+}
+
+// UpdateQualityGateCondition provides a mock function with given fields: ctx, condition
+func (_m *ClientInterface) UpdateQualityGateCondition(ctx context.Context, condition sonar.QualityGateCondition) error {
+	ret := _m.Called(ctx, condition)
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func(context.Context, sonar.QualityGateCondition) error); ok {
+		r0 = rf(ctx, condition)
 	} else {
 		r0 = ret.Error(0)
 	}
