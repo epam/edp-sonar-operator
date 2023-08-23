@@ -19,6 +19,8 @@ type ClientInterface interface {
 	Settings
 	System
 	QualityGateClient
+	QualityProfileClient
+	RuleClient
 }
 
 type UserInterface interface {
@@ -72,4 +74,17 @@ type QualityGateClient interface {
 	CreateQualityGateCondition(ctx context.Context, gate string, condition QualityGateCondition) error
 	UpdateQualityGateCondition(ctx context.Context, condition QualityGateCondition) error
 	DeleteQualityGateCondition(ctx context.Context, conditionId string) error
+}
+
+type QualityProfileClient interface {
+	CreateQualityProfile(ctx context.Context, name, language string) (*QualityProfile, error)
+	GetQualityProfile(ctx context.Context, name string) (*QualityProfile, error)
+	DeleteQualityProfile(ctx context.Context, name, language string) error
+	SetAsDefaultQualityProfile(ctx context.Context, name, language string) error
+	ActivateQualityProfileRule(ctx context.Context, profileKey string, rule Rule) error
+	DeactivateQualityProfileRule(ctx context.Context, profileKey, ruleKey string) error
+}
+
+type RuleClient interface {
+	GetQualityProfileActiveRules(ctx context.Context, profileKey string) ([]Rule, error)
 }

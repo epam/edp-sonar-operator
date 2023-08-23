@@ -1,0 +1,20 @@
+apiVersion: edp.epam.com/v1alpha1
+kind: SonarQualityProfile
+metadata:
+  labels:
+    app.kubernetes.io/name: sonarqualityprofile
+    app.kubernetes.io/instance: sonarqualityprofile-sample
+    app.kubernetes.io/part-of: sonar-operator
+    app.kubernetes.io/managed-by: kustomize
+    app.kubernetes.io/created-by: sonar-operator
+  name: sonarqualityprofile-sample
+spec:
+  sonarRef:
+    name: sonar-sample
+  name: sonarqualityprofile-sample
+  language: go
+  default: true
+  rules:
+    go:S1151:
+      severity: 'MAJOR'
+      params: 'max="6"'

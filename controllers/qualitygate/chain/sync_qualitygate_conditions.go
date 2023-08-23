@@ -22,7 +22,7 @@ func NewSyncQualityGateConditions(sonarApiClient sonar.QualityGateClient) *SyncQ
 
 // ServeRequest implements the logic of syncing quality gate conditions.
 func (h SyncQualityGateConditions) ServeRequest(ctx context.Context, gate *sonarApi.SonarQualityGate) error {
-	log := ctrl.LoggerFrom(ctx).WithValues("name", gate.Name)
+	log := ctrl.LoggerFrom(ctx).WithValues("name", gate.Spec.Name)
 	log.Info("Start syncing quality gate conditions")
 
 	sonarGate, err := h.sonarApiClient.GetQualityGate(ctx, gate.Spec.Name)

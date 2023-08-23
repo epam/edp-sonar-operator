@@ -16,6 +16,20 @@ type ClientInterface struct {
 	mock.Mock
 }
 
+// ActivateQualityProfileRule provides a mock function with given fields: ctx, profileKey, rule
+func (_m *ClientInterface) ActivateQualityProfileRule(ctx context.Context, profileKey string, rule sonar.Rule) error {
+	ret := _m.Called(ctx, profileKey, rule)
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func(context.Context, string, sonar.Rule) error); ok {
+		r0 = rf(ctx, profileKey, rule)
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	return r0
+}
+
 // AddGroupToPermissionTemplate provides a mock function with given fields: ctx, templateID, permGroup
 func (_m *ClientInterface) AddGroupToPermissionTemplate(ctx context.Context, templateID string, permGroup *sonar.PermissionTemplateGroup) error {
 	ret := _m.Called(ctx, templateID, permGroup)
@@ -170,6 +184,32 @@ func (_m *ClientInterface) CreateQualityGateCondition(ctx context.Context, gate 
 	return r0
 }
 
+// CreateQualityProfile provides a mock function with given fields: ctx, name, language
+func (_m *ClientInterface) CreateQualityProfile(ctx context.Context, name string, language string) (*sonar.QualityProfile, error) {
+	ret := _m.Called(ctx, name, language)
+
+	var r0 *sonar.QualityProfile
+	var r1 error
+	if rf, ok := ret.Get(0).(func(context.Context, string, string) (*sonar.QualityProfile, error)); ok {
+		return rf(ctx, name, language)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context, string, string) *sonar.QualityProfile); ok {
+		r0 = rf(ctx, name, language)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*sonar.QualityProfile)
+		}
+	}
+
+	if rf, ok := ret.Get(1).(func(context.Context, string, string) error); ok {
+		r1 = rf(ctx, name, language)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
 // CreateUser provides a mock function with given fields: ctx, u
 func (_m *ClientInterface) CreateUser(ctx context.Context, u *sonar.User) error {
 	ret := _m.Called(ctx, u)
@@ -177,6 +217,20 @@ func (_m *ClientInterface) CreateUser(ctx context.Context, u *sonar.User) error 
 	var r0 error
 	if rf, ok := ret.Get(0).(func(context.Context, *sonar.User) error); ok {
 		r0 = rf(ctx, u)
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	return r0
+}
+
+// DeactivateQualityProfileRule provides a mock function with given fields: ctx, profileKey, ruleKey
+func (_m *ClientInterface) DeactivateQualityProfileRule(ctx context.Context, profileKey string, ruleKey string) error {
+	ret := _m.Called(ctx, profileKey, ruleKey)
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func(context.Context, string, string) error); ok {
+		r0 = rf(ctx, profileKey, ruleKey)
 	} else {
 		r0 = ret.Error(0)
 	}
@@ -247,6 +301,20 @@ func (_m *ClientInterface) DeleteQualityGateCondition(ctx context.Context, condi
 	var r0 error
 	if rf, ok := ret.Get(0).(func(context.Context, string) error); ok {
 		r0 = rf(ctx, conditionId)
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	return r0
+}
+
+// DeleteQualityProfile provides a mock function with given fields: ctx, name, language
+func (_m *ClientInterface) DeleteQualityProfile(ctx context.Context, name string, language string) error {
+	ret := _m.Called(ctx, name, language)
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func(context.Context, string, string) error); ok {
+		r0 = rf(ctx, name, language)
 	} else {
 		r0 = ret.Error(0)
 	}
@@ -377,6 +445,58 @@ func (_m *ClientInterface) GetQualityGate(ctx context.Context, name string) (*so
 
 	if rf, ok := ret.Get(1).(func(context.Context, string) error); ok {
 		r1 = rf(ctx, name)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// GetQualityProfile provides a mock function with given fields: ctx, name
+func (_m *ClientInterface) GetQualityProfile(ctx context.Context, name string) (*sonar.QualityProfile, error) {
+	ret := _m.Called(ctx, name)
+
+	var r0 *sonar.QualityProfile
+	var r1 error
+	if rf, ok := ret.Get(0).(func(context.Context, string) (*sonar.QualityProfile, error)); ok {
+		return rf(ctx, name)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context, string) *sonar.QualityProfile); ok {
+		r0 = rf(ctx, name)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*sonar.QualityProfile)
+		}
+	}
+
+	if rf, ok := ret.Get(1).(func(context.Context, string) error); ok {
+		r1 = rf(ctx, name)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// GetQualityProfileActiveRules provides a mock function with given fields: ctx, profileKey
+func (_m *ClientInterface) GetQualityProfileActiveRules(ctx context.Context, profileKey string) ([]sonar.Rule, error) {
+	ret := _m.Called(ctx, profileKey)
+
+	var r0 []sonar.Rule
+	var r1 error
+	if rf, ok := ret.Get(0).(func(context.Context, string) ([]sonar.Rule, error)); ok {
+		return rf(ctx, profileKey)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context, string) []sonar.Rule); ok {
+		r0 = rf(ctx, profileKey)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).([]sonar.Rule)
+		}
+	}
+
+	if rf, ok := ret.Get(1).(func(context.Context, string) error); ok {
+		r1 = rf(ctx, profileKey)
 	} else {
 		r1 = ret.Error(1)
 	}
@@ -591,6 +711,20 @@ func (_m *ClientInterface) SetAsDefaultQualityGate(ctx context.Context, name str
 	var r0 error
 	if rf, ok := ret.Get(0).(func(context.Context, string) error); ok {
 		r0 = rf(ctx, name)
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	return r0
+}
+
+// SetAsDefaultQualityProfile provides a mock function with given fields: ctx, name, language
+func (_m *ClientInterface) SetAsDefaultQualityProfile(ctx context.Context, name string, language string) error {
+	ret := _m.Called(ctx, name, language)
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func(context.Context, string, string) error); ok {
+		r0 = rf(ctx, name, language)
 	} else {
 		r0 = ret.Error(0)
 	}

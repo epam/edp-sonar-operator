@@ -54,7 +54,7 @@ type Condition struct {
 
 // SonarQualityGateStatus defines the observed state of SonarQualityGate
 type SonarQualityGateStatus struct {
-	// Value is a status of the user.
+	// Value is a status of the quality gate.
 	// +optional
 	Value string `json:"value,omitempty"`
 

@@ -16,6 +16,8 @@ Resource Types:
 
 - [SonarQualityGate](#sonarqualitygate)
 
+- [SonarQualityProfile](#sonarqualityprofile)
+
 - [Sonar](#sonar)
 
 - [SonarUser](#sonaruser)
@@ -546,7 +548,221 @@ SonarQualityGateStatus defines the observed state of SonarQualityGate
         <td><b>value</b></td>
         <td>string</td>
         <td>
-          Value is a status of the user.<br/>
+          Value is a status of the quality gate.<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+## SonarQualityProfile
+<sup><sup>[↩ Parent](#edpepamcomv1alpha1 )</sup></sup>
+
+
+
+
+
+
+SonarQualityProfile is the Schema for the sonarqualityprofiles API
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+      <td><b>apiVersion</b></td>
+      <td>string</td>
+      <td>edp.epam.com/v1alpha1</td>
+      <td>true</td>
+      </tr>
+      <tr>
+      <td><b>kind</b></td>
+      <td>string</td>
+      <td>SonarQualityProfile</td>
+      <td>true</td>
+      </tr>
+      <tr>
+      <td><b><a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.20/#objectmeta-v1-meta">metadata</a></b></td>
+      <td>object</td>
+      <td>Refer to the Kubernetes API documentation for the fields of the `metadata` field.</td>
+      <td>true</td>
+      </tr><tr>
+        <td><b><a href="#sonarqualityprofilespec">spec</a></b></td>
+        <td>object</td>
+        <td>
+          SonarQualityProfileSpec defines the desired state of SonarQualityProfile<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b><a href="#sonarqualityprofilestatus">status</a></b></td>
+        <td>object</td>
+        <td>
+          SonarQualityProfileStatus defines the observed state of SonarQualityProfile<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### SonarQualityProfile.spec
+<sup><sup>[↩ Parent](#sonarqualityprofile)</sup></sup>
+
+
+
+SonarQualityProfileSpec defines the desired state of SonarQualityProfile
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>language</b></td>
+        <td>string</td>
+        <td>
+          Language is a language of quality profile.<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>name</b></td>
+        <td>string</td>
+        <td>
+          Name is a name of quality profile. Name should be unique across all quality profiles. Don't change this field after creation otherwise quality profile will be recreated.<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b><a href="#sonarqualityprofilespecsonarref">sonarRef</a></b></td>
+        <td>object</td>
+        <td>
+          SonarRef is a reference to Sonar custom resource.<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>default</b></td>
+        <td>boolean</td>
+        <td>
+          Default is a flag to set quality profile as default. Only one quality profile can be default. If several quality profiles have default flag, the random one will be chosen. Default quality profile can't be deleted. You need to set another quality profile as default before.<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b><a href="#sonarqualityprofilespecruleskey">rules</a></b></td>
+        <td>map[string]object</td>
+        <td>
+          Rules is a list of rules for quality profile. Key is a rule key, value is a rule.<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### SonarQualityProfile.spec.sonarRef
+<sup><sup>[↩ Parent](#sonarqualityprofilespec)</sup></sup>
+
+
+
+SonarRef is a reference to Sonar custom resource.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>name</b></td>
+        <td>string</td>
+        <td>
+          Name specifies the name of the Sonar resource.<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>kind</b></td>
+        <td>string</td>
+        <td>
+          Kind specifies the kind of the Sonar resource.<br/>
+          <br/>
+            <i>Default</i>: Sonar<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### SonarQualityProfile.spec.rules[key]
+<sup><sup>[↩ Parent](#sonarqualityprofilespec)</sup></sup>
+
+
+
+Rule defines a rule of quality profile.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>params</b></td>
+        <td>string</td>
+        <td>
+          Params is as semicolon list of key=value.<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>severity</b></td>
+        <td>enum</td>
+        <td>
+          Severity is a severity of rule.<br/>
+          <br/>
+            <i>Enum</i>: INFO, MINOR, MAJOR, CRITICAL, BLOCKER<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### SonarQualityProfile.status
+<sup><sup>[↩ Parent](#sonarqualityprofile)</sup></sup>
+
+
+
+SonarQualityProfileStatus defines the observed state of SonarQualityProfile
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>error</b></td>
+        <td>string</td>
+        <td>
+          Error is an error message if something went wrong.<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>value</b></td>
+        <td>string</td>
+        <td>
+          Value is a status of the quality profile.<br/>
         </td>
         <td>false</td>
       </tr></tbody>

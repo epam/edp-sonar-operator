@@ -22,7 +22,7 @@ func NewCreateQualityGate(sonarApiClient sonar.QualityGateClient) *CreateQuality
 
 // ServeRequest implements the logic of creating quality gate.
 func (h CreateQualityGate) ServeRequest(ctx context.Context, gate *sonarApi.SonarQualityGate) error {
-	log := ctrl.LoggerFrom(ctx).WithValues("name", gate.Name)
+	log := ctrl.LoggerFrom(ctx).WithValues("name", gate.Spec.Name)
 	log.Info("Start creating quality gate")
 
 	sonarGate, err := h.sonarApiClient.GetQualityGate(ctx, gate.Spec.Name)

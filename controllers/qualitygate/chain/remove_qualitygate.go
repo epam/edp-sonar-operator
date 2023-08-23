@@ -22,7 +22,7 @@ func NewRemoveQualityGate(sonarApiClient sonar.QualityGateClient) *RemoveQuality
 
 // ServeRequest implements the logic of removing quality gate.
 func (r RemoveQualityGate) ServeRequest(ctx context.Context, gate *sonarApi.SonarQualityGate) error {
-	log := ctrl.LoggerFrom(ctx).WithValues("name", gate.Name)
+	log := ctrl.LoggerFrom(ctx).WithValues("name", gate.Spec.Name)
 	log.Info("Start removing quality gate")
 
 	if err := r.sonarApiClient.DeleteQualityGate(ctx, gate.Spec.Name); err != nil {

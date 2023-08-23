@@ -3,4 +3,5 @@ resources:
 - edp_v1alpha1_sonar.yaml
 - edp_v1alpha1_sonaruser.yaml
 - edp_v1alpha1_sonarqualitygate.yaml
+- edp_v1alpha1_sonarqualityprofile.yaml
 #+kubebuilder:scaffold:manifestskustomizesamples

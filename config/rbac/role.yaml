@@ -33,6 +33,32 @@ rules:
 - apiGroups:
   - edp.epam.com
   resources:
+  - sonarqualityprofiles
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - edp.epam.com
+  resources:
+  - sonarqualityprofiles/finalizers
+  verbs:
+  - update
+- apiGroups:
+  - edp.epam.com
+  resources:
+  - sonarqualityprofiles/status
+  verbs:
+  - get
+  - patch
+  - update
+- apiGroups:
+  - edp.epam.com
+  resources:
   - sonarusers
   verbs:
   - create

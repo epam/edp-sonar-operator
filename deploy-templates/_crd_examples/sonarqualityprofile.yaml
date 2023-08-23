@@ -1,0 +1,14 @@
+apiVersion: edp.epam.com/v1alpha1
+kind: SonarQualityProfile
+metadata:
+  name: sonarqualityprofile-sample
+spec:
+  sonarRef:
+    name: sonar-sample
+  name: sonarqualityprofile-sample
+  language: go
+  default: true
+  rules:
+    go:S1151:
+      severity: 'MAJOR'
+      params: 'max="6"'
