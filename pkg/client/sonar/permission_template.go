@@ -44,6 +44,13 @@ type getUserPermissionResponse struct {
 	} `json:"users"`
 }
 
+type getGroupPermissionResponse struct {
+	Groups []struct {
+		Name        string   `json:"name"`
+		Permissions []string `json:"permissions"`
+	} `json:"groups"`
+}
+
 func (sc *Client) CreatePermissionTemplate(ctx context.Context, tpl *PermissionTemplateData) (string, error) {
 	var result createPermissionTemplateResponse
 	rsp, err := sc.startRequest(ctx).SetResult(&result).SetFormData(map[string]string{
@@ -180,6 +187,7 @@ func (sc *Client) SetDefaultPermissionTemplate(ctx context.Context, name string)
 
 // GetUserPermissions returns user permissions.
 // Warning: this is a sonar internal endpoint, which may be changed in future versions.
+// nolint:dupl // this has a lot of common code with GetGroupPermissions, but it's not worth to extract it
 func (sc *Client) GetUserPermissions(ctx context.Context, userLogin string) ([]string, error) {
 	response := getUserPermissionResponse{}
 	rsp, err := sc.startRequest(ctx).
@@ -230,6 +238,64 @@ func (sc *Client) RemovePermissionFromUser(ctx context.Context, userLogin, permi
 
 	if err = sc.checkError(rsp, err); err != nil {
 		return fmt.Errorf("failed to remove permission %s from user %s: %w", permission, userLogin, err)
+	}
+
+	return nil
+}
+
+// GetGroupPermissions returns group permissions.
+// Warning: this is a sonar internal endpoint, which may be changed in future versions.
+// nolint:dupl // this has a lot of common code with GetUserPermissions, but it's not worth to extract it
+func (sc *Client) GetGroupPermissions(ctx context.Context, groupName string) ([]string, error) {
+	response := getGroupPermissionResponse{}
+	rsp, err := sc.startRequest(ctx).
+		SetResult(&response).
+		SetQueryParams(map[string]string{
+			"q":  groupName,
+			"ps": "100",
+		}).
+		Get("/permissions/groups")
+
+	if err = sc.checkError(rsp, err); err != nil {
+		return nil, fmt.Errorf("failed to get group %s permission: %w", groupName, err)
+	}
+
+	for _, g := range response.Groups {
+		if g.Name == groupName {
+			return g.Permissions, nil
+		}
+	}
+
+	return nil, NewHTTPError(http.StatusNotFound, fmt.Sprintf("group %s not found", groupName))
+}
+
+// AddPermissionToGroup adds permission to group.
+func (sc *Client) AddPermissionToGroup(ctx context.Context, groupName, permission string) error {
+	rsp, err := sc.startRequest(ctx).
+		SetFormData(map[string]string{
+			"groupName":  groupName,
+			"permission": permission,
+		}).
+		Post("/permissions/add_group")
+
+	if err = sc.checkError(rsp, err); err != nil {
+		return fmt.Errorf("failed to add permission %s to group %s: %w", permission, groupName, err)
+	}
+
+	return nil
+}
+
+// RemovePermissionFromGroup removes permission from group.
+func (sc *Client) RemovePermissionFromGroup(ctx context.Context, groupName, permission string) error {
+	rsp, err := sc.startRequest(ctx).
+		SetFormData(map[string]string{
+			"groupName":  groupName,
+			"permission": permission,
+		}).
+		Post("/permissions/remove_group")
+
+	if err = sc.checkError(rsp, err); err != nil {
+		return fmt.Errorf("failed to remove permission %s from group %s: %w", permission, groupName, err)
 	}
 
 	return nil

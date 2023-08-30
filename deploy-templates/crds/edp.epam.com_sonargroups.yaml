@@ -36,26 +36,59 @@ spec:
             properties:
               description:
                 description: Description of sonar group.
+                example: Default group for new users
+                maxLength: 200
                 type: string
               name:
-                description: Name is a group name.
+                description: Name is a group name. Name should be unique across all
+                  groups. Do not edit this field after creation. Otherwise, the group
+                  will be recreated.
+                example: sonar-users
+                maxLength: 255
                 type: string
-              sonarOwner:
-                description: SonarOwner is a name of root sonar custom resource.
-                type: string
+              permissionTemplates:
+                description: PermissionTemplates is a list of permissions templates
+                  assigned to group.
+                example:
+                - scan
+                items:
+                  type: string
+                nullable: true
+                type: array
+              permissions:
+                description: Permissions is a list of permissions assigned to group.
+                example:
+                - admin
+                - provisioning
+                items:
+                  type: string
+                nullable: true
+                type: array
+              sonarRef:
+                description: SonarRef is a reference to Sonar custom resource.
+                properties:
+                  kind:
+                    default: Sonar
+                    description: Kind specifies the kind of the Sonar resource.
+                    type: string
+                  name:
+                    description: Name specifies the name of the Sonar resource.
+                    type: string
+                required:
+                - name
+                type: object
             required:
             - name
-            - sonarOwner
+            - sonarRef
             type: object
           status:
             description: SonarGroupStatus defines the observed state of SonarGroup.
             properties:
-              failureCount:
-                format: int64
-                type: integer
-              id:
+              error:
+                description: Error is an error message if something went wrong.
                 type: string
               value:
+                description: Value is a status of the group.
                 type: string
             type: object
         type: object

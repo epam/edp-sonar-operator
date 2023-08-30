@@ -1,30 +1,52 @@
 package v1alpha1
 
-import metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+import (
+	"github.com/epam/edp-sonar-operator/api/common"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+)
 
 // SonarGroupSpec defines the desired state of SonarGroup.
 type SonarGroupSpec struct {
-	// SonarOwner is a name of root sonar custom resource.
-	SonarOwner string `json:"sonarOwner"`
-
 	// Name is a group name.
+	// Name should be unique across all groups.
+	// Do not edit this field after creation. Otherwise, the group will be recreated.
+	// +required
+	// +kubebuilder:validation:MaxLength=255
+	// +kubebuilder:example="sonar-users"
 	Name string `json:"name"`
 
 	// Description of sonar group.
 	// +optional
+	// +kubebuilder:validation:MaxLength=200
+	// +kubebuilder:example="Default group for new users"
 	Description string `json:"description,omitempty"`
+
+	// Permissions is a list of permissions assigned to group.
+	// +nullable
+	// +optional
+	// +kubebuilder:example={admin, provisioning}
+	Permissions []string `json:"permissions,omitempty"`
+
+	// PermissionTemplates is a list of permissions templates assigned to group.
+	// +nullable
+	// +optional
+	// +kubebuilder:example={scan}
+	PermissionTemplates []string `json:"permissionTemplates,omitempty"`
+
+	// SonarRef is a reference to Sonar custom resource.
+	// +required
+	SonarRef common.SonarRef `json:"sonarRef"`
 }
 
 // SonarGroupStatus defines the observed state of SonarGroup.
 type SonarGroupStatus struct {
+	// Value is a status of the group.
 	// +optional
 	Value string `json:"value,omitempty"`
 
+	// Error is an error message if something went wrong.
 	// +optional
-	FailureCount int64 `json:"failureCount,omitempty"`
-
-	// +optional
-	ID string `json:"id,omitempty"`
+	Error string `json:"error,omitempty"`
 }
 
 // +kubebuilder:object:root=true
@@ -40,24 +62,8 @@ type SonarGroup struct {
 	Status SonarGroupStatus `json:"status,omitempty"`
 }
 
-func (in *SonarGroup) GetFailureCount() int64 {
-	return in.Status.FailureCount
-}
-
-func (in *SonarGroup) SetFailureCount(count int64) {
-	in.Status.FailureCount = count
-}
-
-func (in *SonarGroup) GetStatus() string {
-	return in.Status.Value
-}
-
-func (in *SonarGroup) SetStatus(value string) {
-	in.Status.Value = value
-}
-
-func (in *SonarGroup) SonarOwner() string {
-	return in.Spec.SonarOwner
+func (in *SonarGroup) GetSonarRef() common.SonarRef {
+	return in.Spec.SonarRef
 }
 
 // +kubebuilder:object:root=true

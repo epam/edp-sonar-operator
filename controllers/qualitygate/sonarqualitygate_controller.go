@@ -71,7 +71,7 @@ func (r *SonarQualityGateReconciler) Reconcile(ctx context.Context, req ctrl.Req
 	}
 
 	if gate.GetDeletionTimestamp() != nil {
-		if !controllerutil.ContainsFinalizer(gate, sonarOperatorFinalizer) {
+		if controllerutil.ContainsFinalizer(gate, sonarOperatorFinalizer) {
 			if err = chain.NewRemoveQualityGate(sonarApiClient).ServeRequest(ctx, gate); err != nil {
 				log.Error(err, "An error has occurred while deleting QualityGate")
 

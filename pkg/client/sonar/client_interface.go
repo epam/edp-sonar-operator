@@ -55,6 +55,9 @@ type PermissionTemplateInterface interface {
 	GetUserPermissions(ctx context.Context, userLogin string) ([]string, error)
 	AddPermissionToUser(ctx context.Context, userLogin, permission string) error
 	RemovePermissionFromUser(ctx context.Context, userLogin, permission string) error
+	GetGroupPermissions(ctx context.Context, groupName string) ([]string, error)
+	AddPermissionToGroup(ctx context.Context, groupName, permission string) error
+	RemovePermissionFromGroup(ctx context.Context, groupName, permission string) error
 }
 
 type Settings interface {

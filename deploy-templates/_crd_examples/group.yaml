@@ -1,8 +1,9 @@
-apiVersion: v2.edp.epam.com/v1
+apiVersion: edp.epam.com/v1alpha1
 kind: SonarGroup
 metadata:
   name: sonar-developers
 spec:
-  sonarOwner: sonar
-  name: sonar-developers
+  name: "sonar-developers"
   description: "Developers"
+  sonarRef:
+    name: sonar

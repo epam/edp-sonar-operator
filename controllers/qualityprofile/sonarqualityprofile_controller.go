@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"time"
 
-	"k8s.io/apimachinery/pkg/api/errors"
+	k8sErrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/runtime"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -55,7 +55,7 @@ func (r *SonarQualityProfileReconciler) Reconcile(ctx context.Context, req ctrl.
 	profile := &sonarApi.SonarQualityProfile{}
 	err := r.client.Get(ctx, req.NamespacedName, profile)
 	if err != nil {
-		if errors.IsNotFound(err) {
+		if k8sErrors.IsNotFound(err) {
 			return ctrl.Result{}, nil
 		}
 
@@ -71,7 +71,7 @@ func (r *SonarQualityProfileReconciler) Reconcile(ctx context.Context, req ctrl.
 	}
 
 	if profile.GetDeletionTimestamp() != nil {
-		if !controllerutil.ContainsFinalizer(profile, sonarOperatorFinalizer) {
+		if controllerutil.ContainsFinalizer(profile, sonarOperatorFinalizer) {
 			if err = chain.NewRemoveQualityProfile(sonarApiClient).ServeRequest(ctx, profile); err != nil {
 				log.Error(err, "An error has occurred while deleting QualityProfile")
 

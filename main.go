@@ -142,14 +142,12 @@ func main() {
 		os.Exit(1)
 	}
 
-	groupCtrl, err := group.NewReconcile(mgr.GetClient(), mgr.GetScheme(), ctrlLog, helper.GetPlatformTypeEnv())
-	if err != nil {
+	if err = group.NewSonarGroupReconciler(
+		mgr.GetClient(),
+		mgr.GetScheme(),
+		apiClientProvider,
+	).SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "failed to create sonar group reconcile")
-		os.Exit(1)
-	}
-
-	if err = groupCtrl.SetupWithManager(mgr); err != nil {
-		setupLog.Error(err, "failed to setup sonar group reconcile")
 		os.Exit(1)
 	}
 

@@ -18,8 +18,14 @@ type groupSearchResponse struct {
 
 func (sc *Client) SearchGroups(ctx context.Context, groupName string) ([]Group, error) {
 	var groupResponse groupSearchResponse
-	rsp, err := sc.startRequest(ctx).SetResult(&groupResponse).
-		Get(fmt.Sprintf("/user_groups/search?q=%s&f=name", groupName))
+	rsp, err := sc.startRequest(ctx).
+		SetResult(&groupResponse).
+		SetQueryParams(map[string]string{
+			"q":  groupName,
+			"f":  "name,description",
+			"ps": "500",
+		}).
+		Get("/user_groups/search")
 
 	if err = sc.checkError(rsp, err); err != nil {
 		return nil, fmt.Errorf("failed to search for groups: %w", err)
@@ -28,7 +34,7 @@ func (sc *Client) SearchGroups(ctx context.Context, groupName string) ([]Group, 
 	return groupResponse.Groups, nil
 }
 
-func (sc Client) GetGroup(ctx context.Context, groupName string) (*Group, error) {
+func (sc *Client) GetGroup(ctx context.Context, groupName string) (*Group, error) {
 	groups, err := sc.SearchGroups(ctx, groupName)
 	if err != nil {
 		return nil, fmt.Errorf("failed to search for groups: %w", err)

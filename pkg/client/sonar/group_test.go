@@ -3,6 +3,7 @@ package sonar
 import (
 	"context"
 	"net/http"
+	"regexp"
 	"testing"
 
 	"github.com/jarcoal/httpmock"
@@ -88,14 +89,14 @@ func TestSonarClient_SearchGroups(t *testing.T) {
 	cs := NewClient("", "", "")
 	httpmock.ActivateNonDefault(cs.resty.GetClient())
 	cs.resty.SetDisableWarn(true)
-	httpmock.RegisterResponder("GET", "/api/user_groups/search?q=name&f=name",
+	httpmock.RegisterRegexpResponder("GET", regexp.MustCompile("/api/user_groups/search.*"),
 		httpmock.NewJsonResponderOrPanic(http.StatusOK, groupSearchResponse{}))
 
 	if _, err := cs.SearchGroups(context.Background(), "name"); err != nil {
 		t.Fatal(err)
 	}
 
-	httpmock.RegisterResponder("GET", "/api/user_groups/search?q=name&f=name",
+	httpmock.RegisterRegexpResponder("GET", regexp.MustCompile("/api/user_groups/search.*"),
 		httpmock.NewStringResponder(http.StatusInternalServerError, "search fatal"))
 
 	_, err := cs.SearchGroups(context.Background(), "name")
@@ -111,7 +112,7 @@ func TestSonarClient_GetGroup(t *testing.T) {
 
 	httpmock.ActivateNonDefault(cs.resty.GetClient())
 	cs.resty.SetDisableWarn(true)
-	httpmock.RegisterResponder("GET", "/api/user_groups/search?q=groupName&f=name",
+	httpmock.RegisterRegexpResponder("GET", regexp.MustCompile("/api/user_groups/search.*"),
 		httpmock.NewJsonResponderOrPanic(http.StatusOK, groupSearchResponse{Groups: []Group{
 			{Name: "groupName"},
 		}}))
@@ -120,7 +121,7 @@ func TestSonarClient_GetGroup(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	httpmock.RegisterResponder("GET", "/api/user_groups/search?q=groupNameNotFound&f=name",
+	httpmock.RegisterRegexpResponder("GET", regexp.MustCompile("/api/user_groups/search.*"),
 		httpmock.NewJsonResponderOrPanic(http.StatusOK, groupSearchResponse{Groups: []Group{
 			{Name: "groupName"},
 		}}))
@@ -131,7 +132,7 @@ func TestSonarClient_GetGroup(t *testing.T) {
 		t.Fatalf("wrong error returned: %s", err.Error())
 	}
 
-	httpmock.RegisterResponder("GET", "/api/user_groups/search?q=groupNameNotFound&f=name",
+	httpmock.RegisterRegexpResponder("GET", regexp.MustCompile("/api/user_groups/search.*"),
 		httpmock.NewStringResponder(http.StatusInternalServerError, "search fatal"))
 	_, err = cs.GetGroup(context.Background(), "groupNameNotFound")
 	require.Error(t, err)

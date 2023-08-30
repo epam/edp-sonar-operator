@@ -29,7 +29,7 @@ type apiClientProvider interface {
 // SonarUserReconciler reconciles a SonarUser object
 type SonarUserReconciler struct {
 	client            client.Client
-	Scheme            *runtime.Scheme
+	scheme            *runtime.Scheme
 	apiClientProvider apiClientProvider
 }
 
@@ -39,7 +39,7 @@ func NewSonarUserReconciler(
 	scheme *runtime.Scheme,
 	apiClientProvider apiClientProvider,
 ) *SonarUserReconciler {
-	return &SonarUserReconciler{client: client, Scheme: scheme, apiClientProvider: apiClientProvider}
+	return &SonarUserReconciler{client: client, scheme: scheme, apiClientProvider: apiClientProvider}
 }
 
 //+kubebuilder:rbac:groups=edp.epam.com,resources=sonarusers,verbs=get;list;watch;create;update;patch;delete
