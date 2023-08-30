@@ -113,7 +113,7 @@ func (r *SonarQualityProfileReconciler) Reconcile(ctx context.Context, req ctrl.
 		}, nil
 	}
 
-	profile.Status.Value = "created"
+	profile.Status.Value = common.StatusCreated
 	profile.Status.Error = ""
 
 	if err = r.updateSonarQualityProfileStatus(ctx, profile, oldStatus); err != nil {

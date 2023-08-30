@@ -26,9 +26,9 @@ resources:
   controller: true
   domain: epam.com
   group: edp
-  kind: PermissionTemplate
+  kind: SonarPermissionTemplate
   path: github.com/epam/edp-sonar-operator/api/v1alpha1
-  version: v1
+  version: v1alpha1
 - api:
     crdVersion: v1
     namespaced: true

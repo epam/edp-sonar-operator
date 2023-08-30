@@ -44,7 +44,7 @@ type GroupInterface interface {
 }
 
 type PermissionTemplateInterface interface {
-	CreatePermissionTemplate(ctx context.Context, tpl *PermissionTemplateData) (string, error)
+	CreatePermissionTemplate(ctx context.Context, tpl *PermissionTemplateData) (*PermissionTemplate, error)
 	UpdatePermissionTemplate(ctx context.Context, tpl *PermissionTemplate) error
 	DeletePermissionTemplate(ctx context.Context, id string) error
 	GetPermissionTemplate(ctx context.Context, name string) (*PermissionTemplate, error)

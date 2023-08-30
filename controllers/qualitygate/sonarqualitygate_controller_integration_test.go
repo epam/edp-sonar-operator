@@ -47,7 +47,7 @@ var _ = Describe("SonarQualityGate controller", func() {
 				return false
 			}
 
-			return createdSonarQualityGate.Status.Value == "created" && createdSonarQualityGate.Status.Error == ""
+			return createdSonarQualityGate.Status.Value == common.StatusCreated && createdSonarQualityGate.Status.Error == ""
 		}, timeout, interval).Should(BeTrue())
 	})
 	It("Should update SonarQualityGate object", func() {

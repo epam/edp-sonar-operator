@@ -51,9 +51,9 @@ func (r *SonarGroupReconciler) SetupWithManager(mgr ctrl.Manager) error {
 		Complete(r)
 }
 
-//+kubebuilder:rbac:groups=v1.edp.epam.com,namespace=placeholder,resources=sonargroups,verbs=get;list;watch;create;update;patch;delete
-//+kubebuilder:rbac:groups=v1.edp.epam.com,namespace=placeholder,resources=sonargroups/status,verbs=get;update;patch
-//+kubebuilder:rbac:groups=v1.edp.epam.com,namespace=placeholder,resources=sonargroups/finalizers,verbs=update
+//+kubebuilder:rbac:groups=edp.epam.com,namespace=placeholder,resources=sonargroups,verbs=get;list;watch;create;update;patch;delete
+//+kubebuilder:rbac:groups=edp.epam.com,namespace=placeholder,resources=sonargroups/status,verbs=get;update;patch
+//+kubebuilder:rbac:groups=edp.epam.com,namespace=placeholder,resources=sonargroups/finalizers,verbs=update
 //+kubebuilder:rbac:groups="",namespace=placeholder,resources=secrets,verbs=get
 
 // Reconcile is part of the main kubernetes reconciliation loop which aims to
@@ -123,7 +123,7 @@ func (r *SonarGroupReconciler) Reconcile(ctx context.Context, req reconcile.Requ
 		}, nil
 	}
 
-	group.Status.Value = "created"
+	group.Status.Value = common.StatusCreated
 	group.Status.Error = ""
 
 	if err = r.updateSonarGroupStatus(ctx, group, oldStatus); err != nil {
@@ -135,14 +135,14 @@ func (r *SonarGroupReconciler) Reconcile(ctx context.Context, req reconcile.Requ
 
 func (r *SonarGroupReconciler) updateSonarGroupStatus(
 	ctx context.Context,
-	profile *sonarApi.SonarGroup,
+	group *sonarApi.SonarGroup,
 	oldStatus sonarApi.SonarGroupStatus,
 ) error {
-	if profile.Status == oldStatus {
+	if group.Status == oldStatus {
 		return nil
 	}
 
-	if err := r.client.Status().Update(ctx, profile); err != nil {
+	if err := r.client.Status().Update(ctx, group); err != nil {
 		return fmt.Errorf("failed to update SonarGroup status: %w", err)
 	}
 

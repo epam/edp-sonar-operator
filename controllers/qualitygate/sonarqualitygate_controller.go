@@ -113,7 +113,7 @@ func (r *SonarQualityGateReconciler) Reconcile(ctx context.Context, req ctrl.Req
 		}, nil
 	}
 
-	gate.Status.Value = "created"
+	gate.Status.Value = common.StatusCreated
 	gate.Status.Error = ""
 
 	if err = r.updateSonarQualityGateStatus(ctx, gate, oldStatus); err != nil {

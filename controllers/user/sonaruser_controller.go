@@ -114,7 +114,7 @@ func (r *SonarUserReconciler) Reconcile(ctx context.Context, req ctrl.Request) (
 		}, nil
 	}
 
-	user.Status.Value = "created"
+	user.Status.Value = common.StatusCreated
 	user.Status.Error = ""
 
 	if err = r.updateSonarUserStatus(ctx, user, oldStatus); err != nil {

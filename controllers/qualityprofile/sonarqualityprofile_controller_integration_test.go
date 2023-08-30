@@ -47,7 +47,7 @@ var _ = Describe("SonarQualityProfile controller", func() {
 				return false
 			}
 
-			return createdSonarQualityprofile.Status.Value == "created" && createdSonarQualityprofile.Status.Error == ""
+			return createdSonarQualityprofile.Status.Value == common.StatusCreated && createdSonarQualityprofile.Status.Error == ""
 		}, timeout, interval).Should(BeTrue())
 	})
 	It("Should update SonarQualityProfile object", func() {

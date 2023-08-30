@@ -49,9 +49,9 @@ func (r *ReconcileSonar) SetupWithManager(mgr ctrl.Manager) error {
 		Complete(r)
 }
 
-//+kubebuilder:rbac:groups=v1.edp.epam.com,namespace=placeholder,resources=sonars,verbs=get;list;watch;create;update;patch;delete
-//+kubebuilder:rbac:groups=v1.edp.epam.com,namespace=placeholder,resources=sonars/status,verbs=get;update;patch
-//+kubebuilder:rbac:groups=v1.edp.epam.com,namespace=placeholder,resources=sonars/finalizers,verbs=update
+//+kubebuilder:rbac:groups=edp.epam.com,namespace=placeholder,resources=sonars,verbs=get;list;watch;create;update;patch;delete
+//+kubebuilder:rbac:groups=edp.epam.com,namespace=placeholder,resources=sonars/status,verbs=get;update;patch
+//+kubebuilder:rbac:groups=edp.epam.com,namespace=placeholder,resources=sonars/finalizers,verbs=update
 //+kubebuilder:rbac:groups="",namespace=placeholder,resources=secrets,verbs=get
 
 func (r *ReconcileSonar) Reconcile(ctx context.Context, request reconcile.Request) (reconcile.Result, error) {

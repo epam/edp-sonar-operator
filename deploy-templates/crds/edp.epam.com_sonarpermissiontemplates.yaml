@@ -36,56 +36,56 @@ spec:
             description: SonarPermissionTemplateSpec defines the desired state of
               SonarPermissionTemplate.
             properties:
+              default:
+                description: Default is a flag to set permission template as default.
+                  Only one permission template can be default. If several permission
+                  templates have default flag, the random one will be chosen. Default
+                  permission template can't be deleted. You need to set another permission
+                  template as default before.
+                example: "true"
+                type: boolean
               description:
                 description: Description of sonar permission template.
+                example: Default permission template for new users
                 type: string
-              groupPermissions:
-                description: GroupPermissions adds a group to a permission template.
-                items:
-                  description: GroupPermission represents the group and its permissions.
-                  properties:
-                    groupName:
-                      description: Group name or 'anyone' (case insensitive). Example
-                        value sonar-administrators.
-                      type: string
-                    permissions:
-                      description: 'Permissions is a list of permissions. Possible
-                        values: admin, codeviewer, issueadmin, securityhotspotadmin,
-                        scan, user.'
-                      items:
-                        type: string
-                      type: array
-                  required:
-                  - groupName
-                  - permissions
-                  type: object
-                nullable: true
-                type: array
               name:
-                description: Name is a group name.
+                description: Name is a name of permission template. Name should be
+                  unique across all permission templates. Do not edit this field after
+                  creation. Otherwise, the permission template will be recreated.
+                example: sonar-users-tmpl
+                maxLength: 100
                 type: string
               projectKeyPattern:
                 description: ProjectKeyPattern is key pattern. Must be a valid Java
                   regular expression.
+                example: finance.*
                 type: string
-              sonarOwner:
-                description: SonarOwner is a name of root sonar custom resource.
-                type: string
+              sonarRef:
+                description: SonarRef is a reference to Sonar custom resource.
+                properties:
+                  kind:
+                    default: Sonar
+                    description: Kind specifies the kind of the Sonar resource.
+                    type: string
+                  name:
+                    description: Name specifies the name of the Sonar resource.
+                    type: string
+                required:
+                - name
+                type: object
             required:
             - name
-            - projectKeyPattern
-            - sonarOwner
+            - sonarRef
             type: object
           status:
             description: SonarPermissionTemplateStatus defines the observed state
               of SonarPermissionTemplate.
             properties:
-              failureCount:
-                format: int64
-                type: integer
-              id:
+              error:
+                description: Error is an error message if something went wrong.
                 type: string
               value:
+                description: Value is a status of the permission template.
                 type: string
             type: object
         type: object

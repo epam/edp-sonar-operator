@@ -17,4 +17,3 @@ spec:
           endBlockRegexp: ".*"
     - key: sonar.dbcleaner.hoursBeforeKeepingOnlyOneSnapshotByDay
       value: "20"
-

@@ -135,18 +135,20 @@ func (_m *ClientInterface) CreateGroup(ctx context.Context, gr *sonar.Group) err
 }
 
 // CreatePermissionTemplate provides a mock function with given fields: ctx, tpl
-func (_m *ClientInterface) CreatePermissionTemplate(ctx context.Context, tpl *sonar.PermissionTemplateData) (string, error) {
+func (_m *ClientInterface) CreatePermissionTemplate(ctx context.Context, tpl *sonar.PermissionTemplateData) (*sonar.PermissionTemplate, error) {
 	ret := _m.Called(ctx, tpl)
 
-	var r0 string
+	var r0 *sonar.PermissionTemplate
 	var r1 error
-	if rf, ok := ret.Get(0).(func(context.Context, *sonar.PermissionTemplateData) (string, error)); ok {
+	if rf, ok := ret.Get(0).(func(context.Context, *sonar.PermissionTemplateData) (*sonar.PermissionTemplate, error)); ok {
 		return rf(ctx, tpl)
 	}
-	if rf, ok := ret.Get(0).(func(context.Context, *sonar.PermissionTemplateData) string); ok {
+	if rf, ok := ret.Get(0).(func(context.Context, *sonar.PermissionTemplateData) *sonar.PermissionTemplate); ok {
 		r0 = rf(ctx, tpl)
 	} else {
-		r0 = ret.Get(0).(string)
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*sonar.PermissionTemplate)
+		}
 	}
 
 	if rf, ok := ret.Get(1).(func(context.Context, *sonar.PermissionTemplateData) error); ok {

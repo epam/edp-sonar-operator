@@ -54,7 +54,7 @@ var _ = Describe("SonarUser controller", func() {
 				return false
 			}
 
-			return createdSonarUser.Status.Value == "created" && createdSonarUser.Status.Error == ""
+			return createdSonarUser.Status.Value == common.StatusCreated && createdSonarUser.Status.Error == ""
 		}, timeout, interval).Should(BeTrue())
 	})
 	It("Should delete SonarUser object", func() {

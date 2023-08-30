@@ -1,5 +1,8 @@
 package common
 
+// StatusCreated is success status for Sonar resources.
+const StatusCreated = "created"
+
 // SonarRef is a reference to a Sonar instance.
 type SonarRef struct {
 	// Kind specifies the kind of the Sonar resource.

@@ -38,7 +38,7 @@ var _ = Describe("SonarGroup controller", func() {
 				return false
 			}
 
-			return createdSonarGroup.Status.Value == "created" && createdSonarGroup.Status.Error == ""
+			return createdSonarGroup.Status.Value == common.StatusCreated && createdSonarGroup.Status.Error == ""
 		}, timeout, interval).Should(BeTrue())
 	})
 	It("Should delete SonarGroup object", func() {

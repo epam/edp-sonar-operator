@@ -1,48 +1,52 @@
 package v1alpha1
 
-import metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+import (
+	"github.com/epam/edp-sonar-operator/api/common"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+)
 
 // SonarPermissionTemplateSpec defines the desired state of SonarPermissionTemplate.
 type SonarPermissionTemplateSpec struct {
-	// SonarOwner is a name of root sonar custom resource.
-	SonarOwner string `json:"sonarOwner"`
-
-	// Name is a group name.
+	// Name is a name of permission template.
+	// Name should be unique across all permission templates.
+	// Do not edit this field after creation. Otherwise, the permission template will be recreated.
+	// +required
+	// +kubebuilder:validation:MaxLength=100
+	// +kubebuilder:example="sonar-users-tmpl"
 	Name string `json:"name"`
-
-	// ProjectKeyPattern is key pattern. Must be a valid Java regular expression.
-	ProjectKeyPattern string `json:"projectKeyPattern"`
 
 	// Description of sonar permission template.
 	// +optional
+	// +kubebuilder:example="Default permission template for new users"
 	Description string `json:"description,omitempty"`
 
-	// GroupPermissions adds a group to a permission template.
-	// +nullable
+	// ProjectKeyPattern is key pattern. Must be a valid Java regular expression.
 	// +optional
-	GroupPermissions []GroupPermission `json:"groupPermissions,omitempty"`
-}
+	// +kubebuilder:example="finance.*"
+	ProjectKeyPattern string `json:"projectKeyPattern"`
 
-// GroupPermission represents the group and its permissions.
-type GroupPermission struct {
-	// Group name or 'anyone' (case insensitive). Example value sonar-administrators.
-	GroupName string `json:"groupName"`
+	// Default is a flag to set permission template as default.
+	// Only one permission template can be default.
+	// If several permission templates have default flag, the random one will be chosen.
+	// Default permission template can't be deleted. You need to set another permission template as default before.
+	// +optional
+	// +kubebuilder:example="true"
+	Default bool `json:"default"`
 
-	// Permissions is a list of permissions.
-	// Possible values: admin, codeviewer, issueadmin, securityhotspotadmin, scan, user.
-	Permissions []string `json:"permissions"`
+	// SonarRef is a reference to Sonar custom resource.
+	// +required
+	SonarRef common.SonarRef `json:"sonarRef"`
 }
 
 // SonarPermissionTemplateStatus defines the observed state of SonarPermissionTemplate.
 type SonarPermissionTemplateStatus struct {
+	// Value is a status of the permission template.
 	// +optional
 	Value string `json:"value,omitempty"`
 
+	// Error is an error message if something went wrong.
 	// +optional
-	FailureCount int64 `json:"failureCount,omitempty"`
-
-	// +optional
-	ID string `json:"id,omitempty"`
+	Error string `json:"error,omitempty"`
 }
 
 // +kubebuilder:object:root=true
@@ -58,24 +62,8 @@ type SonarPermissionTemplate struct {
 	Status SonarPermissionTemplateStatus `json:"status,omitempty"`
 }
 
-func (in *SonarPermissionTemplate) GetFailureCount() int64 {
-	return in.Status.FailureCount
-}
-
-func (in *SonarPermissionTemplate) SetFailureCount(count int64) {
-	in.Status.FailureCount = count
-}
-
-func (in *SonarPermissionTemplate) GetStatus() string {
-	return in.Status.Value
-}
-
-func (in *SonarPermissionTemplate) SetStatus(value string) {
-	in.Status.Value = value
-}
-
-func (in *SonarPermissionTemplate) SonarOwner() string {
-	return in.Spec.SonarOwner
+func (in *SonarPermissionTemplate) GetSonarRef() common.SonarRef {
+	return in.Spec.SonarRef
 }
 
 // +kubebuilder:object:root=true

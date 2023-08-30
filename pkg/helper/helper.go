@@ -10,12 +10,7 @@ const (
 	watchNamespaceEnvVar   = "WATCH_NAMESPACE"
 	debugModeEnvVar        = "DEBUG_MODE"
 	inClusterNamespacePath = "/var/run/secrets/kubernetes.io/serviceaccount/namespace"
-	platformType           = "PLATFORM_TYPE"
 )
-
-func GetPlatformTypeEnv() string {
-	return os.Getenv(platformType)
-}
 
 // GetWatchNamespace returns the namespace the operator should be watching for changes.
 func GetWatchNamespace() (string, error) {

@@ -15,7 +15,8 @@ type PermissionTemplateData struct {
 }
 
 type PermissionTemplate struct {
-	ID string `json:"id,omitempty"`
+	ID        string `json:"id,omitempty"`
+	IsDefault bool   `json:"isDefault,omitempty"`
 	PermissionTemplateData
 }
 
@@ -35,6 +36,9 @@ type createPermissionTemplateResponse struct {
 
 type searchPermissionTemplatesResponse struct {
 	PermissionTemplates []PermissionTemplate `json:"permissionTemplates"`
+	DefaultTemplates    []struct {
+		TemplateId string `json:"templateId"`
+	} `json:"defaultTemplates"`
 }
 
 type getUserPermissionResponse struct {
@@ -51,7 +55,7 @@ type getGroupPermissionResponse struct {
 	} `json:"groups"`
 }
 
-func (sc *Client) CreatePermissionTemplate(ctx context.Context, tpl *PermissionTemplateData) (string, error) {
+func (sc *Client) CreatePermissionTemplate(ctx context.Context, tpl *PermissionTemplateData) (*PermissionTemplate, error) {
 	var result createPermissionTemplateResponse
 	rsp, err := sc.startRequest(ctx).SetResult(&result).SetFormData(map[string]string{
 		"name":              tpl.Name,
@@ -60,10 +64,10 @@ func (sc *Client) CreatePermissionTemplate(ctx context.Context, tpl *PermissionT
 	}).Post("/permissions/create_template")
 
 	if err = sc.checkError(rsp, err); err != nil {
-		return "", fmt.Errorf("failed to create permission template: %w", err)
+		return nil, fmt.Errorf("failed to create permission template: %w", err)
 	}
 
-	return result.PermissionTemplate.ID, nil
+	return &result.PermissionTemplate, nil
 }
 
 func (sc *Client) UpdatePermissionTemplate(ctx context.Context, tpl *PermissionTemplate) error {
@@ -93,7 +97,7 @@ func (sc *Client) DeletePermissionTemplate(ctx context.Context, id string) error
 	return nil
 }
 
-func (sc *Client) SearchPermissionTemplates(ctx context.Context, name string) ([]PermissionTemplate, error) {
+func (sc *Client) searchPermissionTemplates(ctx context.Context, name string) (*searchPermissionTemplatesResponse, error) {
 	var result searchPermissionTemplatesResponse
 	rsp, err := sc.startRequest(ctx).SetQueryParam("q", name).SetResult(&result).
 		Get("/permissions/search_templates")
@@ -101,17 +105,23 @@ func (sc *Client) SearchPermissionTemplates(ctx context.Context, name string) ([
 		return nil, fmt.Errorf("failed to search for permission templates: %w", err)
 	}
 
-	return result.PermissionTemplates, nil
+	return &result, nil
 }
 
 func (sc *Client) GetPermissionTemplate(ctx context.Context, name string) (*PermissionTemplate, error) {
-	tpls, err := sc.SearchPermissionTemplates(ctx, name)
+	tpls, err := sc.searchPermissionTemplates(ctx, name)
 	if err != nil {
 		return nil, fmt.Errorf("failed to search for permission templates: %w", err)
 	}
 
-	for _, t := range tpls {
+	for _, t := range tpls.PermissionTemplates {
 		if t.Name == name {
+			for _, dt := range tpls.DefaultTemplates {
+				if dt.TemplateId == t.ID {
+					t.IsDefault = true
+					break
+				}
+			}
 			return &t, nil
 		}
 	}

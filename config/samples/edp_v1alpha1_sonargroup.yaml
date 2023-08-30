@@ -1,0 +1,15 @@
+apiVersion: edp.epam.com/v1alpha1
+kind: SonarGroup
+metadata:
+  labels:
+    app.kubernetes.io/name: sonargroup
+    app.kubernetes.io/instance: sonargroup-sample
+    app.kubernetes.io/part-of: sonar-operator
+    app.kubernetes.io/managed-by: kustomize
+    app.kubernetes.io/created-by: sonar-operator
+  name: sonargroup-sample
+spec:
+  name: "sonar-developers"
+  description: "Developers"
+  sonarRef:
+    name: sonar

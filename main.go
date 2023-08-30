@@ -108,8 +108,6 @@ func main() {
 		os.Exit(1)
 	}
 
-	ctrlLog := ctrl.Log.WithName("controllers")
-
 	apiClientProvider := sonarclient.NewApiClientProvider(mgr.GetClient())
 
 	if err = sonar.NewReconcileSonar(
@@ -130,14 +128,11 @@ func main() {
 		os.Exit(1)
 	}
 
-	permTplCtrl, err := permission_template.NewReconcile(mgr.GetClient(), mgr.GetScheme(), ctrlLog,
-		helper.GetPlatformTypeEnv())
-	if err != nil {
-		setupLog.Error(err, "failed to create permission template reconcile")
-		os.Exit(1)
-	}
-
-	if err = permTplCtrl.SetupWithManager(mgr); err != nil {
+	if err = permission_template.NewSonarPermissionTemplateReconciler(
+		mgr.GetClient(),
+		mgr.GetScheme(),
+		apiClientProvider,
+	).SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "failed to setup permission template reconcile")
 		os.Exit(1)
 	}
@@ -147,7 +142,7 @@ func main() {
 		mgr.GetScheme(),
 		apiClientProvider,
 	).SetupWithManager(mgr); err != nil {
-		setupLog.Error(err, "failed to create sonar group reconcile")
+		setupLog.Error(err, "failed to setup sonar group reconcile")
 		os.Exit(1)
 	}
 

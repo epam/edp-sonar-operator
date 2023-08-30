@@ -89,13 +89,13 @@ func TestClient_SearchPermissionTemplates(t *testing.T) {
 	cs := initClient()
 	httpmock.RegisterResponder("GET", "/api/permissions/search_templates?q=test",
 		httpmock.NewStringResponder(http.StatusOK, ""))
-	if _, err := cs.SearchPermissionTemplates(context.Background(), "test"); err != nil {
+	if _, err := cs.searchPermissionTemplates(context.Background(), "test"); err != nil {
 		t.Fatal(err)
 	}
 
 	httpmock.RegisterResponder("GET", "/api/permissions/search_templates?q=test",
 		httpmock.NewStringResponder(http.StatusInternalServerError, "search fatal"))
-	_, err := cs.SearchPermissionTemplates(context.Background(), "test")
+	_, err := cs.searchPermissionTemplates(context.Background(), "test")
 
 	require.Error(t, err)
 

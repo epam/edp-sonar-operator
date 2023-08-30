@@ -275,23 +275,23 @@ SonarPermissionTemplateSpec defines the desired state of SonarPermissionTemplate
         <td><b>name</b></td>
         <td>string</td>
         <td>
-          Name is a group name.<br/>
+          Name is a name of permission template. Name should be unique across all permission templates. Do not edit this field after creation. Otherwise, the permission template will be recreated.<br/>
         </td>
         <td>true</td>
       </tr><tr>
-        <td><b>projectKeyPattern</b></td>
-        <td>string</td>
+        <td><b><a href="#sonarpermissiontemplatespecsonarref">sonarRef</a></b></td>
+        <td>object</td>
         <td>
-          ProjectKeyPattern is key pattern. Must be a valid Java regular expression.<br/>
+          SonarRef is a reference to Sonar custom resource.<br/>
         </td>
         <td>true</td>
       </tr><tr>
-        <td><b>sonarOwner</b></td>
-        <td>string</td>
+        <td><b>default</b></td>
+        <td>boolean</td>
         <td>
-          SonarOwner is a name of root sonar custom resource.<br/>
+          Default is a flag to set permission template as default. Only one permission template can be default. If several permission templates have default flag, the random one will be chosen. Default permission template can't be deleted. You need to set another permission template as default before.<br/>
         </td>
-        <td>true</td>
+        <td>false</td>
       </tr><tr>
         <td><b>description</b></td>
         <td>string</td>
@@ -300,22 +300,22 @@ SonarPermissionTemplateSpec defines the desired state of SonarPermissionTemplate
         </td>
         <td>false</td>
       </tr><tr>
-        <td><b><a href="#sonarpermissiontemplatespecgrouppermissionsindex">groupPermissions</a></b></td>
-        <td>[]object</td>
+        <td><b>projectKeyPattern</b></td>
+        <td>string</td>
         <td>
-          GroupPermissions adds a group to a permission template.<br/>
+          ProjectKeyPattern is key pattern. Must be a valid Java regular expression.<br/>
         </td>
         <td>false</td>
       </tr></tbody>
 </table>
 
 
-### SonarPermissionTemplate.spec.groupPermissions[index]
+### SonarPermissionTemplate.spec.sonarRef
 <sup><sup>[↩ Parent](#sonarpermissiontemplatespec)</sup></sup>
 
 
 
-GroupPermission represents the group and its permissions.
+SonarRef is a reference to Sonar custom resource.
 
 <table>
     <thead>
@@ -327,19 +327,21 @@ GroupPermission represents the group and its permissions.
         </tr>
     </thead>
     <tbody><tr>
-        <td><b>groupName</b></td>
+        <td><b>name</b></td>
         <td>string</td>
         <td>
-          Group name or 'anyone' (case insensitive). Example value sonar-administrators.<br/>
+          Name specifies the name of the Sonar resource.<br/>
         </td>
         <td>true</td>
       </tr><tr>
-        <td><b>permissions</b></td>
-        <td>[]string</td>
+        <td><b>kind</b></td>
+        <td>string</td>
         <td>
-          Permissions is a list of permissions. Possible values: admin, codeviewer, issueadmin, securityhotspotadmin, scan, user.<br/>
+          Kind specifies the kind of the Sonar resource.<br/>
+          <br/>
+            <i>Default</i>: Sonar<br/>
         </td>
-        <td>true</td>
+        <td>false</td>
       </tr></tbody>
 </table>
 
@@ -361,26 +363,17 @@ SonarPermissionTemplateStatus defines the observed state of SonarPermissionTempl
         </tr>
     </thead>
     <tbody><tr>
-        <td><b>failureCount</b></td>
-        <td>integer</td>
-        <td>
-          <br/>
-          <br/>
-            <i>Format</i>: int64<br/>
-        </td>
-        <td>false</td>
-      </tr><tr>
-        <td><b>id</b></td>
+        <td><b>error</b></td>
         <td>string</td>
         <td>
-          <br/>
+          Error is an error message if something went wrong.<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b>value</b></td>
         <td>string</td>
         <td>
-          <br/>
+          Value is a status of the permission template.<br/>
         </td>
         <td>false</td>
       </tr></tbody>
