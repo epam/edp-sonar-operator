@@ -1,9 +1,9 @@
 # permissions for end users to edit sonars.
 apiVersion: rbac.authorization.k8s.io/v1
-kind: ClusterRole
+kind: Role
 metadata:
   labels:
-    app.kubernetes.io/name: clusterrole
+    app.kubernetes.io/name: role
     app.kubernetes.io/instance: sonar-editor-role
     app.kubernetes.io/component: rbac
     app.kubernetes.io/created-by: sonar-operator
@@ -12,7 +12,7 @@ metadata:
   name: sonar-editor-role
 rules:
 - apiGroups:
-  - v2.edp.epam.com
+  - edp.epam.com
   resources:
   - sonars
   verbs:
@@ -24,7 +24,7 @@ rules:
   - update
   - watch
 - apiGroups:
-  - v2.edp.epam.com
+  - edp.epam.com
   resources:
   - sonars/status
   verbs:

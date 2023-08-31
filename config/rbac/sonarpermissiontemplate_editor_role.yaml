@@ -1,20 +1,20 @@
-# permissions for end users to edit sonarusers.
+# permissions for end users to edit sonarpermissiontemplates.
 apiVersion: rbac.authorization.k8s.io/v1
 kind: Role
 metadata:
   labels:
     app.kubernetes.io/name: role
-    app.kubernetes.io/instance: sonaruser-editor-role
+    app.kubernetes.io/instance: sonarpermissiontemplate-editor-role
     app.kubernetes.io/component: rbac
     app.kubernetes.io/created-by: sonar-operator
     app.kubernetes.io/part-of: sonar-operator
     app.kubernetes.io/managed-by: kustomize
-  name: sonaruser-editor-role
+  name: sonarpermissiontemplate-editor-role
 rules:
 - apiGroups:
   - edp.epam.com
   resources:
-  - sonarusers
+  - sonarpermissiontemplates
   verbs:
   - create
   - delete
@@ -26,6 +26,6 @@ rules:
 - apiGroups:
   - edp.epam.com
   resources:
-  - sonarusers/status
+  - sonarpermissiontemplates/status
   verbs:
   - get

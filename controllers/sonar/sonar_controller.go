@@ -52,7 +52,7 @@ func (r *ReconcileSonar) SetupWithManager(mgr ctrl.Manager) error {
 //+kubebuilder:rbac:groups=edp.epam.com,namespace=placeholder,resources=sonars,verbs=get;list;watch;create;update;patch;delete
 //+kubebuilder:rbac:groups=edp.epam.com,namespace=placeholder,resources=sonars/status,verbs=get;update;patch
 //+kubebuilder:rbac:groups=edp.epam.com,namespace=placeholder,resources=sonars/finalizers,verbs=update
-//+kubebuilder:rbac:groups="",namespace=placeholder,resources=secrets,verbs=get
+//+kubebuilder:rbac:groups="",namespace=placeholder,resources=secrets,verbs=get;list;watch
 
 func (r *ReconcileSonar) Reconcile(ctx context.Context, request reconcile.Request) (reconcile.Result, error) {
 	log := ctrl.LoggerFrom(ctx)

@@ -18,4 +18,4 @@ spec:
   permissions:
     - scan
   sonarRef:
-    name: sonar-sample
+    name: sonar

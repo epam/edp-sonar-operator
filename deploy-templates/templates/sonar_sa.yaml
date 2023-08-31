@@ -1,9 +1,0 @@
-{{if .Values.sonar.deploy}}
-apiVersion: v1
-kind: ServiceAccount
-metadata:
-  name: sonar
-  labels:
-    app: sonar
-    {{- include "sonar-operator.labels" . | nindent 4 }}
-{{ end }}

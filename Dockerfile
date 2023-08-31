@@ -1,23 +1,7 @@
-FROM alpine:3.18.3
+FROM gcr.io/distroless/static:nonroot
+WORKDIR /
+COPY ./dist/manager .
 
-ENV OPERATOR=/usr/local/bin/sonar-operator \
-    USER_UID=1001 \
-    USER_NAME=sonar-operator \
-    HOME=/home/sonar-operator
+USER 65532:65532
 
-RUN apk add --no-cache ca-certificates=20230506-r0 \
-                       openssh-client==9.3_p2-r0
-
-# install operator binary
-COPY ./dist/go-binary ${OPERATOR}
-
-COPY build/bin /usr/local/bin
-COPY build/configs /usr/local/configs
-
-RUN  chmod u+x /usr/local/bin/user_setup && \
-     chmod ugo+x /usr/local/bin/entrypoint && \
-     /usr/local/bin/user_setup
-
-ENTRYPOINT ["/usr/local/bin/entrypoint"]
-
-USER ${USER_UID}
+ENTRYPOINT ["/manager"]

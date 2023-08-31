@@ -41,10 +41,10 @@ func NewSonarQualityGateReconciler(
 	return &SonarQualityGateReconciler{client: client, scheme: scheme, apiClientProvider: apiClientProvider}
 }
 
-//+kubebuilder:rbac:groups=edp.epam.com,resources=sonarqualitygates,verbs=get;list;watch;create;update;patch;delete
-//+kubebuilder:rbac:groups=edp.epam.com,resources=sonarqualitygates/status,verbs=get;update;patch
-//+kubebuilder:rbac:groups=edp.epam.com,resources=sonarqualitygates/finalizers,verbs=update
-//+kubebuilder:rbac:groups="",namespace=placeholder,resources=secrets,verbs=get
+//+kubebuilder:rbac:groups=edp.epam.com,namespace=placeholder,resources=sonarqualitygates,verbs=get;list;watch;create;update;patch;delete
+//+kubebuilder:rbac:groups=edp.epam.com,namespace=placeholder,resources=sonarqualitygates/status,verbs=get;update;patch
+//+kubebuilder:rbac:groups=edp.epam.com,namespace=placeholder,resources=sonarqualitygates/finalizers,verbs=update
+//+kubebuilder:rbac:groups="",namespace=placeholder,resources=secrets,verbs=get;list;watch
 
 // Reconcile is part of the main kubernetes reconciliation loop which aims to
 // move the current state of the cluster closer to the desired state.

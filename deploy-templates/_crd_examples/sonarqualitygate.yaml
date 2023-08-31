@@ -4,7 +4,7 @@ metadata:
   name: sonarqualitygate-sample
 spec:
   sonarRef:
-    name: sonar-sample
+    name: sonar
   name: sonarqualitygate-sample
   default: true
   conditions:

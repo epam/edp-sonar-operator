@@ -3,8 +3,8 @@ description: A Helm chart for EDP Sonar Operator
 home: https://epam.github.io/edp-install/
 name: sonar-operator
 type: application
-version: 2.15.0-SNAPSHOT
-appVersion: 2.15.0-SNAPSHOT
+version: 3.0.0
+appVersion: 3.0.0
 icon: https://epam.github.io/edp-install/assets/logo.png
 keywords:
   - edp
@@ -23,76 +23,123 @@ annotations:
   artifacthub.io/license: Apache-2.0
   artifacthub.io/operator: "true"
   artifacthub.io/images: |
-    - name: sonar-operator:2.14.1
-      image: epamedp/sonar-operator:2.14.1
-    - name: sonarqube:8.9.10-community
-      image: sonarqube:8.9.10-community
-    - name: postgres:9.6
-      image: postgres:9.6
-    - name: epamedp/alpine-wget:1.0.3
-      image: epamedp/alpine-wget:1.0.3
-    - name: busybox:1.35.0
-      image: busybox:1.35.0
-    - name: alpine:3.18.3
-      image: alpine:3.18.3
+    - name: sonar-operator:3.0.0
+      image: epamedp/sonar-operator:3.0.0
   artifacthub.io/operatorCapabilities: Full Lifecycle
   artifacthub.io/crds: |
     - kind: Sonar
-      version: v2.edp.epam.com/v1
+      version: edp.epam.com/v1alpha1
       name: sonar
       displayName: Sonar
-      description: Sonar configuraion with predefined Quility Gates, CI users and Groups
+      description: Sonar resource for connecting to SonarQube server
     - kind: SonarGroup
-      version: v2.edp.epam.com/v1
+      version: edp.epam.com/v1alpha1
       name: sonargroup
       displayName: SonarGroup
-      description: Sonar Group Management
+      description: Sonar group management
     - kind: SonarPermissionTemplate
-      version: v2.edp.epam.com/v1
+      version: edp.epam.com/v1alpha1
       name: sonarpermissiontemplate
       displayName: SonarPermissionTemplate
-      description: Sonar Permission template Management
+      description: Sonar permission template management
+    - kind: SonarQualityGate
+      version: edp.epam.com/v1alpha1
+      name: sonarperqualitygate
+      displayName: SonarQualityGate
+      description: Sonar quality gate management
+    - kind: SonarQualityProfile
+      version: edp.epam.com/v1alpha1
+      name: sonarqualityprofile
+      displayName: SonarQualityProfile
+      description: Sonar quality profile management
+    - kind: SonarUser
+      version: edp.epam.com/v1alpha1
+      name: sonaruser
+      displayName: SonarUser
+      description: Sonar user management
   artifacthub.io/crdsExamples: |
-    - apiVersion: v2.edp.epam.com/v1
+    - apiVersion: edp.epam.com/v1alpha1
       kind: Sonar
       metadata:
         name: sonar
       spec:
-        basePath: ''
-        defaultPermissionTemplate: edp-default
-        edpSpec:
-          dnsWildcard: eks-sandbox.com
-    - apiVersion: v2.edp.epam.com/v1
+        url: https://example.com
+        secret: sonar-admin
+        defaultPermissionTemplate: test
+        settings:
+          - key: sonar.global.exclusions
+            values:
+              - "**/*.jsx"
+              - "**/*.tsx"
+          - key: sonar.issue.ignore.block
+            fieldValues:
+              beginBlockRegexp: ".*"
+              endBlockRegexp: ".*"
+          - key: sonar.dbcleaner.hoursBeforeKeepingOnlyOneSnapshotByDay
+            value: "20"
+    - apiVersion: edp.epam.com/v1alpha1
       kind: SonarGroup
       metadata:
         name: sonar-developers
       spec:
-        sonarOwner: sonar
-        name: sonar-developers
+        name: "sonar-developers"
         description: "Developers"
-    - apiVersion: v2.edp.epam.com/v1
+        sonarRef:
+          name: sonar
+    - apiVersion: edp.epam.com/v1alpha1
       kind: SonarPermissionTemplate
       metadata:
         name: edp-default
       spec:
-        description: EDP permission templates (DO NOT REMOVE)
-        groupPermissions:
-          - groupName: non-interactive-users
-            permissions:
-              - user
-          - groupName: sonar-administrators
-            permissions:
-              - admin
-              - user
-          - groupName: sonar-developers
-            permissions:
-              - codeviewer
-              - issueadmin
-              - securityhotspotadmin
-              - user
         name: edp-default
-        projectKeyPattern: .+
-        sonarOwner: sonar
+        description: "EDP permission templates"
+        projectKeyPattern: ".+"
+        default: true
+        sonarRef:
+          name: sonar
+    - apiVersion: edp.epam.com/v1alpha1
+      kind: SonarQualityGate
+      metadata:
+        name: sonarqualitygate-sample
+      spec:
+        sonarRef:
+          name: sonar
+        name: sonarqualitygate-sample
+        default: true
+        conditions:
+          new_duplicated_lines_density:
+            error: "1"
+            op: GT
+    - apiVersion: edp.epam.com/v1alpha1
+      kind: SonarQualityProfile
+      metadata:
+        name: sonarqualityprofile-sample
+      spec:
+        sonarRef:
+          name: sonar
+        name: sonarqualityprofile-sample
+        language: go
+        default: true
+        rules:
+          go:S1151:
+            severity: 'MAJOR'
+            params: 'max="6"'
+    - apiVersion: edp.epam.com/v1alpha1
+      kind: SonarUser
+      metadata:
+        name: sonaruser-sample
+      spec:
+        secret: sonaruser-secret
+        login: sonaruser
+        name: sonar user
+        email: sonaruser@mail.com
+        groups:
+          - sonar-administrators
+        permissions:
+          - scan
+        sonarRef:
+          name: sonar
+
   artifacthub.io/links: |
     - name: EDP Documentation
       url: https://epam.github.io/edp-install/

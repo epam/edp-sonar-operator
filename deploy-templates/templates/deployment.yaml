@@ -27,7 +27,7 @@ spec:
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
           imagePullPolicy: "{{ .Values.imagePullPolicy }}"
           command:
-            - {{ .Values.name }}
+            - /manager
           securityContext:
             allowPrivilegeEscalation: false
           env:
@@ -35,18 +35,6 @@ spec:
               valueFrom:
                 fieldRef:
                   fieldPath: metadata.namespace
-            - name: POD_NAME
-              valueFrom:
-                fieldRef:
-                  fieldPath: metadata.name
-            - name: OPERATOR_NAME
-              value: "{{ .Values.name }}"
-            - name: PLATFORM_TYPE
-              value: "{{ .Values.global.platform }}"
-{{- if eq .Values.global.platform "openshift" }}
-            - name: DEPLOYMENT_TYPE
-              value: "{{ .Values.global.openshift.deploymentType }}"
-{{- end }}
         {{- if .Values.extraVolumeMounts }}
           volumeMounts:
           {{- if .Values.extraVolumeMounts }}

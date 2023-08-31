@@ -10,7 +10,7 @@ metadata:
   name: sonarqualityprofile-sample
 spec:
   sonarRef:
-    name: sonar-sample
+    name: sonar
   name: sonarqualityprofile-sample
   language: go
   default: true

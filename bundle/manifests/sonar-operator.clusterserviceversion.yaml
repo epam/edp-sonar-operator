@@ -1,0 +1,530 @@
+apiVersion: operators.coreos.com/v1alpha1
+kind: ClusterServiceVersion
+metadata:
+  annotations:
+    alm-examples: |-
+      [
+        {
+          "apiVersion": "edp.epam.com/v1alpha1",
+          "kind": "Sonar",
+          "metadata": {
+            "labels": {
+              "app.kubernetes.io/created-by": "sonar-operator",
+              "app.kubernetes.io/instance": "sonar-sample",
+              "app.kubernetes.io/managed-by": "kustomize",
+              "app.kubernetes.io/name": "sonar",
+              "app.kubernetes.io/part-of": "sonar-operator"
+            },
+            "name": "sonar-sample"
+          },
+          "spec": {
+            "defaultPermissionTemplate": "edp-default",
+            "secret": "sonar-secret",
+            "settings": [
+              {
+                "key": "sonar.global.exclusions",
+                "values": [
+                  "**/*.jsx",
+                  "**/*.tsx"
+                ]
+              },
+              {
+                "fieldValues": {
+                  "beginBlockRegexp": ".*",
+                  "endBlockRegexp": ".*"
+                },
+                "key": "sonar.issue.ignore.block"
+              },
+              {
+                "key": "sonar.dbcleaner.hoursBeforeKeepingOnlyOneSnapshotByDay",
+                "value": "20"
+              }
+            ],
+            "url": "https://example.com"
+          }
+        },
+        {
+          "apiVersion": "edp.epam.com/v1alpha1",
+          "kind": "SonarGroup",
+          "metadata": {
+            "labels": {
+              "app.kubernetes.io/created-by": "sonar-operator",
+              "app.kubernetes.io/instance": "sonargroup-sample",
+              "app.kubernetes.io/managed-by": "kustomize",
+              "app.kubernetes.io/name": "sonargroup",
+              "app.kubernetes.io/part-of": "sonar-operator"
+            },
+            "name": "sonargroup-sample"
+          },
+          "spec": {
+            "description": "Developers",
+            "name": "sonar-developers",
+            "sonarRef": {
+              "name": "sonar"
+            }
+          }
+        },
+        {
+          "apiVersion": "edp.epam.com/v1alpha1",
+          "kind": "SonarPermissionTemplate",
+          "metadata": {
+            "labels": {
+              "app.kubernetes.io/created-by": "sonar-operator",
+              "app.kubernetes.io/instance": "sonarpermissiontemplate-sample",
+              "app.kubernetes.io/managed-by": "kustomize",
+              "app.kubernetes.io/name": "sonarpermissiontemplate",
+              "app.kubernetes.io/part-of": "sonar-operator"
+            },
+            "name": "sonarpermissiontemplate-sample"
+          },
+          "spec": {
+            "default": true,
+            "description": "EDP permission templates",
+            "name": "edp-default",
+            "projectKeyPattern": ".+",
+            "sonarRef": {
+              "name": "sonar"
+            }
+          }
+        },
+        {
+          "apiVersion": "edp.epam.com/v1alpha1",
+          "kind": "SonarQualityGate",
+          "metadata": {
+            "labels": {
+              "app.kubernetes.io/created-by": "sonar-operator",
+              "app.kubernetes.io/instance": "sonarqualitygate-sample",
+              "app.kubernetes.io/managed-by": "kustomize",
+              "app.kubernetes.io/name": "sonarqualitygate",
+              "app.kubernetes.io/part-of": "sonar-operator"
+            },
+            "name": "sonarqualitygate-sample"
+          },
+          "spec": {
+            "conditions": {
+              "new_duplicated_lines_density": {
+                "error": "1",
+                "op": "GT"
+              }
+            },
+            "default": true,
+            "name": "sonarqualitygate-sample",
+            "sonarRef": {
+              "name": "sonar"
+            }
+          }
+        },
+        {
+          "apiVersion": "edp.epam.com/v1alpha1",
+          "kind": "SonarQualityProfile",
+          "metadata": {
+            "labels": {
+              "app.kubernetes.io/created-by": "sonar-operator",
+              "app.kubernetes.io/instance": "sonarqualityprofile-sample",
+              "app.kubernetes.io/managed-by": "kustomize",
+              "app.kubernetes.io/name": "sonarqualityprofile",
+              "app.kubernetes.io/part-of": "sonar-operator"
+            },
+            "name": "sonarqualityprofile-sample"
+          },
+          "spec": {
+            "default": true,
+            "language": "go",
+            "name": "sonarqualityprofile-sample",
+            "rules": {
+              "go:S1151": {
+                "params": "max=\"6\"",
+                "severity": "MAJOR"
+              }
+            },
+            "sonarRef": {
+              "name": "sonar"
+            }
+          }
+        },
+        {
+          "apiVersion": "edp.epam.com/v1alpha1",
+          "kind": "SonarUser",
+          "metadata": {
+            "labels": {
+              "app.kubernetes.io/created-by": "sonar-operator",
+              "app.kubernetes.io/instance": "sonaruser-sample",
+              "app.kubernetes.io/managed-by": "kustomize",
+              "app.kubernetes.io/name": "sonaruser",
+              "app.kubernetes.io/part-of": "sonar-operator"
+            },
+            "name": "sonaruser-sample"
+          },
+          "spec": {
+            "email": "sonaruser@mail.com",
+            "groups": [
+              "sonar-administrators"
+            ],
+            "login": "sonaruser",
+            "name": "sonar user",
+            "permissions": [
+              "scan"
+            ],
+            "secret": "sonaruser-secret",
+            "sonarRef": {
+              "name": "sonar"
+            }
+          }
+        }
+      ]
+    capabilities: Deep Insights
+    categories: Developer Tools
+    containerImage: docker.io/epamedp/sonar-operator:3.0.0
+    createdAt: "2023-09-01T09:47:45Z"
+    description: An Operator for managing Sonar entities (users, groups, permission
+      templates, etc) according to the created CRs.
+    operators.operatorframework.io/builder: operator-sdk-v1.31.0
+    operators.operatorframework.io/project_layout: go.kubebuilder.io/v3
+    repository: https://github.com/epam/edp-sonar-operator
+  name: sonar-operator.v3.0.0
+  namespace: placeholder
+spec:
+  apiservicedefinitions: {}
+  customresourcedefinitions:
+    owned:
+    - description: SonarGroup is the Schema for the sonar group API.
+      displayName: Sonar Group
+      kind: SonarGroup
+      name: sonargroups.edp.epam.com
+      version: v1alpha1
+    - description: SonarPermissionTemplate is the Schema for the sonar permission
+        template API.
+      displayName: Sonar Permission Template
+      kind: SonarPermissionTemplate
+      name: sonarpermissiontemplates.edp.epam.com
+      version: v1alpha1
+    - description: SonarQualityGate is the Schema for the sonarqualitygates API
+      displayName: Sonar Quality Gate
+      kind: SonarQualityGate
+      name: sonarqualitygates.edp.epam.com
+      version: v1alpha1
+    - description: SonarQualityProfile is the Schema for the sonarqualityprofiles
+        API
+      displayName: Sonar Quality Profile
+      kind: SonarQualityProfile
+      name: sonarqualityprofiles.edp.epam.com
+      version: v1alpha1
+    - description: Sonar is the Schema for the sonars API.
+      displayName: Sonar
+      kind: Sonar
+      name: sonars.edp.epam.com
+      version: v1alpha1
+    - description: SonarUser is the Schema for the sonarusers API
+      displayName: Sonar User
+      kind: SonarUser
+      name: sonarusers.edp.epam.com
+      version: v1alpha1
+  description: Sonar Operator is an operator that is responsible for establishing
+    a connection to provided SonarQube server, reconciling Sonar entities (users,
+    groups, permission templates, etc) according to the created CRs.
+  displayName: EDP Sonar Operator
+  icon:
+  - base64data: iVBORw0KGgoAAAANSUhEUgAAAEAAAABACAYAAACqaXHeAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAPxSURBVHhe7ZotjBRBEIXXIZFIJBJ5EolEIpFIJBJ3EolEIpFIJBKJRCKRZ6G+XCp5qcx0V8/s7vT03EtebvfSU9tdXf+7pwfsAy+Mb+9f7gfPjE/vX67CI+NP4z/jN+Nj4y7w0cimfxi5vaUbf2JEBrLgHyMW0T1+G33Tzi/G18ZWYAW3RpXFe/7fJdgYh70z6qadf40fjK1WcWPEAlwOloGrdQsO+Mb43agKcHKYd8aWm0QmynUZKPOlcTHYHPxk5Facr4zn9DUC4nvjlGu4IlqAYjk8z2Npi5UQNzNFPsiVhA8TmNaAzU8pgv+1xIjnxtVKiJvI8pfRFbI0wpMd1Kedn41ZmSjBZSxSQvzwJeSD10R4zD8qgvdZF8S91KKwsFVAIB+Oz5LPMf+pm5oiJollcDMt4Ma5+Sgvm+7OroQp8CGYLbedUchXY2sgxYSjbNwtk+6iEi5eMLEpMsZUQFNiQS2bIchS9qoMLCsjQ5XAM7y/CjB5TL9kGRyqpXDRVAeJNaTnGtgLa3mGYunqFeNcmoNsrKWMRWFRVsa/WePriWObgNvyTi6SQ2VTFi4R5eB6NWCRvv4iQTELFDFnEWwyYw1kCWJJfLYE5HonieVt2jewGW7NfVOZjfLIILPos7hTCQRBjyN8Ttb1LgY2FCM8RDHZqU+sF2rmjav5WmqbLsBhp6yBw2WgHSFyainSlcbatb3M2YDZY5Z+ECcWUjNV9W+ImZfciEO7wjfLClPgIBqtnUT9WkPEoTS48rr0jE6VWkv1i4OGyDfn5EC1So5b12KJTDEHlO2FGsG0O9BNxriAi9QsQYMcLAVTVXRz63wNsCm9UZgpZ0mxvr4U6JDjRRV/uwT+GZVQC4x6MF8/BwozXKC7OKDAEqI71FKkNkFwyYCmK3BTqgBYG56qKxDwusn5S6FdHeSG+X5gDriC1hYUTLuHf83mrOV7FKTru/b1DLhVrfpgLY9r01TrGncB7eqcpSaIW/d1pbS4K9DwqAJqQU6toKv6fw1i31BKjUNaAYeIg9dSKzykFcTUWCpp1QqIIaVqcleIWaE0Lte1XTZAS6A3C0tWoNXhECnRof4N56yAmYGvIX4MgxYr0MlRqZTeHaIVzPm4jsNqo/RdIVrBXPOjRRTN0lDQQQgFz1yjxJCEWqCUMXaJOFDNfsEyDKgOdRJUmgwPixgMr/bDiF4Qx2ebfh2+Bajx1Q2GGIW1Qn8/QONzOGjND6kRDoU4MaqN0IfDQxwwaFVYao6Ghf5y5JCBkN8AuQLgEIPQFsSCaKjeP4PYHh+uIqQHUAUcMhWqAiiODgdVwFDjryy0GMr+8HIo6AT4kApI4nT6DwAMKCLkP1o/AAAAAElFTkSuQmCC
+    mediatype: image/png
+  install:
+    spec:
+      deployments:
+      - label:
+          app.kubernetes.io/component: manager
+          app.kubernetes.io/created-by: sonar-operator
+          app.kubernetes.io/instance: controller-manager
+          app.kubernetes.io/managed-by: kustomize
+          app.kubernetes.io/name: deployment
+          app.kubernetes.io/part-of: sonar-operator
+          control-plane: controller-manager
+        name: sonar-operator-controller-manager
+        spec:
+          replicas: 1
+          selector:
+            matchLabels:
+              control-plane: controller-manager
+          strategy: {}
+          template:
+            metadata:
+              annotations:
+                kubectl.kubernetes.io/default-container: manager
+              labels:
+                control-plane: controller-manager
+            spec:
+              containers:
+              - args:
+                - --leader-elect
+                command:
+                - /manager
+                env:
+                - name: WATCH_NAMESPACE
+                  valueFrom:
+                    fieldRef:
+                      fieldPath: metadata.annotations['olm.targetNamespaces']
+                image: docker.io/epamedp/sonar-operator:3.0.0
+                livenessProbe:
+                  httpGet:
+                    path: /healthz
+                    port: 8081
+                  initialDelaySeconds: 15
+                  periodSeconds: 20
+                name: manager
+                readinessProbe:
+                  httpGet:
+                    path: /readyz
+                    port: 8081
+                  initialDelaySeconds: 5
+                  periodSeconds: 10
+                resources:
+                  limits:
+                    cpu: 500m
+                    memory: 128Mi
+                  requests:
+                    cpu: 10m
+                    memory: 64Mi
+                securityContext:
+                  allowPrivilegeEscalation: false
+                  capabilities:
+                    drop:
+                    - ALL
+              securityContext:
+                runAsNonRoot: true
+              serviceAccountName: sonar-operator-controller-manager
+              terminationGracePeriodSeconds: 10
+      permissions:
+      - rules:
+        - apiGroups:
+          - ""
+          resources:
+          - configmaps
+          verbs:
+          - get
+          - list
+          - watch
+          - create
+          - update
+          - patch
+          - delete
+        - apiGroups:
+          - coordination.k8s.io
+          resources:
+          - leases
+          verbs:
+          - get
+          - list
+          - watch
+          - create
+          - update
+          - patch
+          - delete
+        - apiGroups:
+          - ""
+          resources:
+          - events
+          verbs:
+          - create
+          - patch
+        - apiGroups:
+          - ""
+          resources:
+          - secrets
+          verbs:
+          - get
+          - list
+          - watch
+        - apiGroups:
+          - edp.epam.com
+          resources:
+          - sonargroups
+          verbs:
+          - create
+          - delete
+          - get
+          - list
+          - patch
+          - update
+          - watch
+        - apiGroups:
+          - edp.epam.com
+          resources:
+          - sonargroups/finalizers
+          verbs:
+          - update
+        - apiGroups:
+          - edp.epam.com
+          resources:
+          - sonargroups/status
+          verbs:
+          - get
+          - patch
+          - update
+        - apiGroups:
+          - edp.epam.com
+          resources:
+          - sonarpermissiontemplates
+          verbs:
+          - create
+          - delete
+          - get
+          - list
+          - patch
+          - update
+          - watch
+        - apiGroups:
+          - edp.epam.com
+          resources:
+          - sonarpermissiontemplates/finalizers
+          verbs:
+          - update
+        - apiGroups:
+          - edp.epam.com
+          resources:
+          - sonarpermissiontemplates/status
+          verbs:
+          - get
+          - patch
+          - update
+        - apiGroups:
+          - edp.epam.com
+          resources:
+          - sonarqualitygates
+          verbs:
+          - create
+          - delete
+          - get
+          - list
+          - patch
+          - update
+          - watch
+        - apiGroups:
+          - edp.epam.com
+          resources:
+          - sonarqualitygates/finalizers
+          verbs:
+          - update
+        - apiGroups:
+          - edp.epam.com
+          resources:
+          - sonarqualitygates/status
+          verbs:
+          - get
+          - patch
+          - update
+        - apiGroups:
+          - edp.epam.com
+          resources:
+          - sonarqualityprofiles
+          verbs:
+          - create
+          - delete
+          - get
+          - list
+          - patch
+          - update
+          - watch
+        - apiGroups:
+          - edp.epam.com
+          resources:
+          - sonarqualityprofiles/finalizers
+          verbs:
+          - update
+        - apiGroups:
+          - edp.epam.com
+          resources:
+          - sonarqualityprofiles/status
+          verbs:
+          - get
+          - patch
+          - update
+        - apiGroups:
+          - edp.epam.com
+          resources:
+          - sonars
+          verbs:
+          - create
+          - delete
+          - get
+          - list
+          - patch
+          - update
+          - watch
+        - apiGroups:
+          - edp.epam.com
+          resources:
+          - sonars/finalizers
+          verbs:
+          - update
+        - apiGroups:
+          - edp.epam.com
+          resources:
+          - sonars/status
+          verbs:
+          - get
+          - patch
+          - update
+        - apiGroups:
+          - edp.epam.com
+          resources:
+          - sonarusers
+          verbs:
+          - create
+          - delete
+          - get
+          - list
+          - patch
+          - update
+          - watch
+        - apiGroups:
+          - edp.epam.com
+          resources:
+          - sonarusers/finalizers
+          verbs:
+          - update
+        - apiGroups:
+          - edp.epam.com
+          resources:
+          - sonarusers/status
+          verbs:
+          - get
+          - patch
+          - update
+        serviceAccountName: sonar-operator-controller-manager
+    strategy: deployment
+  installModes:
+  - supported: true
+    type: OwnNamespace
+  - supported: true
+    type: SingleNamespace
+  - supported: false
+    type: MultiNamespace
+  - supported: false
+    type: AllNamespaces
+  keywords:
+  - quality
+  - analysis
+  - security
+  - inspection
+  - metrics
+  - code
+  - monitoring
+  - devops
+  - continuous
+  - static
+  - vulnerabilities
+  - technical
+  - metrics
+  - software
+  - automation
+  - edp
+  - operator
+  links:
+  - name: Sonar Operator
+    url: https://github.com/epam/edp-sonar-operator
+  maintainers:
+  - email: SupportEPMD-EDP@epam.com
+    name: epmd-edp
+  maturity: alpha
+  provider:
+    name: EPAM Delivery Platform
+    url: https://epam.github.io/edp-install/
+  version: 3.0.0

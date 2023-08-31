@@ -1,0 +1,98 @@
+apiVersion: operators.coreos.com/v1alpha1
+kind: ClusterServiceVersion
+metadata:
+  annotations:
+    alm-examples: '[]'
+    capabilities: Deep Insights
+    categories: Developer Tools
+    containerImage: docker.io/epamedp/sonar-operator:3.0.0
+    description: An Operator for managing Sonar entities (users, groups, permission
+      templates, etc) according to the created CRs.
+    repository: https://github.com/epam/edp-sonar-operator
+  name: sonar-operator.v0.0.0
+  namespace: placeholder
+spec:
+  apiservicedefinitions: {}
+  customresourcedefinitions:
+    owned:
+    - description: SonarGroup is the Schema for the sonar group API.
+      displayName: Sonar Group
+      kind: SonarGroup
+      name: sonargroups.edp.epam.com
+      version: v1alpha1
+    - description: SonarPermissionTemplate is the Schema for the sonar permission
+        template API.
+      displayName: Sonar Permission Template
+      kind: SonarPermissionTemplate
+      name: sonarpermissiontemplates.edp.epam.com
+      version: v1alpha1
+    - description: SonarQualityGate is the Schema for the sonarqualitygates API
+      displayName: Sonar Quality Gate
+      kind: SonarQualityGate
+      name: sonarqualitygates.edp.epam.com
+      version: v1alpha1
+    - description: SonarQualityProfile is the Schema for the sonarqualityprofiles
+        API
+      displayName: Sonar Quality Profile
+      kind: SonarQualityProfile
+      name: sonarqualityprofiles.edp.epam.com
+      version: v1alpha1
+    - description: Sonar is the Schema for the sonars API.
+      displayName: Sonar
+      kind: Sonar
+      name: sonars.edp.epam.com
+      version: v1alpha1
+    - description: SonarUser is the Schema for the sonarusers API
+      displayName: Sonar User
+      kind: SonarUser
+      name: sonarusers.edp.epam.com
+      version: v1alpha1
+  description: Sonar Operator is an operator that is responsible for establishing
+    a connection to provided SonarQube server, reconciling Sonar entities (users,
+    groups, permission templates, etc) according to the created CRs.
+  displayName: EDP Sonar Operator
+  icon:
+  - base64data: iVBORw0KGgoAAAANSUhEUgAAAEAAAABACAYAAACqaXHeAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAPxSURBVHhe7ZotjBRBEIXXIZFIJBJ5EolEIpFIJBJ3EolEIpFIJBKJRCKRZ6G+XCp5qcx0V8/s7vT03EtebvfSU9tdXf+7pwfsAy+Mb+9f7gfPjE/vX67CI+NP4z/jN+Nj4y7w0cimfxi5vaUbf2JEBrLgHyMW0T1+G33Tzi/G18ZWYAW3RpXFe/7fJdgYh70z6qadf40fjK1WcWPEAlwOloGrdQsO+Mb43agKcHKYd8aWm0QmynUZKPOlcTHYHPxk5Facr4zn9DUC4nvjlGu4IlqAYjk8z2Npi5UQNzNFPsiVhA8TmNaAzU8pgv+1xIjnxtVKiJvI8pfRFbI0wpMd1Kedn41ZmSjBZSxSQvzwJeSD10R4zD8qgvdZF8S91KKwsFVAIB+Oz5LPMf+pm5oiJollcDMt4Ma5+Sgvm+7OroQp8CGYLbedUchXY2sgxYSjbNwtk+6iEi5eMLEpMsZUQFNiQS2bIchS9qoMLCsjQ5XAM7y/CjB5TL9kGRyqpXDRVAeJNaTnGtgLa3mGYunqFeNcmoNsrKWMRWFRVsa/WePriWObgNvyTi6SQ2VTFi4R5eB6NWCRvv4iQTELFDFnEWwyYw1kCWJJfLYE5HonieVt2jewGW7NfVOZjfLIILPos7hTCQRBjyN8Ttb1LgY2FCM8RDHZqU+sF2rmjav5WmqbLsBhp6yBw2WgHSFyainSlcbatb3M2YDZY5Z+ECcWUjNV9W+ImZfciEO7wjfLClPgIBqtnUT9WkPEoTS48rr0jE6VWkv1i4OGyDfn5EC1So5b12KJTDEHlO2FGsG0O9BNxriAi9QsQYMcLAVTVXRz63wNsCm9UZgpZ0mxvr4U6JDjRRV/uwT+GZVQC4x6MF8/BwozXKC7OKDAEqI71FKkNkFwyYCmK3BTqgBYG56qKxDwusn5S6FdHeSG+X5gDriC1hYUTLuHf83mrOV7FKTru/b1DLhVrfpgLY9r01TrGncB7eqcpSaIW/d1pbS4K9DwqAJqQU6toKv6fw1i31BKjUNaAYeIg9dSKzykFcTUWCpp1QqIIaVqcleIWaE0Lte1XTZAS6A3C0tWoNXhECnRof4N56yAmYGvIX4MgxYr0MlRqZTeHaIVzPm4jsNqo/RdIVrBXPOjRRTN0lDQQQgFz1yjxJCEWqCUMXaJOFDNfsEyDKgOdRJUmgwPixgMr/bDiF4Qx2ebfh2+Bajx1Q2GGIW1Qn8/QONzOGjND6kRDoU4MaqN0IfDQxwwaFVYao6Ghf5y5JCBkN8AuQLgEIPQFsSCaKjeP4PYHh+uIqQHUAUcMhWqAiiODgdVwFDjryy0GMr+8HIo6AT4kApI4nT6DwAMKCLkP1o/AAAAAElFTkSuQmCC
+    mediatype: image/png
+  install:
+    spec:
+      deployments: null
+    strategy: ""
+  installModes:
+  - supported: true
+    type: OwnNamespace
+  - supported: true
+    type: SingleNamespace
+  - supported: false
+    type: MultiNamespace
+  - supported: false
+    type: AllNamespaces
+  keywords:
+  - quality
+  - analysis
+  - security
+  - inspection
+  - metrics
+  - code
+  - monitoring
+  - devops
+  - continuous
+  - static
+  - vulnerabilities
+  - technical
+  - metrics
+  - software
+  - automation
+  - edp
+  - operator
+  links:
+  - name: Sonar Operator
+    url: https://github.com/epam/edp-sonar-operator
+  maintainers:
+  - email: SupportEPMD-EDP@epam.com
+    name: epmd-edp
+  maturity: alpha
+  provider:
+    name: EPAM Delivery Platform
+    url: https://epam.github.io/edp-install/
+  version: 3.0.0

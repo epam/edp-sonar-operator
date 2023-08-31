@@ -1,7 +1,7 @@
 PACKAGE=github.com/epam/edp-common/pkg/config
 CURRENT_DIR=$(shell pwd)
 DIST_DIR=${CURRENT_DIR}/dist
-BIN_NAME=go-binary
+BIN_NAME=manager
 
 HOST_OS:=$(shell go env GOOS)
 HOST_ARCH:=$(shell go env GOARCH)
@@ -52,6 +52,12 @@ endif
 BUNDLE_METADATA_OPTS ?= $(BUNDLE_CHANNELS) $(BUNDLE_DEFAULT_CHANNEL)
 BUNDLE_METADATA_OPTS ?= $(BUNDLE_CHANNELS) $(BUNDLE_DEFAULT_CHANNEL)
 
+# Use kind cluster for testing
+START_KIND_CLUSTER?=true
+KIND_CLUSTER_NAME?="sonar-operator"
+KUBE_VERSION?=1.26
+KIND_CONFIG?=./hack/kind-$(KUBE_VERSION).yaml
+
 .DEFAULT_GOAL:=help
 # set default shell
 SHELL=/bin/bash -o pipefail -o errexit
@@ -91,7 +97,7 @@ lint: golangci-lint ## Run go lint
 
 .PHONY: build
 build: clean ## build operator's binary
-	CGO_ENABLED=0 GOOS=${HOST_OS} GOARCH=${HOST_ARCH} go build -v -ldflags '${LDFLAGS}' -o ${DIST_DIR}/${BIN_NAME} -gcflags '${GCFLAGS}' main.go
+	CGO_ENABLED=0 GOOS=${HOST_OS} GOARCH=${HOST_ARCH} go build -v -ldflags '${LDFLAGS}' -o ${DIST_DIR}/${BIN_NAME} -gcflags '${GCFLAGS}' .
 
 .PHONY: clean
 clean:  ## clean up
@@ -128,29 +134,6 @@ CRDOC = ${LOCALBIN}/crdoc
 .PHONY: crdoc
 crdoc: ## Download crdoc locally if necessary.
 	$(call go-get-tool,$(CRDOC),fybrik.io/crdoc,v0.6.1)
-
-.PHONY: gen-mocks
-gen-mocks: gen-platform-service-mock gen-sonar-client-mock gen-sonar-service-mock gen-k8s-clients-mock gen-openshift-clients-mock
-
-.PHONY: gen-platform-service-mock
-gen-platform-service-mock:
-	docker run -v `pwd`:/src -w /src vektra/mockery:v2.14 --case snake --name Service --dir ./pkg/service/platform --output mocks/platform --outpkg mock --exported --filename mock_service.go
-
-.PHONY: gen-sonar-service-mock
-gen-sonar-service-mock:
-	docker run -v `pwd`:/src -w /src vektra/mockery:v2.14 --case snake --name ServiceInterface --dir ./pkg/service/sonar --output mocks/service --outpkg mock --exported --filename sonar_service.go
-
-.PHONY: gen-sonar-client-mock
-gen-sonar-client-mock:
-	docker run -v `pwd`:/src -w /src vektra/mockery:v2.14 --case snake --name ClientInterface --dir ./pkg/service/sonar --output mocks/client --outpkg mock --exported --filename sonar_client.go
-
-.PHONY: gen-k8s-clients-mock
-gen-k8s-clients-mock:
-	docker run -v `pwd`:/src -w /src vektra/mockery:v2.14 --case snake --all --dir ./pkg/service/platform/kubernetes --output mocks/k8s --outpkg mock --exported
-
-.PHONY: gen-openshift-clients-mock
-gen-openshift-clients-mock:
-	docker run -v `pwd`:/src -w /src vektra/mockery:v2.14 --case snake --all --dir ./pkg/service/platform/openshift --output mocks/openshift --outpkg mock --exported
 
 CONTROLLER_GEN = ${LOCALBIN}/controller-gen
 .PHONY: controller-gen
@@ -211,3 +194,16 @@ ENVTEST=$(LOCALBIN)/setup-envtest
 envtest: $(ENVTEST) ## Download envtest-setup locally if necessary.
 $(ENVTEST): $(LOCALBIN)
 	$(call go-get-tool,$(ENVTEST),sigs.k8s.io/controller-runtime/tools/setup-envtest,latest)
+
+.PHONY: bundle
+bundle: manifests kustomize ## Generate bundle manifests and metadata, then validate generated files.
+	operator-sdk generate kustomize manifests -q
+	cd config/manager && $(KUSTOMIZE) edit set image controller=$(IMG)
+	$(KUSTOMIZE) build config/manifests | operator-sdk generate bundle $(BUNDLE_GEN_FLAGS)
+	operator-sdk bundle validate ./bundle
+
+.PHONY: start-kind
+start-kind:	## Start kind cluster
+ifeq (true,$(START_KIND_CLUSTER))
+	kind create cluster --name $(KIND_CLUSTER_NAME) --config $(KIND_CONFIG)
+endif
