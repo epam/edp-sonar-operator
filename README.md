@@ -9,7 +9,7 @@ Get acquainted with the Sonar Operator and the installation process as well as t
 
 ## Overview
 
-Sonar Operator is an EDP operator that is responsible for installing and configuring SonarQube.
+Sonar Operator is an EDP operator that is responsible for configuring SonarQube.
 
 _**NOTE:** Operator is platform-independent, that is why there is a unified instruction for deploying._
 
@@ -34,8 +34,7 @@ In order to install the EDP Sonar Operator, follow the steps below:
      ```bash
      helm search repo epamedp/sonar-operator -l
      NAME                    CHART VERSION   APP VERSION     DESCRIPTION
-     epamedp/sonar-operator  2.13.0          2.13.0          A Helm chart for EDP Sonar Operator
-     epamedp/sonar-operator  2.12.0          2.12.0          A Helm chart for EDP Sonar Operator
+     epamedp/sonar-operator  3.0.0           3.0.0           A Helm chart for EDP Sonar Operator
      ```
 
     _**NOTE:** It is highly recommended to use the latest released version._
@@ -44,13 +43,13 @@ In order to install the EDP Sonar Operator, follow the steps below:
 
     Full available chart parameters available in [deploy-templates/README.md](deploy-templates/README.md):
 
-4. Install operator in the <edp-project> namespace with the helm command; find below the installation command example:
+4. Install operator in the arbitrary (`sonar-operator`) namespace with the helm command; find below the installation command example:
 
     ```bash
-    helm install sonar-operator epamedp/sonar-operator --version <chart_version> --namespace <edp-project> --set name=sonar-operator --set global.edpName=<edp-project> --set global.platform=<platform_type> --set global.dnsWildCard=<cluster_DNS_wildcard>
+    helm install sonar-operator epamedp/sonar-operator --version <chart_version> --namespace sonar-operator
     ```
 
-5. Check the <edp-project> namespace that should contain operator deployment with your operator in a running status.
+5. Check the `sonar-operator` namespace that should contain operator deployment with your operator in a running status.
 
 ## Local Development
 
@@ -60,5 +59,4 @@ Development versions are also available, please refer to the [snapshot helm char
 
 ### Related Articles
 
-- [Architecture Scheme of Sonar Operator](docs/arch.md)
 - [Install EDP](https://epam.github.io/edp-install/operator-guide/install-edp/)
