@@ -58,6 +58,9 @@ KIND_CLUSTER_NAME?="sonar-operator"
 KUBE_VERSION?=1.26
 KIND_CONFIG?=./hack/kind-$(KUBE_VERSION).yaml
 
+E2E_IMAGE_REPOSITORY?="sonar-image"
+E2E_IMAGE_TAG?="latest"
+
 .DEFAULT_GOAL:=help
 # set default shell
 SHELL=/bin/bash -o pipefail -o errexit
@@ -82,6 +85,12 @@ test: fmt vet envtest
 	TEST_SONAR_USER=${TEST_SONAR_USER} \
 	TEST_SONAR_PASSWORD=${TEST_SONAR_PASSWORD} \
 	go test ./... -coverprofile=coverage.out `go list ./...`
+
+## Run e2e tests. Requires kind with running cluster and kuttl tool.
+e2e: build
+	docker build --no-cache -t ${E2E_IMAGE_REPOSITORY}:${E2E_IMAGE_TAG} .
+	kind load --name $(KIND_CLUSTER_NAME) docker-image ${E2E_IMAGE_REPOSITORY}:${E2E_IMAGE_TAG}
+	E2E_IMAGE_REPOSITORY=${E2E_IMAGE_REPOSITORY} E2E_IMAGE_TAG=${E2E_IMAGE_TAG} kubectl kuttl test
 
 .PHONY: fmt
 fmt:  ## Run go fmt

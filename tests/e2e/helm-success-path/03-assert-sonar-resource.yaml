@@ -1,0 +1,9 @@
+apiVersion: edp.epam.com/v1alpha1
+kind: Sonar
+metadata:
+  name: sonar
+spec:
+  secret: sonar-secret
+  url: http://sonar:9000
+status:
+  connected: true
