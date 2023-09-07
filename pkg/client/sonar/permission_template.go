@@ -129,53 +129,55 @@ func (sc *Client) GetPermissionTemplate(ctx context.Context, name string) (*Perm
 	return nil, NewHTTPError(http.StatusNotFound, fmt.Sprintf("permission template %s not found", name))
 }
 
-func (sc *Client) AddGroupToPermissionTemplate(ctx context.Context, templateID string,
-	permGroup *PermissionTemplateGroup,
-) error {
-	for _, perm := range permGroup.Permissions {
-		rsp, err := sc.startRequest(ctx).SetFormData(map[string]string{
-			templateIdName: templateID,
-			"groupName":    permGroup.GroupName,
-			"permission":   perm,
-		}).Post("/permissions/add_group_to_template")
+func (sc *Client) AddGroupToPermissionTemplate(ctx context.Context, templateID, groupName, permission string) error {
+	rsp, err := sc.startRequest(ctx).SetFormData(map[string]string{
+		templateIdName: templateID,
+		"groupName":    groupName,
+		"permission":   permission,
+	}).Post("/permissions/add_group_to_template")
 
-		if err = sc.checkError(rsp, err); err != nil {
-			return fmt.Errorf("failed to add group to permission template: %w", err)
-		}
+	if err = sc.checkError(rsp, err); err != nil {
+		return fmt.Errorf("failed to add group %s to permission template: %w", groupName, err)
 	}
 
 	return nil
 }
 
-func (sc *Client) GetPermissionTemplateGroups(ctx context.Context, templateID string) ([]PermissionTemplateGroup, error) {
+// GetPermissionTemplateGroups returns map where key is group name and value is list of permissions.
+// Warning: this is a sonar internal endpoint, which may be changed in future versions.
+func (sc *Client) GetPermissionTemplateGroups(ctx context.Context, templateID string) (map[string][]string, error) {
 	var response getPermissionGroupsResponse
 	rsp, err := sc.startRequest(ctx).
 		SetResult(&response).
-		SetQueryParam(templateIdName, templateID).
+		SetQueryParams(map[string]string{
+			"templateId": templateID,
+			"ps":         "100",
+		}).
 		Get("/permissions/template_groups")
 
 	if err = sc.checkError(rsp, err); err != nil {
 		return nil, fmt.Errorf("failed to get permission template groups: %w", err)
 	}
 
-	return response.Groups, nil
+	result := make(map[string][]string, len(response.Groups))
+	for _, g := range response.Groups {
+		result[g.GroupName] = g.Permissions
+	}
+
+	return result, nil
 }
 
-func (sc *Client) RemoveGroupFromPermissionTemplate(ctx context.Context, templateID string,
-	permGroup *PermissionTemplateGroup,
-) error {
-	for _, perm := range permGroup.Permissions {
-		rsp, err := sc.startRequest(ctx).
-			SetFormData(map[string]string{
-				templateIdName: templateID,
-				"groupName":    permGroup.GroupName,
-				"permission":   perm,
-			}).
-			Post("/permissions/remove_group_from_template")
+func (sc *Client) RemoveGroupFromPermissionTemplate(ctx context.Context, templateID, groupName, permission string) error {
+	rsp, err := sc.startRequest(ctx).
+		SetFormData(map[string]string{
+			templateIdName: templateID,
+			"groupName":    groupName,
+			"permission":   permission,
+		}).
+		Post("/permissions/remove_group_from_template")
 
-		if err = sc.checkError(rsp, err); err != nil {
-			return fmt.Errorf("failed to remove group from permission template: %w", err)
-		}
+	if err = sc.checkError(rsp, err); err != nil {
+		return fmt.Errorf("failed to remove group from permission template: %w", err)
 	}
 
 	return nil

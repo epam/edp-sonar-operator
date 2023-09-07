@@ -11,5 +11,7 @@ metadata:
 spec:
   name: "sonar-developers"
   description: "Developers"
+  permissions:
+    - "admin"
   sonarRef:
     name: sonar

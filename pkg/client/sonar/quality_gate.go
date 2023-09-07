@@ -113,10 +113,10 @@ func (sc *Client) SetAsDefaultQualityGate(ctx context.Context, name string) erro
 func (sc *Client) CreateQualityGateCondition(ctx context.Context, gate string, condition QualityGateCondition) error {
 	resp, err := sc.startRequest(ctx).
 		SetFormData(map[string]string{
-			nameField: gate,
-			"error":   condition.Error,
-			"metric":  condition.Metric,
-			"op":      condition.OP,
+			"gateName": gate,
+			"error":    condition.Error,
+			"metric":   condition.Metric,
+			"op":       condition.OP,
 		}).
 		Post("/qualitygates/create_condition")
 

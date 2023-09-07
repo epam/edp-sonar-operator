@@ -30,13 +30,13 @@ func (_m *ClientInterface) ActivateQualityProfileRule(ctx context.Context, profi
 	return r0
 }
 
-// AddGroupToPermissionTemplate provides a mock function with given fields: ctx, templateID, permGroup
-func (_m *ClientInterface) AddGroupToPermissionTemplate(ctx context.Context, templateID string, permGroup *sonar.PermissionTemplateGroup) error {
-	ret := _m.Called(ctx, templateID, permGroup)
+// AddGroupToPermissionTemplate provides a mock function with given fields: ctx, templateID, groupName, permission
+func (_m *ClientInterface) AddGroupToPermissionTemplate(ctx context.Context, templateID string, groupName string, permission string) error {
+	ret := _m.Called(ctx, templateID, groupName, permission)
 
 	var r0 error
-	if rf, ok := ret.Get(0).(func(context.Context, string, *sonar.PermissionTemplateGroup) error); ok {
-		r0 = rf(ctx, templateID, permGroup)
+	if rf, ok := ret.Get(0).(func(context.Context, string, string, string) error); ok {
+		r0 = rf(ctx, templateID, groupName, permission)
 	} else {
 		r0 = ret.Error(0)
 	}
@@ -443,19 +443,19 @@ func (_m *ClientInterface) GetPermissionTemplate(ctx context.Context, name strin
 }
 
 // GetPermissionTemplateGroups provides a mock function with given fields: ctx, templateID
-func (_m *ClientInterface) GetPermissionTemplateGroups(ctx context.Context, templateID string) ([]sonar.PermissionTemplateGroup, error) {
+func (_m *ClientInterface) GetPermissionTemplateGroups(ctx context.Context, templateID string) (map[string][]string, error) {
 	ret := _m.Called(ctx, templateID)
 
-	var r0 []sonar.PermissionTemplateGroup
+	var r0 map[string][]string
 	var r1 error
-	if rf, ok := ret.Get(0).(func(context.Context, string) ([]sonar.PermissionTemplateGroup, error)); ok {
+	if rf, ok := ret.Get(0).(func(context.Context, string) (map[string][]string, error)); ok {
 		return rf(ctx, templateID)
 	}
-	if rf, ok := ret.Get(0).(func(context.Context, string) []sonar.PermissionTemplateGroup); ok {
+	if rf, ok := ret.Get(0).(func(context.Context, string) map[string][]string); ok {
 		r0 = rf(ctx, templateID)
 	} else {
 		if ret.Get(0) != nil {
-			r0 = ret.Get(0).([]sonar.PermissionTemplateGroup)
+			r0 = ret.Get(0).(map[string][]string)
 		}
 	}
 
@@ -690,13 +690,13 @@ func (_m *ClientInterface) InstallPlugins(plugins []string) error {
 	return r0
 }
 
-// RemoveGroupFromPermissionTemplate provides a mock function with given fields: ctx, templateID, permGroup
-func (_m *ClientInterface) RemoveGroupFromPermissionTemplate(ctx context.Context, templateID string, permGroup *sonar.PermissionTemplateGroup) error {
-	ret := _m.Called(ctx, templateID, permGroup)
+// RemoveGroupFromPermissionTemplate provides a mock function with given fields: ctx, templateID, groupName, permission
+func (_m *ClientInterface) RemoveGroupFromPermissionTemplate(ctx context.Context, templateID string, groupName string, permission string) error {
+	ret := _m.Called(ctx, templateID, groupName, permission)
 
 	var r0 error
-	if rf, ok := ret.Get(0).(func(context.Context, string, *sonar.PermissionTemplateGroup) error); ok {
-		r0 = rf(ctx, templateID, permGroup)
+	if rf, ok := ret.Get(0).(func(context.Context, string, string, string) error); ok {
+		r0 = rf(ctx, templateID, groupName, permission)
 	} else {
 		r0 = ret.Error(0)
 	}

@@ -33,6 +33,12 @@ type SonarPermissionTemplateSpec struct {
 	// +kubebuilder:example="true"
 	Default bool `json:"default"`
 
+	// GroupsPermissions is a map of groups and permissions assigned to them.
+	// +nullable
+	// +optional
+	// +kubebuilder:example={sonar-users: {codeviewer, scan}}
+	GroupsPermissions map[string][]string `json:"groupsPermissions,omitempty"`
+
 	// SonarRef is a reference to Sonar custom resource.
 	// +required
 	SonarRef common.SonarRef `json:"sonarRef"`

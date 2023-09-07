@@ -3,6 +3,7 @@ package sonar
 import (
 	"context"
 	"net/http"
+	"regexp"
 	"testing"
 
 	"github.com/jarcoal/httpmock"
@@ -153,41 +154,34 @@ func TestClient_AddGroupToPermissionTemplate(t *testing.T) {
 
 	httpmock.RegisterResponder("POST", "/api/permissions/add_group_to_template",
 		httpmock.NewStringResponder(http.StatusOK, ""))
-	if err := sc.AddGroupToPermissionTemplate(context.Background(), "tpl1",
-		&PermissionTemplateGroup{GroupName: "test", Permissions: []string{"admin"}}); err != nil {
+	if err := sc.AddGroupToPermissionTemplate(context.Background(), "tpl1", "test", "admin"); err != nil {
 		t.Fatal(err)
 	}
 
 	httpmock.RegisterResponder("POST", "/api/permissions/add_group_to_template",
 		httpmock.NewStringResponder(http.StatusInternalServerError, "add fatal"))
 
-	err := sc.AddGroupToPermissionTemplate(context.Background(), "tpl1",
-		&PermissionTemplateGroup{GroupName: "test", Permissions: []string{"admin"}})
+	err := sc.AddGroupToPermissionTemplate(context.Background(), "tpl1", "test", "admin")
 
 	require.Error(t, err)
-
-	if err.Error() != "failed to add group to permission template: status: 500, body: add fatal" {
-		t.Fatalf("wrong error returned: %s", err.Error())
-	}
+	require.Contains(t, err.Error(), "add fatal")
 }
 
 func TestClient_GetPermissionTemplateGroups(t *testing.T) {
 	sc := initClient()
-	httpmock.RegisterResponder("GET", "/api/permissions/template_groups?templateId=tplid1",
+	httpmock.RegisterRegexpResponder("GET", regexp.MustCompile("/api/permissions/template_groups.*"),
 		httpmock.NewStringResponder(http.StatusOK, ""))
 	if _, err := sc.GetPermissionTemplateGroups(context.Background(), "tplid1"); err != nil {
 		t.Fatal(err)
 	}
 
-	httpmock.RegisterResponder("GET", "/api/permissions/template_groups?templateId=tplid1",
+	httpmock.RegisterRegexpResponder("GET", regexp.MustCompile("/api/permissions/template_groups.*"),
 		httpmock.NewStringResponder(http.StatusInternalServerError, "get template groups fatal"))
 
 	_, err := sc.GetPermissionTemplateGroups(context.Background(), "tplid1")
-	require.Error(t, err)
 
-	if err.Error() != "failed to get permission template groups: status: 500, body: get template groups fatal" {
-		t.Fatalf("wrong error returned: %s", err.Error())
-	}
+	require.Error(t, err)
+	require.Contains(t, err.Error(), "get template groups fatal")
 }
 
 func TestClient_RemoveGroupFromPermissionTemplate(t *testing.T) {
@@ -195,16 +189,14 @@ func TestClient_RemoveGroupFromPermissionTemplate(t *testing.T) {
 
 	httpmock.RegisterResponder("POST", "/api/permissions/remove_group_from_template",
 		httpmock.NewStringResponder(http.StatusOK, ""))
-	if err := sc.RemoveGroupFromPermissionTemplate(context.Background(), "tpl1",
-		&PermissionTemplateGroup{GroupName: "test1", Permissions: []string{"foo"}}); err != nil {
+	if err := sc.RemoveGroupFromPermissionTemplate(context.Background(), "tpl1", "test1", "foo"); err != nil {
 		t.Fatal(err)
 	}
 
 	httpmock.RegisterResponder("POST", "/api/permissions/remove_group_from_template",
 		httpmock.NewStringResponder(http.StatusInternalServerError, "remove fatal"))
 
-	err := sc.RemoveGroupFromPermissionTemplate(context.Background(), "tpl1",
-		&PermissionTemplateGroup{GroupName: "test1", Permissions: []string{"foo"}})
+	err := sc.RemoveGroupFromPermissionTemplate(context.Background(), "tpl1", "test1", "foo")
 
 	require.Error(t, err)
 

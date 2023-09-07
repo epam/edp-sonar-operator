@@ -46,15 +46,6 @@ spec:
                 example: sonar-users
                 maxLength: 255
                 type: string
-              permissionTemplates:
-                description: PermissionTemplates is a list of permissions templates
-                  assigned to group.
-                example:
-                - scan
-                items:
-                  type: string
-                nullable: true
-                type: array
               permissions:
                 description: Permissions is a list of permissions assigned to group.
                 example:

@@ -7,5 +7,10 @@ spec:
   description: "EDP permission templates"
   projectKeyPattern: ".+"
   default: true
+  groupsPermissions:
+      sonar-users:
+        - issueadmin
+      sonar-developers:
+        - scan
   sonarRef:
     name: sonar

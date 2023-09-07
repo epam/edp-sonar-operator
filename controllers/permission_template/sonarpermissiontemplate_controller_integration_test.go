@@ -26,6 +26,9 @@ var _ = Describe("PermissionTemplate controller", func() {
 				Description:       "test description",
 				ProjectKeyPattern: ".*.finance",
 				Default:           true,
+				GroupsPermissions: map[string][]string{
+					"sonar-developers": {"scan", "codeviewer"},
+				},
 				SonarRef: common.SonarRef{
 					Name: sonarName,
 				},

@@ -27,12 +27,6 @@ type SonarGroupSpec struct {
 	// +kubebuilder:example={admin, provisioning}
 	Permissions []string `json:"permissions,omitempty"`
 
-	// PermissionTemplates is a list of permissions templates assigned to group.
-	// +nullable
-	// +optional
-	// +kubebuilder:example={scan}
-	PermissionTemplates []string `json:"permissionTemplates,omitempty"`
-
 	// SonarRef is a reference to Sonar custom resource.
 	// +required
 	SonarRef common.SonarRef `json:"sonarRef"`

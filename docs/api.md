@@ -115,13 +115,6 @@ SonarGroupSpec defines the desired state of SonarGroup.
         </td>
         <td>false</td>
       </tr><tr>
-        <td><b>permissionTemplates</b></td>
-        <td>[]string</td>
-        <td>
-          PermissionTemplates is a list of permissions templates assigned to group.<br/>
-        </td>
-        <td>false</td>
-      </tr><tr>
         <td><b>permissions</b></td>
         <td>[]string</td>
         <td>
@@ -297,6 +290,13 @@ SonarPermissionTemplateSpec defines the desired state of SonarPermissionTemplate
         <td>string</td>
         <td>
           Description of sonar permission template.<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>groupsPermissions</b></td>
+        <td>map[string][]string</td>
+        <td>
+          GroupsPermissions is a map of groups and permissions assigned to them.<br/>
         </td>
         <td>false</td>
       </tr><tr>

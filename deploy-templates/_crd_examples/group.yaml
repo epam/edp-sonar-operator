@@ -7,3 +7,5 @@ spec:
   description: "Developers"
   sonarRef:
     name: sonar
+  permissions:
+    - "admin"

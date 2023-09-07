@@ -48,6 +48,19 @@ spec:
                 description: Description of sonar permission template.
                 example: Default permission template for new users
                 type: string
+              groupsPermissions:
+                additionalProperties:
+                  items:
+                    type: string
+                  type: array
+                description: GroupsPermissions is a map of groups and permissions
+                  assigned to them.
+                example:
+                  sonar-users:
+                  - codeviewer
+                  - scan
+                nullable: true
+                type: object
               name:
                 description: Name is a name of permission template. Name should be
                   unique across all permission templates. Do not edit this field after

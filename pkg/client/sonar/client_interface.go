@@ -48,9 +48,9 @@ type PermissionTemplateInterface interface {
 	UpdatePermissionTemplate(ctx context.Context, tpl *PermissionTemplate) error
 	DeletePermissionTemplate(ctx context.Context, id string) error
 	GetPermissionTemplate(ctx context.Context, name string) (*PermissionTemplate, error)
-	AddGroupToPermissionTemplate(ctx context.Context, templateID string, permGroup *PermissionTemplateGroup) error
-	GetPermissionTemplateGroups(ctx context.Context, templateID string) ([]PermissionTemplateGroup, error)
-	RemoveGroupFromPermissionTemplate(ctx context.Context, templateID string, permGroup *PermissionTemplateGroup) error
+	AddGroupToPermissionTemplate(ctx context.Context, templateID, groupName, permission string) error
+	GetPermissionTemplateGroups(ctx context.Context, templateID string) (map[string][]string, error)
+	RemoveGroupFromPermissionTemplate(ctx context.Context, templateID, groupName, permission string) error
 	SetDefaultPermissionTemplate(ctx context.Context, name string) error
 	GetUserPermissions(ctx context.Context, userLogin string) ([]string, error)
 	AddPermissionToUser(ctx context.Context, userLogin, permission string) error

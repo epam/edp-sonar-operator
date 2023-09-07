@@ -12,6 +12,7 @@ func MakeChain(sonarApiClient sonarApiClient) SonarPermissionTemplateHandler {
 	ch := &chain{}
 
 	ch.Use(NewCreatePermissionTemplate(sonarApiClient))
+	ch.Use(NewSyncPermissionTemplateGroups(sonarApiClient))
 
 	return ch
 }
