@@ -2,6 +2,18 @@
 ## [Unreleased]
 
 
+<a name="v3.1.0"></a>
+## [v3.1.0] - 2023-09-07
+### Features
+
+- Add groupsPermissions property to SonarPermissionTemplate ([#3](https://github.com/epam/edp-sonar-operator/issues/3))
+
+### Routine
+
+- Publish operator on OperatorHub ([#6](https://github.com/epam/edp-sonar-operator/issues/6))
+- Update current development version ([#6](https://github.com/epam/edp-sonar-operator/issues/6))
+
+
 <a name="v3.0.0"></a>
 ## [v3.0.0] - 2023-09-05
 ### Features
@@ -21,6 +33,7 @@
 <a name="v2.14.1"></a>
 ## [v2.14.1] - 2023-08-17
 
-[Unreleased]: https://github.com/epam/edp-sonar-operator/compare/v3.0.0...HEAD
+[Unreleased]: https://github.com/epam/edp-sonar-operator/compare/v3.1.0...HEAD
+[v3.1.0]: https://github.com/epam/edp-sonar-operator/compare/v3.0.0...v3.1.0
 [v3.0.0]: https://github.com/epam/edp-sonar-operator/compare/v2.14.1...v3.0.0
 [v2.14.1]: https://github.com/epam/edp-sonar-operator/compare/v2.14.0...v2.14.1
