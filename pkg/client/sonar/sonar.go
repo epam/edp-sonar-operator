@@ -3,6 +3,7 @@ package sonar
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net/url"
 	"reflect"
@@ -10,7 +11,6 @@ import (
 	"time"
 
 	"github.com/go-resty/resty/v2"
-	"github.com/pkg/errors"
 	"golang.org/x/text/cases"
 	"golang.org/x/text/language"
 	ctrl "sigs.k8s.io/controller-runtime"
@@ -103,7 +103,7 @@ func (sc *Client) ChangePassword(ctx context.Context, user string, oldPassword s
 
 	// make sure that Sonar is up and running
 	if systemHealthResponse.Health != "GREEN" {
-		return errors.Errorf("sonar is not in green state, current state - %s; %v", systemHealthResponse.Health, systemHealthResponse)
+		return fmt.Errorf("sonar is not in green state, current state - %s; %v", systemHealthResponse.Health, systemHealthResponse)
 	}
 
 	resp, err = sc.startRequest(ctx).
@@ -178,7 +178,7 @@ func (sc *Client) WaitForStatusIsUp(retryCount int, timeout time.Duration) error
 	}
 
 	if resp.IsError() {
-		return errors.New(fmt.Sprintf("checking Sonar status failed. Response - %s", resp.Status()))
+		return fmt.Errorf("checking Sonar status failed. Response - %s", resp.Status())
 	}
 
 	return nil
@@ -389,7 +389,7 @@ func (sc Client) checkProfileExist(requiredProfileName string) (exits bool, prof
 
 	err = json.Unmarshal(resp.Body(), &qualityProfilesSearchResponse)
 	if err != nil {
-		return false, "", false, errors.Wrap(err, string(resp.Body()))
+		return false, "", false, fmt.Errorf("%s: %w", resp.Body(), err)
 	}
 	if qualityProfilesSearchResponse.Profiles == nil {
 		return false, "", false, nil
@@ -621,7 +621,7 @@ func (sc Client) checkGeneralSetting(key string, valueToCheck string) (bool, err
 	var settingsValuesResponse SettingsValuesResponse
 	err = json.Unmarshal(resp.Body(), &settingsValuesResponse)
 	if err != nil {
-		return false, errors.Wrap(err, string(resp.Body()))
+		return false, fmt.Errorf("%s: %w", resp.Body(), err)
 	}
 
 	for _, v := range settingsValuesResponse.Settings {
