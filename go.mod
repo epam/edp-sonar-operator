@@ -1,6 +1,6 @@
 module github.com/epam/edp-sonar-operator
 
-go 1.19
+go 1.20
 
 require (
 	github.com/epam/edp-common v0.0.0-20230104131608-33d095012fe8
