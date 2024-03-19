@@ -17,7 +17,6 @@ _**NOTE:** Operator is platform-independent, that is why there is a unified inst
 
 1. Linux machine or Windows Subsystem for Linux instance with [Helm 3](https://helm.sh/docs/intro/install/) installed;
 2. Cluster admin access to the cluster;
-3. EDP project/namespace is deployed by following the [Install EDP](https://epam.github.io/edp-install/operator-guide/install-edp/) instruction.
 
 ## Installation
 
@@ -34,8 +33,8 @@ In order to install the EDP Sonar Operator, follow the steps below:
      ```bash
      helm search repo epamedp/sonar-operator -l
      NAME                    CHART VERSION   APP VERSION     DESCRIPTION
+     epamedp/sonar-operator  3.1.1           3.1.1           A Helm chart for EDP Sonar Operator
      epamedp/sonar-operator  3.1.0           3.1.0           A Helm chart for EDP Sonar Operator
-     epamedp/sonar-operator  3.0.0           3.0.0           A Helm chart for EDP Sonar Operator
      ```
 
     _**NOTE:** It is highly recommended to use the latest released version._
@@ -47,14 +46,14 @@ In order to install the EDP Sonar Operator, follow the steps below:
 4. Install operator in the arbitrary (`sonar-operator`) namespace with the helm command; find below the installation command example:
 
     ```bash
-    helm install sonar-operator epamedp/sonar-operator --version <chart_version> --namespace sonar-operator
+    helm install sonar-operator epamedp/sonar-operator --version <chart_version> --namespace sonar
     ```
 
-5. Check the `sonar-operator` namespace that should contain operator deployment with your operator in a running status.
+5. Check the `sonar` namespace that should contain operator deployment with your operator in a running status.
 
 ## Quick Start
 
-1. Insert newly created user credentials into Kubernetes secret:
+1. Login into Sonarqube and create user. Attach permissions to user such as quality gates, profiles, user managment etc. Insert user credentials into Kubernetes secret.
 
     ```yaml
     apiVersion: v1
@@ -75,8 +74,8 @@ In order to install the EDP Sonar Operator, follow the steps below:
     metadata:
       name: sonar-sample
     spec:
-      url: https://sonar.example.com/ # Sonar URL
-      secret: sonar-access  # Secret name
+      url: https://sonar.example.com   # Sonar URL
+      secret: sonar-access             # Secret name
     ```
 
     Wait for the `.status` field with  `status.connected: true`
