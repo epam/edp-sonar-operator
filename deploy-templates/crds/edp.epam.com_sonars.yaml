@@ -3,7 +3,7 @@ apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   annotations:
-    controller-gen.kubebuilder.io/version: v0.12.1
+    controller-gen.kubebuilder.io/version: v0.15.0
   name: sonars.edp.epam.com
 spec:
   group: edp.epam.com
@@ -25,14 +25,19 @@ spec:
         description: Sonar is the Schema for the sonars API.
         properties:
           apiVersion:
-            description: 'APIVersion defines the versioned schema of this representation
-              of an object. Servers should convert recognized schemas to the latest
-              internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources'
+            description: |-
+              APIVersion defines the versioned schema of this representation of an object.
+              Servers should convert recognized schemas to the latest internal value, and
+              may reject unrecognized values.
+              More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources
             type: string
           kind:
-            description: 'Kind is a string value representing the REST resource this
-              object represents. Servers may infer this from the endpoint the client
-              submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds'
+            description: |-
+              Kind is a string value representing the REST resource this object represents.
+              Servers may infer this from the endpoint the client submits requests to.
+              Cannot be updated.
+              In CamelCase.
+              More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds
             type: string
           metadata:
             type: object
@@ -45,10 +50,10 @@ spec:
                 example: Default template for projects
                 type: string
               secret:
-                description: Secret is the name of the k8s object Secret related to
-                  sonar. Secret should contain a user field with a sonar username
-                  and a password field with a sonar password. Pass the token in the
-                  user field and leave the password field empty for token authentication.
+                description: |-
+                  Secret is the name of the k8s object Secret related to sonar.
+                  Secret should contain a user field with a sonar username and a password field with a sonar password.
+                  Pass the token in the user field and leave the password field empty for token authentication.
                 type: string
               settings:
                 description: Settings specify which settings should be configured.
@@ -103,16 +108,18 @@ spec:
                 description: Error represents error message if something went wrong.
                 type: string
               processedSettings:
-                description: ProcessedSettings shows which settings were processed.
-                  It is used to compare the current settings with the settings that
-                  were processed to unset the settings that are not in the current
-                  settings.
+                description: |-
+                  ProcessedSettings shows which settings were processed.
+                  It is used to compare the current settings with the settings that were processed
+                  to unset the settings that are not in the current settings.
                 type: string
               value:
-                description: 'Value is status of sonar instance. Possible values:
-                  GREEN: SonarQube is fully operational YELLOW: SonarQube is usable,
-                  but it needs attention in order to be fully operational RED: SonarQube
-                  is not operational'
+                description: |-
+                  Value is status of sonar instance.
+                  Possible values:
+                  GREEN: SonarQube is fully operational
+                  YELLOW: SonarQube is usable, but it needs attention in order to be fully operational
+                  RED: SonarQube is not operational
                 type: string
             type: object
         type: object

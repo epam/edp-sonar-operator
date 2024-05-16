@@ -3,7 +3,7 @@ apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   annotations:
-    controller-gen.kubebuilder.io/version: v0.12.1
+    controller-gen.kubebuilder.io/version: v0.15.0
   name: sonarqualityprofiles.edp.epam.com
 spec:
   group: edp.epam.com
@@ -21,14 +21,19 @@ spec:
           API
         properties:
           apiVersion:
-            description: 'APIVersion defines the versioned schema of this representation
-              of an object. Servers should convert recognized schemas to the latest
-              internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources'
+            description: |-
+              APIVersion defines the versioned schema of this representation of an object.
+              Servers should convert recognized schemas to the latest internal value, and
+              may reject unrecognized values.
+              More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources
             type: string
           kind:
-            description: 'Kind is a string value representing the REST resource this
-              object represents. Servers may infer this from the endpoint the client
-              submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds'
+            description: |-
+              Kind is a string value representing the REST resource this object represents.
+              Servers may infer this from the endpoint the client submits requests to.
+              Cannot be updated.
+              In CamelCase.
+              More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds
             type: string
           metadata:
             type: object
@@ -36,11 +41,11 @@ spec:
             description: SonarQualityProfileSpec defines the desired state of SonarQualityProfile
             properties:
               default:
-                description: Default is a flag to set quality profile as default.
-                  Only one quality profile can be default. If several quality profiles
-                  have default flag, the random one will be chosen. Default quality
-                  profile can't be deleted. You need to set another quality profile
-                  as default before.
+                description: |-
+                  Default is a flag to set quality profile as default.
+                  Only one quality profile can be default.
+                  If several quality profiles have default flag, the random one will be chosen.
+                  Default quality profile can't be deleted. You need to set another quality profile as default before.
                 example: "true"
                 type: boolean
               language:
@@ -48,9 +53,10 @@ spec:
                 example: go
                 type: string
               name:
-                description: Name is a name of quality profile. Name should be unique
-                  across all quality profiles. Don't change this field after creation
-                  otherwise quality profile will be recreated.
+                description: |-
+                  Name is a name of quality profile.
+                  Name should be unique across all quality profiles.
+                  Don't change this field after creation otherwise quality profile will be recreated.
                 example: My Quality Profile
                 maxLength: 100
                 type: string
@@ -73,8 +79,9 @@ spec:
                       example: MAJOR
                       type: string
                   type: object
-                description: Rules is a list of rules for quality profile. Key is
-                  a rule key, value is a rule.
+                description: |-
+                  Rules is a list of rules for quality profile.
+                  Key is a rule key, value is a rule.
                 example:
                   S5547:
                     params: key1=v1;key2=v2
