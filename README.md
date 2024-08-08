@@ -2,14 +2,14 @@
 
 # Sonar Operator
 
-| :heavy_exclamation_mark: Please refer to [EDP documentation](https://epam.github.io/edp-install/) to get the notion of the main concepts and guidelines. |
+| :heavy_exclamation_mark: Please refer to [KubeRocketCI documentation](https://docs.kuberocketci.io/) to get the notion of the main concepts and guidelines. |
 | --- |
 
 Get acquainted with the Sonar Operator and the installation process as well as the local development, and architecture scheme.
 
 ## Overview
 
-Sonar Operator is an EDP operator that is responsible for configuring SonarQube.
+Sonar Operator is a KubeRocketCI operator that is responsible for configuring SonarQube.
 
 _**NOTE:** Operator is platform-independent, that is why there is a unified instruction for deploying._
 
@@ -20,7 +20,7 @@ _**NOTE:** Operator is platform-independent, that is why there is a unified inst
 
 ## Installation
 
-In order to install the EDP Sonar Operator, follow the steps below:
+In order to install the KubeRocketCI Sonar Operator, follow the steps below:
 
 1. To add the Helm EPAMEDP Charts for local client, run "helm repo add":
 
@@ -33,8 +33,7 @@ In order to install the EDP Sonar Operator, follow the steps below:
      ```bash
      helm search repo epamedp/sonar-operator -l
      NAME                    CHART VERSION   APP VERSION     DESCRIPTION
-     epamedp/sonar-operator  3.1.1           3.1.1           A Helm chart for EDP Sonar Operator
-     epamedp/sonar-operator  3.1.0           3.1.0           A Helm chart for EDP Sonar Operator
+     epamedp/sonar-operator  3.1.1           3.1.1           A Helm chart for KRCI Sonar Operator
      ```
 
     _**NOTE:** It is highly recommended to use the latest released version._
@@ -118,10 +117,10 @@ In order to install the EDP Sonar Operator, follow the steps below:
 
 ## Local Development
 
-In order to develop the operator, first set up a local environment. For details, please refer to the [Local Development](https://epam.github.io/edp-install/developer-guide/local-development/) page.
+In order to develop the operator, first set up a local environment. For details, please refer to the [Local Development](https://docs.kuberocketci.io/docs/developer-guide/local-development) page.
 
 Development versions are also available, please refer to the [snapshot helm chart repository](https://epam.github.io/edp-helm-charts/snapshot/) page.
 
 ### Related Articles
 
-- [Install EDP](https://epam.github.io/edp-install/operator-guide/install-edp/)
+- [Install KubeRocketCI](https://docs.kuberocketci.io/docs/operator-guide/install-kuberocketci)

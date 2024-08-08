@@ -2,13 +2,13 @@
 
 ![Version: 3.2.0-SNAPSHOT](https://img.shields.io/badge/Version-3.2.0--SNAPSHOT-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 3.2.0-SNAPSHOT](https://img.shields.io/badge/AppVersion-3.2.0--SNAPSHOT-informational?style=flat-square)
 
-A Helm chart for EDP Sonar Operator
+A Helm chart for KubeRocketCI Sonar Operator
 
-**Homepage:** <https://epam.github.io/edp-install/>
+**Homepage:** <https://docs.kuberocketci.io/>
 
 ## Overview
 
-Sonar Operator is an EDP operator that is responsible for configuring SonarQube.
+Sonar Operator is a KubeRocketCI operator that is responsible for configuring SonarQube.
 
 _**NOTE:** Operator is platform-independent, that is why there is a unified instruction for deploying._
 
@@ -19,7 +19,7 @@ _**NOTE:** Operator is platform-independent, that is why there is a unified inst
 
 ## Installation
 
-In order to install the EDP Sonar Operator, follow the steps below:
+In order to install the KubeRocketCI Sonar Operator, follow the steps below:
 
 1. To add the Helm EPAMEDP Charts for local client, run "helm repo add":
 
@@ -32,8 +32,7 @@ In order to install the EDP Sonar Operator, follow the steps below:
      ```bash
      helm search repo epamedp/sonar-operator -l
      NAME                    CHART VERSION   APP VERSION     DESCRIPTION
-     epamedp/sonar-operator  3.1.1           3.1.1           A Helm chart for EDP Sonar Operator
-     epamedp/sonar-operator  3.1.0           3.1.0           A Helm chart for EDP Sonar Operator
+     epamedp/sonar-operator  3.1.1           3.1.1           A Helm chart for KubeRocketCI Sonar Operator
      ```
 
     _**NOTE:** It is highly recommended to use the latest released version._
@@ -117,19 +116,19 @@ In order to install the EDP Sonar Operator, follow the steps below:
 
 ## Local Development
 
-In order to develop the operator, first set up a local environment. For details, please refer to the [Local Development](https://epam.github.io/edp-install/developer-guide/local-development/) page.
+In order to develop the operator, first set up a local environment. For details, please refer to the [Local Development](https://docs.kuberocketci.io/docs/developer-guide/local-development) page.
 
 Development versions are also available, please refer to the [snapshot helm chart repository](https://epam.github.io/edp-helm-charts/snapshot/) page.
 
 ### Related Articles
 
-- [Install EDP](https://epam.github.io/edp-install/operator-guide/install-edp/)
+- [Install KubeRocketCI](https://docs.kuberocketci.io/docs/operator-guide/install-kuberocketci)
 
 ## Maintainers
 
 | Name | Email | Url |
 | ---- | ------ | --- |
-| epmd-edp | <SupportEPMD-EDP@epam.com> | <https://solutionshub.epam.com/solution/epam-delivery-platform> |
+| epmd-edp | <SupportEPMD-EDP@epam.com> | <https://solutionshub.epam.com/solution/kuberocketci> |
 | sergk |  | <https://github.com/SergK> |
 
 ## Source Code
@@ -144,8 +143,8 @@ Development versions are also available, please refer to the [snapshot helm char
 | annotations | object | `{}` |  |
 | extraVolumeMounts | list | `[]` | Additional volumeMounts to be added to the container |
 | extraVolumes | list | `[]` | Additional volumes to be added to the pod |
-| image.repository | string | `"epamedp/sonar-operator"` | EDP sonar-operator Docker image name. The released image can be found on [Dockerhub](https://hub.docker.com/r/epamedp/sonar-operator) |
-| image.tag | string | `nil` | EDP sonar-operator Docker image tag. The released image can be found on [Dockerhub](https://hub.docker.com/r/epamedp/sonar-operator/tags) |
+| image.repository | string | `"epamedp/sonar-operator"` | KubeRocketCI sonar-operator Docker image name. The released image can be found on [Dockerhub](https://hub.docker.com/r/epamedp/sonar-operator) |
+| image.tag | string | `nil` | KubeRocketCI sonar-operator Docker image tag. The released image can be found on [Dockerhub](https://hub.docker.com/r/epamedp/sonar-operator/tags) |
 | imagePullPolicy | string | `"IfNotPresent"` |  |
 | name | string | `"sonar-operator"` | component name |
 | nodeSelector | object | `{}` |  |
