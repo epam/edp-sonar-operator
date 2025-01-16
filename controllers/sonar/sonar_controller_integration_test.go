@@ -1,6 +1,7 @@
 package sonar
 
 import (
+	"github.com/epam/edp-sonar-operator/api/common"
 	"time"
 
 	. "github.com/onsi/ginkgo/v2"
@@ -30,8 +31,9 @@ var _ = Describe("Sonar controller", func() {
 				Namespace: namespace,
 			},
 			Data: map[string][]byte{
-				"user":     []byte(sonarUser),
-				"password": []byte(sonarPassword),
+				"user":      []byte(sonarUser),
+				"password":  []byte(sonarPassword),
+				"smtp-pass": []byte("smtp-password"),
 			},
 		}
 		Expect(k8sClient.Create(ctx, secret)).Should(Succeed())
@@ -60,24 +62,34 @@ var _ = Describe("Sonar controller", func() {
 						Key:    "sonar.global.exclusions",
 						Values: []string{"**/*.js", "**/*.ts", "**/*.tsx", "**/*.jsx"},
 					},
+					{
+						Key: "email.smtp_password.secured",
+						ValueRef: &common.SourceRef{
+							SecretKeyRef: &common.SecretKeySelector{
+								LocalObjectReference: v1.LocalObjectReference{
+									Name: secret.Name,
+								},
+								Key: "smtp-pass",
+							},
+						},
+					},
 				},
 			},
 		}
 		Expect(k8sClient.Create(ctx, newSonar)).Should(Succeed())
-		Eventually(func() bool {
+		Eventually(func(g Gomega) {
 			createdSonar := &sonarApi.Sonar{}
 			err := k8sClient.Get(ctx, types.NamespacedName{Name: sonarName, Namespace: namespace}, createdSonar)
-			if err != nil {
-				return false
-			}
+			g.Expect(err).ShouldNot(HaveOccurred())
 
-			processedSettings := "sonar.dbcleaner.hoursBeforeKeepingOnlyOneSnapshotByDay,sonar.global.exclusions,sonar.issue.ignore.block"
-
-			return createdSonar.Status.Connected &&
-				createdSonar.Status.Error == "" &&
-				createdSonar.Status.Value != "" &&
-				createdSonar.Status.ProcessedSettings == processedSettings
-
-		}, timeout, interval).Should(BeTrue())
+			g.Expect(createdSonar.Status.Connected).Should(BeTrue(), "Sonar should be connected")
+			g.Expect(createdSonar.Status.Error).Should(BeEmpty(), "Error should be empty")
+			g.Expect(createdSonar.Status.Value).ShouldNot(BeEmpty(), "Value should not be empty")
+			g.Expect(createdSonar.Status.ProcessedSettings).
+				Should(
+					Equal("email.smtp_password.secured,sonar.dbcleaner.hoursBeforeKeepingOnlyOneSnapshotByDay,sonar.global.exclusions,sonar.issue.ignore.block"),
+					"Processed settings should be equal",
+				)
+		}).WithTimeout(timeout).WithPolling(interval).Should(Succeed())
 	})
 })

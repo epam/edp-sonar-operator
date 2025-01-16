@@ -78,6 +78,47 @@ spec:
                       example: https://my-sonarqube-instance.com
                       maxLength: 4000
                       type: string
+                    valueRef:
+                      description: ValueRef is a reference to a key in a ConfigMap
+                        or a Secret.
+                      example:
+                        secretKeyRef:
+                          key: my-key
+                          name: my-secret
+                      properties:
+                        configMapKeyRef:
+                          description: Selects a key of a ConfigMap.
+                          properties:
+                            key:
+                              description: The key to select.
+                              type: string
+                            name:
+                              description: |-
+                                Name of the referent.
+                                More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+                                TODO: Add other useful fields. apiVersion, kind, uid?
+                              type: string
+                          required:
+                          - key
+                          type: object
+                          x-kubernetes-map-type: atomic
+                        secretKeyRef:
+                          description: Selects a key of a secret.
+                          properties:
+                            key:
+                              description: The key of the secret to select from.
+                              type: string
+                            name:
+                              description: |-
+                                Name of the referent.
+                                More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+                                TODO: Add other useful fields. apiVersion, kind, uid?
+                              type: string
+                          required:
+                          - key
+                          type: object
+                          x-kubernetes-map-type: atomic
+                      type: object
                     values:
                       description: Setting multi value. To set several values, the
                         parameter must be called once for each value.

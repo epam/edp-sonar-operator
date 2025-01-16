@@ -2,6 +2,8 @@ package v1alpha1
 
 import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+
+	"github.com/epam/edp-sonar-operator/api/common"
 )
 
 // SonarSpec defines the desired state of Sonar.
@@ -45,6 +47,11 @@ type SonarSetting struct {
 	// +optional
 	// +kubebuilder:example={beginBlockRegexp: ".*", endBlockRegexp: ".*"}
 	FieldValues map[string]string `json:"fieldValues,omitempty"`
+
+	// ValueRef is a reference to a key in a ConfigMap or a Secret.
+	// +optional
+	// +kubebuilder:example={secretKeyRef: {name: my-secret, key: my-key}}
+	ValueRef *common.SourceRef `json:"valueRef,omitempty"`
 }
 
 // SonarStatus defines the observed state of Sonar.

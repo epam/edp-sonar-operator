@@ -80,7 +80,7 @@ func (r *ReconcileSonar) Reconcile(ctx context.Context, request reconcile.Reques
 		return reconcile.Result{RequeueAfter: defaultRequeueTime}, err
 	}
 
-	if err = chain.MakeChain(sonarApiClient).ServeRequest(ctx, sonar); err != nil {
+	if err = chain.MakeChain(sonarApiClient, r.client).ServeRequest(ctx, sonar); err != nil {
 		sonar.Status.Error = err.Error()
 
 		if statusErr := r.updateSonarStatus(ctx, sonar, oldStatus); statusErr != nil {

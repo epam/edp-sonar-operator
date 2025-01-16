@@ -12,7 +12,7 @@ GIT_COMMIT=$(shell git rev-parse HEAD)
 GIT_TAG=$(shell if [ -z "`git status --porcelain`" ]; then git describe --exact-match --tags HEAD 2>/dev/null; fi)
 KUBECTL_VERSION=$(shell go list -m all | grep k8s.io/client-go| cut -d' ' -f2)
 ENVTEST ?= $(LOCALBIN)/setup-envtest
-ENVTEST_K8S_VERSION = 1.23.5
+ENVTEST_K8S_VERSION = 1.31.0
 
 override LDFLAGS += \
   -X ${PACKAGE}.version=${VERSION} \
@@ -204,7 +204,7 @@ ENVTEST=$(LOCALBIN)/setup-envtest
 .PHONY: envtest
 envtest: $(ENVTEST) ## Download envtest-setup locally if necessary.
 $(ENVTEST): $(LOCALBIN)
-	$(call go-get-tool,$(ENVTEST),sigs.k8s.io/controller-runtime/tools/setup-envtest,release-0.16)
+	$(call go-get-tool,$(ENVTEST),sigs.k8s.io/controller-runtime/tools/setup-envtest,release-0.19)
 
 .PHONY: bundle
 bundle: manifests kustomize ## Generate bundle manifests and metadata, then validate generated files.
