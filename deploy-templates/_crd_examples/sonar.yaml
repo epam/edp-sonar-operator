@@ -17,3 +17,16 @@ spec:
           endBlockRegexp: ".*"
     - key: sonar.dbcleaner.hoursBeforeKeepingOnlyOneSnapshotByDay
       value: "20"
+    - key: email.smtp_password.secured
+      valueRef:
+        secretKeyRef:
+          key: password
+          name: sonar-smtp
+
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: sonar-smtp
+data:
+  password: c29uYXItcGFzc3dvcmQ=

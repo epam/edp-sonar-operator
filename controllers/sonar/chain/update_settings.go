@@ -9,17 +9,20 @@ import (
 	"strings"
 
 	ctrl "sigs.k8s.io/controller-runtime"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	sonarApi "github.com/epam/edp-sonar-operator/api/v1alpha1"
 	"github.com/epam/edp-sonar-operator/pkg/client/sonar"
+	"github.com/epam/edp-sonar-operator/pkg/sourceref"
 )
 
 type UpdateSettings struct {
 	sonarApiClient sonar.Settings
+	k8sClient      client.Client
 }
 
-func NewUpdateSettings(sonarApiClient sonar.Settings) *UpdateSettings {
-	return &UpdateSettings{sonarApiClient: sonarApiClient}
+func NewUpdateSettings(sonarApiClient sonar.Settings, k8sClient client.Client) *UpdateSettings {
+	return &UpdateSettings{sonarApiClient: sonarApiClient, k8sClient: k8sClient}
 }
 
 func (h *UpdateSettings) ServeRequest(ctx context.Context, sonar *sonarApi.Sonar) error {
@@ -32,7 +35,12 @@ func (h *UpdateSettings) ServeRequest(ctx context.Context, sonar *sonarApi.Sonar
 	processedSettings := make([]string, 0, len(sonar.Spec.Settings))
 
 	for _, s := range sonar.Spec.Settings {
-		if err := h.sonarApiClient.SetSetting(ctx, makeSetting(s)); err != nil {
+		setting, err := h.makeSetting(ctx, s, sonar.Namespace)
+		if err != nil {
+			return err
+		}
+
+		if err = h.sonarApiClient.SetSetting(ctx, setting); err != nil {
 			return fmt.Errorf("failed to set setting %s: %w", s.Key, err)
 		}
 
@@ -77,7 +85,11 @@ func settingsKeysMapToSlice(m map[string]struct{}) []string {
 	return s
 }
 
-func makeSetting(setting sonarApi.SonarSetting) url.Values {
+func (h *UpdateSettings) makeSetting(
+	ctx context.Context,
+	setting sonarApi.SonarSetting,
+	namespace string,
+) (url.Values, error) {
 	if setting.FieldValues != nil {
 		// nolint:errchkjson //we can skip error for marshal map[string]string
 		fv, _ := json.Marshal(setting.FieldValues)
@@ -85,19 +97,32 @@ func makeSetting(setting sonarApi.SonarSetting) url.Values {
 		return url.Values{
 			"key":         []string{setting.Key},
 			"fieldValues": []string{string(fv)},
-		}
+		}, nil
 	}
 
 	if setting.Values != nil {
 		return url.Values{
 			"key":    []string{setting.Key},
 			"values": setting.Values,
-		}
+		}, nil
 	}
 
+	if setting.ValueRef != nil {
+		val, err := sourceref.GetValueFromSourceRef(ctx, setting.ValueRef, namespace, h.k8sClient)
+		if err != nil {
+			return url.Values{}, fmt.Errorf("failed to get sonar setting from source ref: %w", err)
+		}
+
+		return newSettingValue(setting.Key, val), nil
+	}
+
+	return newSettingValue(setting.Key, setting.Value), nil
+}
+
+func newSettingValue(key, value string) url.Values {
 	return url.Values{
-		"key":   []string{setting.Key},
-		"value": []string{setting.Value},
+		"key":   []string{key},
+		"value": []string{value},
 	}
 }
 

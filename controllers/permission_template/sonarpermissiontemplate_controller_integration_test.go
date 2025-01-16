@@ -27,7 +27,7 @@ var _ = Describe("PermissionTemplate controller", func() {
 				ProjectKeyPattern: ".*.finance",
 				Default:           true,
 				GroupsPermissions: map[string][]string{
-					"sonar-developers": {"scan", "codeviewer"},
+					"sonar-users": {"scan", "codeviewer"},
 				},
 				SonarRef: common.SonarRef{
 					Name: sonarName,
@@ -35,15 +35,14 @@ var _ = Describe("PermissionTemplate controller", func() {
 			},
 		}
 		Expect(k8sClient.Create(ctx, newPermissionTemplate)).Should(Succeed())
-		Eventually(func() bool {
+		Eventually(func(g Gomega) {
 			createdPermissionTemplate := &sonarApi.SonarPermissionTemplate{}
 			err := k8sClient.Get(ctx, types.NamespacedName{Name: permissionTemplateCRName, Namespace: namespace}, createdPermissionTemplate)
-			if err != nil {
-				return false
-			}
 
-			return createdPermissionTemplate.Status.Value == common.StatusCreated && createdPermissionTemplate.Status.Error == ""
-		}, timeout, interval).Should(BeTrue())
+			g.Expect(err).ShouldNot(HaveOccurred())
+			g.Expect(createdPermissionTemplate.Status.Error).Should(Equal(""), "Error should be empty")
+			g.Expect(createdPermissionTemplate.Status.Value).Should(Equal(common.StatusCreated), "Status should be created")
+		}).WithTimeout(timeout).WithPolling(interval).Should(Succeed())
 	})
 	It("Should delete PermissionTemplate object", func() {
 		By("By creating not default PermissionTemplate object")

@@ -5,6 +5,7 @@
 package v1alpha1
 
 import (
+	"github.com/epam/edp-sonar-operator/api/common"
 	runtime "k8s.io/apimachinery/pkg/runtime"
 )
 
@@ -506,6 +507,11 @@ func (in *SonarSetting) DeepCopyInto(out *SonarSetting) {
 		for key, val := range *in {
 			(*out)[key] = val
 		}
+	}
+	if in.ValueRef != nil {
+		in, out := &in.ValueRef, &out.ValueRef
+		*out = new(common.SourceRef)
+		(*in).DeepCopyInto(*out)
 	}
 }
 
