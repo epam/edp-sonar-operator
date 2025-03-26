@@ -146,6 +146,7 @@ Development versions are also available, please refer to the [snapshot helm char
 | image.repository | string | `"epamedp/sonar-operator"` | KubeRocketCI sonar-operator Docker image name. The released image can be found on [Dockerhub](https://hub.docker.com/r/epamedp/sonar-operator) |
 | image.tag | string | `nil` | KubeRocketCI sonar-operator Docker image tag. The released image can be found on [Dockerhub](https://hub.docker.com/r/epamedp/sonar-operator/tags) |
 | imagePullPolicy | string | `"IfNotPresent"` |  |
+| imagePullSecrets | list | `[]` | Optional array of imagePullSecrets containing private registry credentials # Ref: https://kubernetes.io/docs/tasks/configure-pod-container/pull-image-private-registry |
 | name | string | `"sonar-operator"` | component name |
 | nodeSelector | object | `{}` |  |
 | resources.limits.memory | string | `"192Mi"` |  |
