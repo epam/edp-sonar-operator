@@ -3,10 +3,7 @@ kind: SonarUser
 metadata:
   labels:
     app.kubernetes.io/name: sonaruser
-    app.kubernetes.io/instance: sonaruser-sample
-    app.kubernetes.io/part-of: sonar-operator
     app.kubernetes.io/managed-by: kustomize
-    app.kubernetes.io/created-by: sonar-operator
   name: sonaruser-sample
 spec:
   secret: sonaruser-secret

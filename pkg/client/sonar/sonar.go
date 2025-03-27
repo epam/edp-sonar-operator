@@ -266,7 +266,7 @@ func (sc Client) GetInstalledPlugins() ([]string, error) {
 		return nil, fmt.Errorf(cantUnmarshalMsg, resp.Body(), err)
 	}
 
-	var installedPlugins []string
+	installedPlugins := make([]string, 0, len(installedPluginsResponse.Plugins))
 
 	for index := range installedPluginsResponse.Plugins {
 		installedPlugins = append(installedPlugins, installedPluginsResponse.Plugins[index].Key)
@@ -323,6 +323,7 @@ func (sc Client) UploadProfile(profileName string, profilePath string) (string, 
 	if err != nil {
 		return "", fmt.Errorf("failed to send upload profile request!: %w", err)
 	}
+
 	if resp.IsError() {
 		errMsg := fmt.Sprintf("Uploading profile %s failed. Response - %s", profileName, resp.Status())
 		return "", errors.New(errMsg)
@@ -339,6 +340,7 @@ func (sc Client) UploadProfile(profileName string, profilePath string) (string, 
 	}
 
 	log.Info(fmt.Sprintf("Profile %s in Sonar from path %v has been uploaded and is set as default", profileName, profilePath))
+
 	return profileId, nil
 }
 
@@ -380,6 +382,7 @@ func (sc Client) checkProfileExist(requiredProfileName string) (exits bool, prof
 	if err != nil {
 		return false, "", false, fmt.Errorf("failed to get default quality profile!: %w", err)
 	}
+
 	if resp.IsError() {
 		errMsg := fmt.Sprintf("Request for quality profile failed! Response - %v", resp.StatusCode())
 		return false, "", false, errors.New(errMsg)
@@ -391,9 +394,11 @@ func (sc Client) checkProfileExist(requiredProfileName string) (exits bool, prof
 	if err != nil {
 		return false, "", false, fmt.Errorf("%s: %w", resp.Body(), err)
 	}
+
 	if qualityProfilesSearchResponse.Profiles == nil {
 		return false, "", false, nil
 	}
+
 	profiles := qualityProfilesSearchResponse.Profiles
 	for index := range profiles {
 		if profiles[index].Name == requiredProfileName {
@@ -414,15 +419,18 @@ func (sc Client) setDefaultProfile(language string, profileName string) error {
 	if err != nil {
 		return errors.New("failed to send request to set default quality profile!")
 	}
+
 	if resp.IsError() {
 		errMsg := fmt.Sprintf("Setting profile %s as default failed. Response - %s", profileName, resp.Status())
 		return errors.New(errMsg)
 	}
+
 	return nil
 }
 
 func (sc Client) AddPermissionsToGroup(groupName string, permissions string) error {
 	log.Info(fmt.Sprintf("Start adding permissions %v to group %v", permissions, groupName))
+
 	resp, err := sc.jsonTypeRequest().
 		SetQueryParams(map[string]string{
 			"groupName":  groupName,
@@ -432,12 +440,14 @@ func (sc Client) AddPermissionsToGroup(groupName string, permissions string) err
 	if err != nil {
 		return fmt.Errorf("failed to send request to add permissions to group!: %w", err)
 	}
+
 	if resp.IsError() {
 		errMsg := fmt.Sprintf("Adding permission %s to group %s failed. Response - %s", permissions, groupName, resp.Status())
 		return errors.New(errMsg)
 	}
 
 	log.Info(fmt.Sprintf("Permissions %v to group %v has been added", permissions, groupName))
+
 	return nil
 }
 
@@ -528,12 +538,14 @@ func (sc Client) checkWebhookExist(webhookName string) (bool, error) {
 	if err != nil {
 		return false, fmt.Errorf("failed to send request to list all webhooks!: %w", err)
 	}
+
 	if resp.IsError() {
 		errMsg := fmt.Sprintf("failed to list webhooks on server! Response code - %v", resp.StatusCode())
 		return false, errors.New(errMsg)
 	}
 
 	var raw WebhooksListResponse
+
 	err = json.Unmarshal(resp.Body(), &raw)
 	if err != nil {
 		return false, fmt.Errorf(cantUnmarshalMsg, resp.Body(), err)
@@ -619,6 +631,7 @@ func (sc Client) checkGeneralSetting(key string, valueToCheck string) (bool, err
 	}
 
 	var settingsValuesResponse SettingsValuesResponse
+
 	err = json.Unmarshal(resp.Body(), &settingsValuesResponse)
 	if err != nil {
 		return false, fmt.Errorf("%s: %w", resp.Body(), err)
@@ -657,6 +670,7 @@ func checkValue(value interface{}, valueToCheck string) bool {
 	default:
 		return false
 	}
+
 	return false
 }
 
@@ -668,10 +682,12 @@ func (sc Client) SetProjectsDefaultVisibility(visibility string) error {
 	if err != nil {
 		return err
 	}
+
 	if resp.IsError() {
 		errMsg := fmt.Sprintf("setting project visibility failed. Response - %s", resp.Status())
 		return errors.New(errMsg)
 	}
+
 	return nil
 }
 

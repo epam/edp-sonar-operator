@@ -67,6 +67,7 @@ func (sc *Client) CreateGroup(ctx context.Context, group *Group) error {
 	if err = sc.checkError(rsp, err); err != nil {
 		return fmt.Errorf("failed to create user group: %w", err)
 	}
+
 	group.ID = createGroupRsp.Group.ID
 
 	return nil
