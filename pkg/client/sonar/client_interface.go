@@ -6,8 +6,6 @@ import (
 )
 
 // ClientInterface is an interface for Sonar client.
-//
-//go:generate mockery --name ClientInterface --filename client_mock.go
 type ClientInterface interface {
 	ConfigureGeneralSettings(settings ...SettingRequest) error
 	InstallPlugins(plugins []string) error

@@ -63,10 +63,9 @@ type SonarQualityGateStatus struct {
 	Error string `json:"error,omitempty"`
 }
 
-//+kubebuilder:object:root=true
-//+kubebuilder:subresource:status
-
 // SonarQualityGate is the Schema for the sonarqualitygates API
+// +kubebuilder:object:root=true
+// +kubebuilder:subresource:status
 type SonarQualityGate struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`
@@ -79,9 +78,8 @@ func (in *SonarQualityGate) GetSonarRef() common.SonarRef {
 	return in.Spec.SonarRef
 }
 
-//+kubebuilder:object:root=true
-
 // SonarQualityGateList contains a list of SonarQualityGate
+// +kubebuilder:object:root=true
 type SonarQualityGateList struct {
 	metav1.TypeMeta `json:",inline"`
 	metav1.ListMeta `json:"metadata,omitempty"`

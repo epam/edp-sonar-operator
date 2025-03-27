@@ -66,10 +66,9 @@ type SonarQualityProfileStatus struct {
 	Error string `json:"error,omitempty"`
 }
 
-//+kubebuilder:object:root=true
-//+kubebuilder:subresource:status
-
 // SonarQualityProfile is the Schema for the sonarqualityprofiles API
+// +kubebuilder:object:root=true
+// +kubebuilder:subresource:status
 type SonarQualityProfile struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`
@@ -82,9 +81,8 @@ func (in *SonarQualityProfile) GetSonarRef() common.SonarRef {
 	return in.Spec.SonarRef
 }
 
-//+kubebuilder:object:root=true
-
 // SonarQualityProfileList contains a list of SonarQualityProfile
+// +kubebuilder:object:root=true
 type SonarQualityProfileList struct {
 	metav1.TypeMeta `json:",inline"`
 	metav1.ListMeta `json:"metadata,omitempty"`

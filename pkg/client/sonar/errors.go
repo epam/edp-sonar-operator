@@ -26,6 +26,7 @@ func (e HTTPError) Error() string {
 
 func IsHTTPErrorCode(err error, code int) bool {
 	var httpError HTTPError
+
 	ok := errors.As(err, &httpError)
 	if !ok {
 		return false

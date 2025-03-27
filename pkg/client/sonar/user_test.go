@@ -13,6 +13,7 @@ import (
 
 func TestSonarClient_CreateUser(t *testing.T) {
 	cs := initClient()
+
 	httpmock.RegisterResponder("POST", "/api/users/create",
 		httpmock.NewJsonResponderOrPanic(http.StatusOK, createUserResponse{
 			User: User{Login: "userlogin", Name: "username"},
@@ -25,6 +26,7 @@ func TestSonarClient_CreateUser(t *testing.T) {
 
 	httpmock.RegisterResponder("POST", "/api/users/create",
 		httpmock.NewStringResponder(http.StatusInternalServerError, "create fatal"))
+
 	err := cs.CreateUser(context.Background(), &u)
 	require.Error(t, err)
 
@@ -35,6 +37,7 @@ func TestSonarClient_CreateUser(t *testing.T) {
 
 func TestSonarClient_SearchUsers(t *testing.T) {
 	cs := initClient()
+
 	httpmock.RegisterRegexpResponder("GET", regexp.MustCompile("/api/users/search.*"),
 		httpmock.NewJsonResponderOrPanic(http.StatusOK, userSearchResponse{}))
 
@@ -56,6 +59,7 @@ func TestSonarClient_SearchUsers(t *testing.T) {
 
 func TestSonarClient_GetUser(t *testing.T) {
 	cs := initClient()
+
 	httpmock.RegisterRegexpResponder("GET", regexp.MustCompile("/api/users/search.*"),
 		httpmock.NewJsonResponderOrPanic(http.StatusOK, userSearchResponse{Users: []User{
 			{Name: "userName", Login: "loginName"},
@@ -70,8 +74,10 @@ func TestSonarClient_GetUser(t *testing.T) {
 		httpmock.NewJsonResponderOrPanic(http.StatusOK, userSearchResponse{Users: []User{
 			{Name: "userName", Login: "loginName"},
 		}}))
+
 	_, err := cs.GetUserByLogin(context.Background(), "userNameNotFound")
 	require.Error(t, err)
+
 	e := NewHTTPError(http.StatusNotFound, "")
 	require.ErrorAs(t, err, &e)
 
@@ -86,6 +92,7 @@ func TestSonarClient_GetUser(t *testing.T) {
 
 func TestSonarClient_SearchUserTokens(t *testing.T) {
 	cs := initClient()
+
 	httpmock.RegisterResponder("GET", "/api/user_tokens/search?login=name",
 		httpmock.NewJsonResponderOrPanic(http.StatusOK, userTokenSearchResponse{}))
 
@@ -106,6 +113,7 @@ func TestSonarClient_SearchUserTokens(t *testing.T) {
 
 func TestSonarClient_GetUserToken(t *testing.T) {
 	cs := initClient()
+
 	httpmock.RegisterResponder("GET", "/api/user_tokens/search?login=loginName",
 		httpmock.NewJsonResponderOrPanic(http.StatusOK, userTokenSearchResponse{UserTokens: []UserToken{
 			{Name: "tokenName", Login: "loginName"},
