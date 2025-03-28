@@ -4,10 +4,6 @@ kind: Role
 metadata:
   labels:
     app.kubernetes.io/name: role
-    app.kubernetes.io/instance: sonarqualitygate-editor-role
-    app.kubernetes.io/component: rbac
-    app.kubernetes.io/created-by: sonar-operator
-    app.kubernetes.io/part-of: sonar-operator
     app.kubernetes.io/managed-by: kustomize
   name: sonarqualitygate-editor-role
 rules:

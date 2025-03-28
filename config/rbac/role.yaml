@@ -17,135 +17,10 @@ rules:
   - edp.epam.com
   resources:
   - sonargroups
-  verbs:
-  - create
-  - delete
-  - get
-  - list
-  - patch
-  - update
-  - watch
-- apiGroups:
-  - edp.epam.com
-  resources:
-  - sonargroups/finalizers
-  verbs:
-  - update
-- apiGroups:
-  - edp.epam.com
-  resources:
-  - sonargroups/status
-  verbs:
-  - get
-  - patch
-  - update
-- apiGroups:
-  - edp.epam.com
-  resources:
   - sonarpermissiontemplates
-  verbs:
-  - create
-  - delete
-  - get
-  - list
-  - patch
-  - update
-  - watch
-- apiGroups:
-  - edp.epam.com
-  resources:
-  - sonarpermissiontemplates/finalizers
-  verbs:
-  - update
-- apiGroups:
-  - edp.epam.com
-  resources:
-  - sonarpermissiontemplates/status
-  verbs:
-  - get
-  - patch
-  - update
-- apiGroups:
-  - edp.epam.com
-  resources:
   - sonarqualitygates
-  verbs:
-  - create
-  - delete
-  - get
-  - list
-  - patch
-  - update
-  - watch
-- apiGroups:
-  - edp.epam.com
-  resources:
-  - sonarqualitygates/finalizers
-  verbs:
-  - update
-- apiGroups:
-  - edp.epam.com
-  resources:
-  - sonarqualitygates/status
-  verbs:
-  - get
-  - patch
-  - update
-- apiGroups:
-  - edp.epam.com
-  resources:
   - sonarqualityprofiles
-  verbs:
-  - create
-  - delete
-  - get
-  - list
-  - patch
-  - update
-  - watch
-- apiGroups:
-  - edp.epam.com
-  resources:
-  - sonarqualityprofiles/finalizers
-  verbs:
-  - update
-- apiGroups:
-  - edp.epam.com
-  resources:
-  - sonarqualityprofiles/status
-  verbs:
-  - get
-  - patch
-  - update
-- apiGroups:
-  - edp.epam.com
-  resources:
   - sonars
-  verbs:
-  - create
-  - delete
-  - get
-  - list
-  - patch
-  - update
-  - watch
-- apiGroups:
-  - edp.epam.com
-  resources:
-  - sonars/finalizers
-  verbs:
-  - update
-- apiGroups:
-  - edp.epam.com
-  resources:
-  - sonars/status
-  verbs:
-  - get
-  - patch
-  - update
-- apiGroups:
-  - edp.epam.com
-  resources:
   - sonarusers
   verbs:
   - create
@@ -158,12 +33,22 @@ rules:
 - apiGroups:
   - edp.epam.com
   resources:
+  - sonargroups/finalizers
+  - sonarpermissiontemplates/finalizers
+  - sonarqualitygates/finalizers
+  - sonarqualityprofiles/finalizers
+  - sonars/finalizers
   - sonarusers/finalizers
   verbs:
   - update
 - apiGroups:
   - edp.epam.com
   resources:
+  - sonargroups/status
+  - sonarpermissiontemplates/status
+  - sonarqualitygates/status
+  - sonarqualityprofiles/status
+  - sonars/status
   - sonarusers/status
   verbs:
   - get

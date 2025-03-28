@@ -62,11 +62,11 @@ type SonarUserStatus struct {
 	Error string `json:"error,omitempty"`
 }
 
-//+kubebuilder:object:root=true
-//+kubebuilder:subresource:status
-//+kubebuilder:storageversion
+// +kubebuilder:object:root=true
+// +kubebuilder:subresource:status
+// +kubebuilder:storageversion
 
-// SonarUser is the Schema for the sonarusers API
+// SonarUser is the Schema for the sonarusers API.
 type SonarUser struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`
@@ -79,7 +79,7 @@ func (in *SonarUser) GetSonarRef() common.SonarRef {
 	return in.Spec.SonarRef
 }
 
-//+kubebuilder:object:root=true
+// +kubebuilder:object:root=true
 
 // SonarUserList contains a list of SonarUser
 type SonarUserList struct {

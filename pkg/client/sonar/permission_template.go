@@ -99,6 +99,7 @@ func (sc *Client) DeletePermissionTemplate(ctx context.Context, id string) error
 
 func (sc *Client) searchPermissionTemplates(ctx context.Context, name string) (*searchPermissionTemplatesResponse, error) {
 	var result searchPermissionTemplatesResponse
+
 	rsp, err := sc.startRequest(ctx).SetQueryParam("q", name).SetResult(&result).
 		Get("/permissions/search_templates")
 	if err = sc.checkError(rsp, err); err != nil {
@@ -122,6 +123,7 @@ func (sc *Client) GetPermissionTemplate(ctx context.Context, name string) (*Perm
 					break
 				}
 			}
+
 			return &t, nil
 		}
 	}

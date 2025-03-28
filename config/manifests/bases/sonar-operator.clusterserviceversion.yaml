@@ -41,7 +41,7 @@ spec:
       kind: Sonar
       name: sonars.edp.epam.com
       version: v1alpha1
-    - description: SonarUser is the Schema for the sonarusers API
+    - description: SonarUser is the Schema for the sonarusers API.
       displayName: Sonar User
       kind: SonarUser
       name: sonarusers.edp.epam.com

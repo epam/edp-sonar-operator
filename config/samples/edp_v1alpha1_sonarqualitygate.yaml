@@ -3,10 +3,7 @@ kind: SonarQualityGate
 metadata:
   labels:
     app.kubernetes.io/name: sonarqualitygate
-    app.kubernetes.io/instance: sonarqualitygate-sample
-    app.kubernetes.io/part-of: sonar-operator
     app.kubernetes.io/managed-by: kustomize
-    app.kubernetes.io/created-by: sonar-operator
   name: sonarqualitygate-sample
 spec:
   sonarRef:

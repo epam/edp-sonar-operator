@@ -29,6 +29,7 @@ func TestSonarClient_CreateGroup(t *testing.T) {
 
 	httpmock.RegisterResponder("POST", "/api/user_groups/create",
 		httpmock.NewStringResponder(http.StatusInternalServerError, "create fatal"))
+
 	err := cs.CreateGroup(context.Background(), &gr)
 	require.Error(t, err)
 
@@ -69,6 +70,7 @@ func TestSonarClient_DeleteGroup(t *testing.T) {
 
 	httpmock.RegisterResponder("POST", "/api/user_groups/delete",
 		httpmock.NewStringResponder(http.StatusOK, ""))
+
 	if err := cs.DeleteGroup(context.Background(), "groupName"); err != nil {
 		t.Fatal(err)
 	}
@@ -125,6 +127,7 @@ func TestSonarClient_GetGroup(t *testing.T) {
 		httpmock.NewJsonResponderOrPanic(http.StatusOK, groupSearchResponse{Groups: []Group{
 			{Name: "groupName"},
 		}}))
+
 	_, err := cs.GetGroup(context.Background(), "groupNameNotFound")
 	require.Error(t, err)
 
@@ -134,8 +137,11 @@ func TestSonarClient_GetGroup(t *testing.T) {
 
 	httpmock.RegisterRegexpResponder("GET", regexp.MustCompile("/api/user_groups/search.*"),
 		httpmock.NewStringResponder(http.StatusInternalServerError, "search fatal"))
+
 	_, err = cs.GetGroup(context.Background(), "groupNameNotFound")
+
 	require.Error(t, err)
+
 	if err.Error() != "failed to search for groups: failed to search for groups: status: 500, body: search fatal" {
 		t.Fatalf("wrong error returned: %s", err.Error())
 	}

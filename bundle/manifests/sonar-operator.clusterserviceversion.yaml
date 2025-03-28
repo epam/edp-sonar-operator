@@ -9,11 +9,8 @@ metadata:
           "kind": "Sonar",
           "metadata": {
             "labels": {
-              "app.kubernetes.io/created-by": "sonar-operator",
-              "app.kubernetes.io/instance": "sonar-sample",
               "app.kubernetes.io/managed-by": "kustomize",
-              "app.kubernetes.io/name": "sonar",
-              "app.kubernetes.io/part-of": "sonar-operator"
+              "app.kubernetes.io/name": "sonar"
             },
             "name": "sonar-sample"
           },
@@ -48,11 +45,8 @@ metadata:
           "kind": "SonarGroup",
           "metadata": {
             "labels": {
-              "app.kubernetes.io/created-by": "sonar-operator",
-              "app.kubernetes.io/instance": "sonargroup-sample",
               "app.kubernetes.io/managed-by": "kustomize",
-              "app.kubernetes.io/name": "sonargroup",
-              "app.kubernetes.io/part-of": "sonar-operator"
+              "app.kubernetes.io/name": "sonargroup"
             },
             "name": "sonargroup-sample"
           },
@@ -72,11 +66,8 @@ metadata:
           "kind": "SonarPermissionTemplate",
           "metadata": {
             "labels": {
-              "app.kubernetes.io/created-by": "sonar-operator",
-              "app.kubernetes.io/instance": "sonarpermissiontemplate-sample",
               "app.kubernetes.io/managed-by": "kustomize",
-              "app.kubernetes.io/name": "sonarpermissiontemplate",
-              "app.kubernetes.io/part-of": "sonar-operator"
+              "app.kubernetes.io/name": "sonarpermissiontemplate"
             },
             "name": "sonarpermissiontemplate-sample"
           },
@@ -103,11 +94,8 @@ metadata:
           "kind": "SonarQualityGate",
           "metadata": {
             "labels": {
-              "app.kubernetes.io/created-by": "sonar-operator",
-              "app.kubernetes.io/instance": "sonarqualitygate-sample",
               "app.kubernetes.io/managed-by": "kustomize",
-              "app.kubernetes.io/name": "sonarqualitygate",
-              "app.kubernetes.io/part-of": "sonar-operator"
+              "app.kubernetes.io/name": "sonarqualitygate"
             },
             "name": "sonarqualitygate-sample"
           },
@@ -130,11 +118,8 @@ metadata:
           "kind": "SonarQualityProfile",
           "metadata": {
             "labels": {
-              "app.kubernetes.io/created-by": "sonar-operator",
-              "app.kubernetes.io/instance": "sonarqualityprofile-sample",
               "app.kubernetes.io/managed-by": "kustomize",
-              "app.kubernetes.io/name": "sonarqualityprofile",
-              "app.kubernetes.io/part-of": "sonar-operator"
+              "app.kubernetes.io/name": "sonarqualityprofile"
             },
             "name": "sonarqualityprofile-sample"
           },
@@ -158,11 +143,8 @@ metadata:
           "kind": "SonarUser",
           "metadata": {
             "labels": {
-              "app.kubernetes.io/created-by": "sonar-operator",
-              "app.kubernetes.io/instance": "sonaruser-sample",
               "app.kubernetes.io/managed-by": "kustomize",
-              "app.kubernetes.io/name": "sonaruser",
-              "app.kubernetes.io/part-of": "sonar-operator"
+              "app.kubernetes.io/name": "sonaruser"
             },
             "name": "sonaruser-sample"
           },
@@ -186,10 +168,10 @@ metadata:
     capabilities: Deep Insights
     categories: Developer Tools
     containerImage: docker.io/epamedp/sonar-operator:3.1.0
-    createdAt: "2023-09-08T12:53:57Z"
+    createdAt: "2025-03-27T12:42:10Z"
     description: An Operator for managing Sonar entities.
-    operators.operatorframework.io/builder: operator-sdk-v1.31.0
-    operators.operatorframework.io/project_layout: go.kubebuilder.io/v3
+    operators.operatorframework.io/builder: operator-sdk-v1.39.2
+    operators.operatorframework.io/project_layout: go.kubebuilder.io/v4
     repository: https://github.com/epam/edp-sonar-operator
   name: sonar-operator.v3.1.0
   namespace: placeholder
@@ -224,7 +206,7 @@ spec:
       kind: Sonar
       name: sonars.edp.epam.com
       version: v1alpha1
-    - description: SonarUser is the Schema for the sonarusers API
+    - description: SonarUser is the Schema for the sonarusers API.
       displayName: Sonar User
       kind: SonarUser
       name: sonarusers.edp.epam.com
@@ -239,14 +221,25 @@ spec:
     mediatype: image/png
   install:
     spec:
+      clusterPermissions:
+      - rules:
+        - apiGroups:
+          - authentication.k8s.io
+          resources:
+          - tokenreviews
+          verbs:
+          - create
+        - apiGroups:
+          - authorization.k8s.io
+          resources:
+          - subjectaccessreviews
+          verbs:
+          - create
+        serviceAccountName: sonar-operator-controller-manager
       deployments:
       - label:
-          app.kubernetes.io/component: manager
-          app.kubernetes.io/created-by: sonar-operator
-          app.kubernetes.io/instance: controller-manager
           app.kubernetes.io/managed-by: kustomize
           app.kubernetes.io/name: deployment
-          app.kubernetes.io/part-of: sonar-operator
           control-plane: controller-manager
         name: sonar-operator-controller-manager
         spec:
@@ -264,7 +257,9 @@ spec:
             spec:
               containers:
               - args:
+                - --metrics-bind-address=:8443
                 - --leader-elect
+                - --health-probe-bind-address=:8081
                 command:
                 - /manager
                 env:
@@ -347,135 +342,10 @@ spec:
           - edp.epam.com
           resources:
           - sonargroups
-          verbs:
-          - create
-          - delete
-          - get
-          - list
-          - patch
-          - update
-          - watch
-        - apiGroups:
-          - edp.epam.com
-          resources:
-          - sonargroups/finalizers
-          verbs:
-          - update
-        - apiGroups:
-          - edp.epam.com
-          resources:
-          - sonargroups/status
-          verbs:
-          - get
-          - patch
-          - update
-        - apiGroups:
-          - edp.epam.com
-          resources:
           - sonarpermissiontemplates
-          verbs:
-          - create
-          - delete
-          - get
-          - list
-          - patch
-          - update
-          - watch
-        - apiGroups:
-          - edp.epam.com
-          resources:
-          - sonarpermissiontemplates/finalizers
-          verbs:
-          - update
-        - apiGroups:
-          - edp.epam.com
-          resources:
-          - sonarpermissiontemplates/status
-          verbs:
-          - get
-          - patch
-          - update
-        - apiGroups:
-          - edp.epam.com
-          resources:
           - sonarqualitygates
-          verbs:
-          - create
-          - delete
-          - get
-          - list
-          - patch
-          - update
-          - watch
-        - apiGroups:
-          - edp.epam.com
-          resources:
-          - sonarqualitygates/finalizers
-          verbs:
-          - update
-        - apiGroups:
-          - edp.epam.com
-          resources:
-          - sonarqualitygates/status
-          verbs:
-          - get
-          - patch
-          - update
-        - apiGroups:
-          - edp.epam.com
-          resources:
           - sonarqualityprofiles
-          verbs:
-          - create
-          - delete
-          - get
-          - list
-          - patch
-          - update
-          - watch
-        - apiGroups:
-          - edp.epam.com
-          resources:
-          - sonarqualityprofiles/finalizers
-          verbs:
-          - update
-        - apiGroups:
-          - edp.epam.com
-          resources:
-          - sonarqualityprofiles/status
-          verbs:
-          - get
-          - patch
-          - update
-        - apiGroups:
-          - edp.epam.com
-          resources:
           - sonars
-          verbs:
-          - create
-          - delete
-          - get
-          - list
-          - patch
-          - update
-          - watch
-        - apiGroups:
-          - edp.epam.com
-          resources:
-          - sonars/finalizers
-          verbs:
-          - update
-        - apiGroups:
-          - edp.epam.com
-          resources:
-          - sonars/status
-          verbs:
-          - get
-          - patch
-          - update
-        - apiGroups:
-          - edp.epam.com
-          resources:
           - sonarusers
           verbs:
           - create
@@ -488,12 +358,22 @@ spec:
         - apiGroups:
           - edp.epam.com
           resources:
+          - sonargroups/finalizers
+          - sonarpermissiontemplates/finalizers
+          - sonarqualitygates/finalizers
+          - sonarqualityprofiles/finalizers
+          - sonars/finalizers
           - sonarusers/finalizers
           verbs:
           - update
         - apiGroups:
           - edp.epam.com
           resources:
+          - sonargroups/status
+          - sonarpermissiontemplates/status
+          - sonarqualitygates/status
+          - sonarqualityprofiles/status
+          - sonars/status
           - sonarusers/status
           verbs:
           - get

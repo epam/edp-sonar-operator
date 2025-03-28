@@ -10,7 +10,7 @@ concurrency:
   cancel-in-progress: true
 
 env:
-  GOLANG_VERSION: '1.22'
+  GOLANG_VERSION: '1.24'
 
 jobs:
 
@@ -107,14 +107,37 @@ jobs:
       - name: Make Build
         run: make build
 
-      - name: Make Test
-        run: make test
-
       - name: Make Lint
         run: make lint
+  tests:
+    needs: [build-and-lint]
+    runs-on: ubuntu-20.04
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Start SonarQube server
+        run: docker run -d --name sonarqube -p 9000:9000 sonarqube:lts-community
+
+      - name: Wait for SonarQube to be ready
+        run: |
+          echo "Waiting for SonarQube to start..."
+          until curl -s http://localhost:9000/api/system/status | grep -q "UP"; do
+            sleep 5
+          done
+
+      - name: Run integration tests
+        env:
+          TEST_SONAR_URL: http://localhost:9000
+          TEST_SONAR_USER: admin
+          TEST_SONAR_PASSWORD: admin
+        run: make test
+
+      - name: Stop and remove SonarQube server
+        run: docker stop sonarqube && docker rm sonarqube
 
   docker-lint:
-    needs: [build-and-lint]
+    needs: [tests]
     runs-on: ubuntu-20.04
     steps:
       - name: Checkout code
@@ -135,8 +158,8 @@ jobs:
        # All Kubernetes version in between expose the same APIs, hence the operator
        # should be compatible with them.
        kube-version:
-       - "1.27"
-       - "1.28"
+       - "1.30"
+       - "1.31"
 
     steps:
       - name: Check out code into the Go module directory

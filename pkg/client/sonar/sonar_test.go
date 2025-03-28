@@ -30,26 +30,30 @@ const (
 	id             = "AU-Tpxb--iU5OvuD2FLy"
 )
 
-func createFileWithData(path string) error {
+func createFileWithData() error {
 	fp, err := os.Create(path)
 	if err != nil {
 		return err
 	}
+
 	if _, err = fp.WriteString(name); err != nil {
 		return err
 	}
+
 	if err = fp.Close(); err != nil {
 		return err
 	}
+
 	return nil
 }
 
-func createProfileResp(profileName string, isDefault bool) QualityProfilesSearchResponse {
+func createProfileResp(isDefault bool) QualityProfilesSearchResponse {
 	respProfile := Profiles{
 		Key:       key,
 		IsDefault: isDefault,
-		Name:      profileName,
+		Name:      name,
 	}
+
 	return QualityProfilesSearchResponse{
 		Profiles: []Profiles{respProfile},
 	}
@@ -60,8 +64,10 @@ func CreateMockResty() *resty.Client {
 		"Content-Type": "application/json",
 		"Accept":       "application/json",
 	})
+
 	httpmock.DeactivateAndReset()
 	httpmock.ActivateNonDefault(restyClient.GetClient())
+
 	return restyClient
 }
 
@@ -75,6 +81,7 @@ func TestClient_Reboot_PostErr(t *testing.T) {
 
 func TestClient_Reboot_NotFoundStatus(t *testing.T) {
 	restClient := CreateMockResty()
+
 	httpmock.RegisterResponder(http.MethodPost, "https://domain/system/restart", httpmock.NewStringResponder(http.StatusNotFound, ""))
 
 	client := Client{resty: restClient}
@@ -85,6 +92,7 @@ func TestClient_Reboot_NotFoundStatus(t *testing.T) {
 
 func TestClient_Reboot(t *testing.T) {
 	restClient := CreateMockResty()
+
 	httpmock.RegisterResponder(http.MethodPost, "https://domain/system/restart", httpmock.NewStringResponder(http.StatusOK, ""))
 
 	client := Client{resty: restClient}
@@ -104,6 +112,7 @@ func TestClient_GetInstalledPlugins_GetErr(t *testing.T) {
 
 func TestClient_GetInstalledPlugins_UnmarshalErr(t *testing.T) {
 	restClient := CreateMockResty()
+
 	httpmock.RegisterResponder(http.MethodGet, "https://domain/plugins/installed", httpmock.NewStringResponder(http.StatusOK, ""))
 
 	client := Client{resty: restClient}
@@ -202,6 +211,7 @@ func TestClient_AddUserToGroup_PostErr(t *testing.T) {
 func TestClient_AddUserToGroup_BadStatus(t *testing.T) {
 	restClient := CreateMockResty()
 	client := Client{resty: restClient}
+
 	httpmock.RegisterResponder(http.MethodPost, "https://domain/user_groups/add_user?login=user&name=name", httpmock.NewStringResponder(http.StatusNotFound, ""))
 
 	err := client.AddUserToGroup(context.Background(), user, name)
@@ -212,6 +222,7 @@ func TestClient_AddUserToGroup_BadStatus(t *testing.T) {
 func TestClient_AddUserToGroup(t *testing.T) {
 	restClient := CreateMockResty()
 	client := Client{resty: restClient}
+
 	httpmock.RegisterResponder(http.MethodPost, "https://domain/user_groups/add_user?login=user&name=name", httpmock.NewStringResponder(http.StatusOK, ""))
 
 	err := client.AddUserToGroup(context.Background(), user, name)
@@ -229,6 +240,7 @@ func TestClient_AddPermissionsToUser_PostErr(t *testing.T) {
 func TestClient_AddPermissionsToUser_BadStatus(t *testing.T) {
 	restClient := CreateMockResty()
 	client := Client{resty: restClient}
+
 	httpmock.RegisterResponder(
 		http.MethodPost,
 		"https://domain/permissions/add_user",
@@ -243,6 +255,7 @@ func TestClient_AddPermissionsToUser_BadStatus(t *testing.T) {
 func TestClient_AddPermissionsToUser(t *testing.T) {
 	restClient := CreateMockResty()
 	client := Client{resty: restClient}
+
 	httpmock.RegisterResponder(http.MethodPost, "https://domain/permissions/add_user", httpmock.NewStringResponder(http.StatusOK, ""))
 
 	err := client.AddPermissionToUser(context.Background(), name, user)
@@ -260,6 +273,7 @@ func TestClient_AddPermissionsToGroup_PostErr(t *testing.T) {
 func TestClient_AddPermissionsToGroup_BadStatus(t *testing.T) {
 	restClient := CreateMockResty()
 	client := Client{resty: restClient}
+
 	httpmock.RegisterResponder(http.MethodPost, "https://domain/permissions/add_group?groupName=name&permission=user", httpmock.NewStringResponder(http.StatusNotFound, ""))
 
 	err := client.AddPermissionsToGroup(name, user)
@@ -270,6 +284,7 @@ func TestClient_AddPermissionsToGroup_BadStatus(t *testing.T) {
 func TestClient_AddPermissionsToGroup(t *testing.T) {
 	restClient := CreateMockResty()
 	client := Client{resty: restClient}
+
 	httpmock.RegisterResponder(http.MethodPost, "https://domain/permissions/add_group?groupName=name&permission=user", httpmock.NewStringResponder(http.StatusOK, ""))
 
 	err := client.AddPermissionsToGroup(name, user)
@@ -287,6 +302,7 @@ func TestClient_SetProjectsDefaultVisibility_PostErr(t *testing.T) {
 
 func TestClient_SetProjectsDefaultVisibility_BadStatus(t *testing.T) {
 	restClient := CreateMockResty()
+
 	httpmock.RegisterResponder(http.MethodPost, "https://domain/projects/update_default_visibility", httpmock.NewStringResponder(http.StatusNotFound, ""))
 
 	client := Client{resty: restClient}
@@ -297,6 +313,7 @@ func TestClient_SetProjectsDefaultVisibility_BadStatus(t *testing.T) {
 
 func TestClient_SetProjectsDefaultVisibility(t *testing.T) {
 	restClient := CreateMockResty()
+
 	httpmock.RegisterResponder(http.MethodPost, "https://domain/projects/update_default_visibility", httpmock.NewStringResponder(http.StatusOK, ""))
 
 	client := Client{resty: restClient}
@@ -379,6 +396,7 @@ func TestClient_GenerateUserToken_PostErr(t *testing.T) {
 
 func TestClient_GenerateUserToken_BadStatus(t *testing.T) {
 	restClient := CreateMockResty()
+
 	httpmock.RegisterResponder(http.MethodPost, "https://domain/user_tokens/generate?login=user&name=User", httpmock.NewStringResponder(http.StatusNotFound, ""))
 
 	client := Client{resty: restClient}
@@ -390,6 +408,7 @@ func TestClient_GenerateUserToken_BadStatus(t *testing.T) {
 
 func TestClient_GenerateUserToken_UnmarshallErr(t *testing.T) {
 	restClient := CreateMockResty()
+
 	httpmock.RegisterResponder(http.MethodPost, "https://domain/user_tokens/generate?login=user&name=User", httpmock.NewStringResponder(http.StatusOK, ""))
 
 	client := Client{resty: restClient}
@@ -425,12 +444,14 @@ func TestClient_UploadProfile_checkProfileExistErr(t *testing.T) {
 func TestClient_UploadProfile_AlreadyDefault(t *testing.T) {
 	restClient := CreateMockResty()
 	client := Client{resty: restClient}
-	respBody := createProfileResp(name, true)
+	respBody := createProfileResp(true)
 	response, err := httpmock.NewJsonResponder(http.StatusOK, respBody)
 	require.NoError(t, err)
 
 	httpmock.RegisterResponder(http.MethodGet, "https://domain/qualityprofiles/search?qualityProfile=name", response)
+
 	profile, err := client.UploadProfile(name, path)
+
 	assert.NoError(t, err)
 	assert.Equal(t, key, profile)
 }
@@ -438,12 +459,14 @@ func TestClient_UploadProfile_AlreadyDefault(t *testing.T) {
 func TestClient_UploadProfile_NotDefault_setDefaultProfileErr(t *testing.T) {
 	restClient := CreateMockResty()
 	client := Client{resty: restClient}
-	respBody := createProfileResp(name, false)
+	respBody := createProfileResp(false)
 	response, err := httpmock.NewJsonResponder(http.StatusOK, respBody)
 	require.NoError(t, err)
 
 	httpmock.RegisterResponder(http.MethodGet, "https://domain/qualityprofiles/search?qualityProfile=name", response)
+
 	profile, err := client.UploadProfile(name, path)
+
 	assert.Error(t, err)
 	assert.Contains(t, err.Error(), "failed to send request to set default quality profile")
 	assert.Empty(t, profile)
@@ -453,7 +476,7 @@ func TestClient_UploadProfile_NotDefault(t *testing.T) {
 	restClient := CreateMockResty()
 	client := Client{resty: restClient}
 
-	respBody := createProfileResp(name, false)
+	respBody := createProfileResp(false)
 	response, err := httpmock.NewJsonResponder(http.StatusOK, respBody)
 	require.NoError(t, err)
 
@@ -469,7 +492,7 @@ func TestClient_UploadProfile_FileNotExists(t *testing.T) {
 	restClient := CreateMockResty()
 	client := Client{resty: restClient}
 
-	respBody := createProfileResp(name, false)
+	respBody := createProfileResp(false)
 	response, err := httpmock.NewJsonResponder(http.StatusOK, respBody)
 	require.NoError(t, err)
 
@@ -485,12 +508,13 @@ func TestClient_UploadProfile_PostErr(t *testing.T) {
 	restClient := CreateMockResty()
 	client := Client{resty: restClient}
 
-	respBody := createProfileResp(name, false)
+	respBody := createProfileResp(false)
 	response, err := httpmock.NewJsonResponder(http.StatusOK, respBody)
 	require.NoError(t, err)
 
-	err = createFileWithData(path)
+	err = createFileWithData()
 	require.NoError(t, err)
+
 	defer func() {
 		if err = os.Remove(path); err != nil {
 			t.Fatal(err)
@@ -509,12 +533,13 @@ func TestClient_UploadProfile_PostBadStatus(t *testing.T) {
 	restClient := CreateMockResty()
 	client := Client{resty: restClient}
 
-	respBody := createProfileResp(name, false)
+	respBody := createProfileResp(false)
 	response, err := httpmock.NewJsonResponder(http.StatusOK, respBody)
 	require.NoError(t, err)
 
-	err = createFileWithData(path)
+	err = createFileWithData()
 	require.NoError(t, err)
+
 	defer func() {
 		if err = os.Remove(path); err != nil {
 			t.Fatal(err)
@@ -534,13 +559,15 @@ func TestClient_UploadProfile_checkProfileExistErr2(t *testing.T) {
 	restClient := CreateMockResty()
 	client := Client{resty: restClient}
 
-	respBody := createProfileResp(name, false)
+	respBody := createProfileResp(false)
 	resp, err := httpmock.NewJsonResponder(http.StatusOK, respBody)
 	response := resp.Once()
+
 	require.NoError(t, err)
 
-	err = createFileWithData(path)
+	err = createFileWithData()
 	require.NoError(t, err)
+
 	defer func() {
 		if err = os.Remove(path); err != nil {
 			t.Fatal(err)
@@ -560,12 +587,11 @@ func TestClient_UploadProfile_setDefaultProfileErr(t *testing.T) {
 	restClient := CreateMockResty()
 	client := Client{resty: restClient}
 
-	respBody := createProfileResp(name, false)
+	respBody := createProfileResp(false)
 	response, err := httpmock.NewJsonResponder(http.StatusOK, respBody)
 	require.NoError(t, err)
+	require.NoError(t, createFileWithData())
 
-	err = createFileWithData(path)
-	require.NoError(t, err)
 	defer func() {
 		if err = os.Remove(path); err != nil {
 			t.Fatal(err)
@@ -586,12 +612,13 @@ func TestClient_UploadProfile(t *testing.T) {
 	restClient := CreateMockResty()
 	client := Client{resty: restClient}
 
-	respBody := createProfileResp(name, false)
+	respBody := createProfileResp(false)
 	response, err := httpmock.NewJsonResponder(http.StatusOK, respBody)
 	require.NoError(t, err)
 
-	err = createFileWithData(path)
+	err = createFileWithData()
 	require.NoError(t, err)
+
 	defer func() {
 		if err = os.Remove(path); err != nil {
 			t.Fatal(err)

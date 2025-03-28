@@ -3,10 +3,6 @@ kind: RoleBinding
 metadata:
   labels:
     app.kubernetes.io/name: rolebinding
-    app.kubernetes.io/instance: manager-rolebinding
-    app.kubernetes.io/component: rbac
-    app.kubernetes.io/created-by: sonar-operator
-    app.kubernetes.io/part-of: sonar-operator
     app.kubernetes.io/managed-by: kustomize
   name: manager-rolebinding
 roleRef:

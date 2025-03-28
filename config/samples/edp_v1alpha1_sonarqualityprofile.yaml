@@ -3,10 +3,7 @@ kind: SonarQualityProfile
 metadata:
   labels:
     app.kubernetes.io/name: sonarqualityprofile
-    app.kubernetes.io/instance: sonarqualityprofile-sample
-    app.kubernetes.io/part-of: sonar-operator
     app.kubernetes.io/managed-by: kustomize
-    app.kubernetes.io/created-by: sonar-operator
   name: sonarqualityprofile-sample
 spec:
   sonarRef:
