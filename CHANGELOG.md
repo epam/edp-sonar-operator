@@ -2,6 +2,14 @@
 ## [Unreleased]
 
 
+<a name="v3.3.0"></a>
+## [v3.3.0] - 2025-04-02
+### Routine
+
+- Add ImagePullSecrets field support ([#34](https://github.com/epam/edp-sonar-operator/issues/34))
+- Update current development version ([#30](https://github.com/epam/edp-sonar-operator/issues/30))
+
+
 <a name="v3.2.0"></a>
 ## [v3.2.0] - 2025-01-20
 ### Features
@@ -68,7 +76,8 @@
 <a name="v2.14.1"></a>
 ## [v2.14.1] - 2023-08-17
 
-[Unreleased]: https://github.com/epam/edp-sonar-operator/compare/v3.2.0...HEAD
+[Unreleased]: https://github.com/epam/edp-sonar-operator/compare/v3.3.0...HEAD
+[v3.3.0]: https://github.com/epam/edp-sonar-operator/compare/v3.2.0...v3.3.0
 [v3.2.0]: https://github.com/epam/edp-sonar-operator/compare/v3.1.1...v3.2.0
 [v3.1.1]: https://github.com/epam/edp-sonar-operator/compare/v3.1.0...v3.1.1
 [v3.1.0]: https://github.com/epam/edp-sonar-operator/compare/v3.0.0...v3.1.0
