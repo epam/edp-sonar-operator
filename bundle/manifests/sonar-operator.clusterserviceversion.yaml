@@ -185,13 +185,13 @@ metadata:
       ]
     capabilities: Deep Insights
     categories: Developer Tools
-    containerImage: docker.io/epamedp/sonar-operator:3.1.0
-    createdAt: "2023-09-08T12:53:57Z"
+    containerImage: docker.io/epamedp/sonar-operator:3.2.0
+    createdAt: "2025-04-22T09:35:11Z"
     description: An Operator for managing Sonar entities.
-    operators.operatorframework.io/builder: operator-sdk-v1.31.0
-    operators.operatorframework.io/project_layout: go.kubebuilder.io/v3
+    operators.operatorframework.io/builder: operator-sdk-v1.39.2
+    operators.operatorframework.io/project_layout: go.kubebuilder.io/v4
     repository: https://github.com/epam/edp-sonar-operator
-  name: sonar-operator.v3.1.0
+  name: sonar-operator.v3.2.0
   namespace: placeholder
 spec:
   apiservicedefinitions: {}
@@ -272,7 +272,7 @@ spec:
                   valueFrom:
                     fieldRef:
                       fieldPath: metadata.annotations['olm.targetNamespaces']
-                image: docker.io/epamedp/sonar-operator:3.1.0
+                image: docker.io/epamedp/sonar-operator:3.2.0
                 livenessProbe:
                   httpGet:
                     path: /healthz
@@ -538,4 +538,4 @@ spec:
   provider:
     name: EPAM Delivery Platform
     url: https://epam.github.io/edp-install/
-  version: 3.1.0
+  version: 3.2.0
