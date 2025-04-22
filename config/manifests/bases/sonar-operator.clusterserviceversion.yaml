@@ -8,6 +8,7 @@ metadata:
     containerImage: docker.io/epamedp/sonar-operator:3.2.0
     description: An Operator for managing Sonar entities.
     repository: https://github.com/epam/edp-sonar-operator
+    support: KubeRocketCI
   name: sonar-operator.v3.2.0
   namespace: placeholder
 spec:
@@ -91,8 +92,9 @@ spec:
   maintainers:
   - email: SupportEPMD-EDP@epam.com
     name: epmd-edp
-  maturity: alpha
+  maturity: stable
+  minKubeVersion: 1.24.0
   provider:
-    name: EPAM Delivery Platform
-    url: https://epam.github.io/edp-install/
+    name: KubeRocketCI
+    url: https://docs.kuberocketci.io/
   version: 3.2.0
