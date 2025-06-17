@@ -149,7 +149,9 @@ Development versions are also available, please refer to the [snapshot helm char
 | imagePullSecrets | list | `[]` | Optional array of imagePullSecrets containing private registry credentials # Ref: https://kubernetes.io/docs/tasks/configure-pod-container/pull-image-private-registry |
 | name | string | `"sonar-operator"` | component name |
 | nodeSelector | object | `{}` |  |
+| podSecurityContext | object | `{"runAsNonRoot":true}` | Pod Security Context Ref: https://kubernetes.io/docs/tasks/configure-pod-container/security-context/ |
 | resources.limits.memory | string | `"192Mi"` |  |
 | resources.requests.cpu | string | `"50m"` |  |
 | resources.requests.memory | string | `"64Mi"` |  |
+| securityContext | object | `{"allowPrivilegeEscalation":false}` | Container Security Context Ref: https://kubernetes.io/docs/tasks/configure-pod-container/security-context/ |
 | tolerations | list | `[]` |  |
