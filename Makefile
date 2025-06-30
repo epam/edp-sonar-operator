@@ -275,3 +275,4 @@ bundle-push: ## Push the bundle image.
 .PHONY: docker-push
 docker-push: ## Push docker image with the manager.
 	docker push ${IMG}
+
