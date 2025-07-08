@@ -14,6 +14,7 @@ type ClientInterface interface {
 	UserInterface
 	GroupInterface
 	PermissionTemplateInterface
+	ProjectInterface
 	Settings
 	System
 	QualityGateClient
@@ -88,4 +89,11 @@ type QualityProfileClient interface {
 
 type RuleClient interface {
 	GetQualityProfileActiveRules(ctx context.Context, profileKey string) ([]Rule, error)
+}
+
+type ProjectInterface interface {
+	CreateProject(ctx context.Context, project *Project) error
+	GetProject(ctx context.Context, projectKey string) (*Project, error)
+	UpdateProject(ctx context.Context, project *Project) error
+	DeleteProject(ctx context.Context, projectKey string) error
 }

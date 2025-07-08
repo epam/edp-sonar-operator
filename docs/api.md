@@ -12,6 +12,8 @@ Resource Types:
 
 - [SonarPermissionTemplate](#sonarpermissiontemplate)
 
+- [SonarProject](#sonarproject)
+
 - [SonarQualityGate](#sonarqualitygate)
 
 - [SonarQualityProfile](#sonarqualityprofile)
@@ -381,6 +383,199 @@ SonarPermissionTemplateStatus defines the observed state of SonarPermissionTempl
         <td>string</td>
         <td>
           Value is a status of the permission template.<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+## SonarProject
+<sup><sup>[↩ Parent](#edpepamcomv1alpha1 )</sup></sup>
+
+
+
+
+
+
+SonarProject is the Schema for the sonarprojects API.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+      <td><b>apiVersion</b></td>
+      <td>string</td>
+      <td>edp.epam.com/v1alpha1</td>
+      <td>true</td>
+      </tr>
+      <tr>
+      <td><b>kind</b></td>
+      <td>string</td>
+      <td>SonarProject</td>
+      <td>true</td>
+      </tr>
+      <tr>
+      <td><b><a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.27/#objectmeta-v1-meta">metadata</a></b></td>
+      <td>object</td>
+      <td>Refer to the Kubernetes API documentation for the fields of the `metadata` field.</td>
+      <td>true</td>
+      </tr><tr>
+        <td><b><a href="#sonarprojectspec">spec</a></b></td>
+        <td>object</td>
+        <td>
+          SonarProjectSpec defines the desired state of SonarProject.<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b><a href="#sonarprojectstatus">status</a></b></td>
+        <td>object</td>
+        <td>
+          SonarProjectStatus defines the observed state of SonarProject.<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### SonarProject.spec
+<sup><sup>[↩ Parent](#sonarproject)</sup></sup>
+
+
+
+SonarProjectSpec defines the desired state of SonarProject.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>key</b></td>
+        <td>string</td>
+        <td>
+          Key is the SonarQube project key.
+This is a unique identifier for the project in SonarQube.
+Allowed characters are alphanumeric, '-' (dash), '_' (underscore), '.' (period) and ':' (colon), with at least one non-digit.<br/>
+          <br/>
+            <i>Validations</i>:<li>self == oldSelf: Value is immutable</li>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>name</b></td>
+        <td>string</td>
+        <td>
+          Name is the display name of the project.<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b><a href="#sonarprojectspecsonarref">sonarRef</a></b></td>
+        <td>object</td>
+        <td>
+          SonarRef is a reference to Sonar custom resource.<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>mainBranch</b></td>
+        <td>string</td>
+        <td>
+          MainBranch is the key of the main branch of the project.
+If not provided, the default main branch key will be used.<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>visibility</b></td>
+        <td>enum</td>
+        <td>
+          Visibility defines the visibility of the project.<br/>
+          <br/>
+            <i>Enum</i>: private, public<br/>
+            <i>Default</i>: public<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### SonarProject.spec.sonarRef
+<sup><sup>[↩ Parent](#sonarprojectspec)</sup></sup>
+
+
+
+SonarRef is a reference to Sonar custom resource.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>name</b></td>
+        <td>string</td>
+        <td>
+          Name specifies the name of the Sonar resource.<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>kind</b></td>
+        <td>string</td>
+        <td>
+          Kind specifies the kind of the Sonar resource.<br/>
+          <br/>
+            <i>Default</i>: Sonar<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### SonarProject.status
+<sup><sup>[↩ Parent](#sonarproject)</sup></sup>
+
+
+
+SonarProjectStatus defines the observed state of SonarProject.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>error</b></td>
+        <td>string</td>
+        <td>
+          Error is an error message if something went wrong.<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>projectKey</b></td>
+        <td>string</td>
+        <td>
+          ProjectKey is the actual project key in SonarQube.<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>value</b></td>
+        <td>string</td>
+        <td>
+          Value is a status of the project.<br/>
         </td>
         <td>false</td>
       </tr></tbody>

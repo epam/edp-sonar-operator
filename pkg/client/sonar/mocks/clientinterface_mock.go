@@ -477,6 +477,53 @@ func (_c *MockClientInterface_CreatePermissionTemplate_Call) RunAndReturn(run fu
 	return _c
 }
 
+// CreateProject provides a mock function with given fields: ctx, project
+func (_m *MockClientInterface) CreateProject(ctx context.Context, project *sonar.Project) error {
+	ret := _m.Called(ctx, project)
+
+	if len(ret) == 0 {
+		panic("no return value specified for CreateProject")
+	}
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func(context.Context, *sonar.Project) error); ok {
+		r0 = rf(ctx, project)
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	return r0
+}
+
+// MockClientInterface_CreateProject_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'CreateProject'
+type MockClientInterface_CreateProject_Call struct {
+	*mock.Call
+}
+
+// CreateProject is a helper method to define mock.On call
+//   - ctx context.Context
+//   - project *sonar.Project
+func (_e *MockClientInterface_Expecter) CreateProject(ctx interface{}, project interface{}) *MockClientInterface_CreateProject_Call {
+	return &MockClientInterface_CreateProject_Call{Call: _e.mock.On("CreateProject", ctx, project)}
+}
+
+func (_c *MockClientInterface_CreateProject_Call) Run(run func(ctx context.Context, project *sonar.Project)) *MockClientInterface_CreateProject_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run(args[0].(context.Context), args[1].(*sonar.Project))
+	})
+	return _c
+}
+
+func (_c *MockClientInterface_CreateProject_Call) Return(_a0 error) *MockClientInterface_CreateProject_Call {
+	_c.Call.Return(_a0)
+	return _c
+}
+
+func (_c *MockClientInterface_CreateProject_Call) RunAndReturn(run func(context.Context, *sonar.Project) error) *MockClientInterface_CreateProject_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
 // CreateQualityGate provides a mock function with given fields: ctx, name
 func (_m *MockClientInterface) CreateQualityGate(ctx context.Context, name string) (*sonar.QualityGate, error) {
 	ret := _m.Called(ctx, name)
@@ -876,6 +923,53 @@ func (_c *MockClientInterface_DeletePermissionTemplate_Call) Return(_a0 error) *
 }
 
 func (_c *MockClientInterface_DeletePermissionTemplate_Call) RunAndReturn(run func(context.Context, string) error) *MockClientInterface_DeletePermissionTemplate_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
+// DeleteProject provides a mock function with given fields: ctx, projectKey
+func (_m *MockClientInterface) DeleteProject(ctx context.Context, projectKey string) error {
+	ret := _m.Called(ctx, projectKey)
+
+	if len(ret) == 0 {
+		panic("no return value specified for DeleteProject")
+	}
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func(context.Context, string) error); ok {
+		r0 = rf(ctx, projectKey)
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	return r0
+}
+
+// MockClientInterface_DeleteProject_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'DeleteProject'
+type MockClientInterface_DeleteProject_Call struct {
+	*mock.Call
+}
+
+// DeleteProject is a helper method to define mock.On call
+//   - ctx context.Context
+//   - projectKey string
+func (_e *MockClientInterface_Expecter) DeleteProject(ctx interface{}, projectKey interface{}) *MockClientInterface_DeleteProject_Call {
+	return &MockClientInterface_DeleteProject_Call{Call: _e.mock.On("DeleteProject", ctx, projectKey)}
+}
+
+func (_c *MockClientInterface_DeleteProject_Call) Run(run func(ctx context.Context, projectKey string)) *MockClientInterface_DeleteProject_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run(args[0].(context.Context), args[1].(string))
+	})
+	return _c
+}
+
+func (_c *MockClientInterface_DeleteProject_Call) Return(_a0 error) *MockClientInterface_DeleteProject_Call {
+	_c.Call.Return(_a0)
+	return _c
+}
+
+func (_c *MockClientInterface_DeleteProject_Call) RunAndReturn(run func(context.Context, string) error) *MockClientInterface_DeleteProject_Call {
 	_c.Call.Return(run)
 	return _c
 }
@@ -1312,6 +1406,65 @@ func (_c *MockClientInterface_GetPermissionTemplateGroups_Call) Return(_a0 map[s
 }
 
 func (_c *MockClientInterface_GetPermissionTemplateGroups_Call) RunAndReturn(run func(context.Context, string) (map[string][]string, error)) *MockClientInterface_GetPermissionTemplateGroups_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
+// GetProject provides a mock function with given fields: ctx, projectKey
+func (_m *MockClientInterface) GetProject(ctx context.Context, projectKey string) (*sonar.Project, error) {
+	ret := _m.Called(ctx, projectKey)
+
+	if len(ret) == 0 {
+		panic("no return value specified for GetProject")
+	}
+
+	var r0 *sonar.Project
+	var r1 error
+	if rf, ok := ret.Get(0).(func(context.Context, string) (*sonar.Project, error)); ok {
+		return rf(ctx, projectKey)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context, string) *sonar.Project); ok {
+		r0 = rf(ctx, projectKey)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*sonar.Project)
+		}
+	}
+
+	if rf, ok := ret.Get(1).(func(context.Context, string) error); ok {
+		r1 = rf(ctx, projectKey)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// MockClientInterface_GetProject_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'GetProject'
+type MockClientInterface_GetProject_Call struct {
+	*mock.Call
+}
+
+// GetProject is a helper method to define mock.On call
+//   - ctx context.Context
+//   - projectKey string
+func (_e *MockClientInterface_Expecter) GetProject(ctx interface{}, projectKey interface{}) *MockClientInterface_GetProject_Call {
+	return &MockClientInterface_GetProject_Call{Call: _e.mock.On("GetProject", ctx, projectKey)}
+}
+
+func (_c *MockClientInterface_GetProject_Call) Run(run func(ctx context.Context, projectKey string)) *MockClientInterface_GetProject_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run(args[0].(context.Context), args[1].(string))
+	})
+	return _c
+}
+
+func (_c *MockClientInterface_GetProject_Call) Return(_a0 *sonar.Project, _a1 error) *MockClientInterface_GetProject_Call {
+	_c.Call.Return(_a0, _a1)
+	return _c
+}
+
+func (_c *MockClientInterface_GetProject_Call) RunAndReturn(run func(context.Context, string) (*sonar.Project, error)) *MockClientInterface_GetProject_Call {
 	_c.Call.Return(run)
 	return _c
 }
@@ -2400,6 +2553,53 @@ func (_c *MockClientInterface_UpdatePermissionTemplate_Call) Return(_a0 error) *
 }
 
 func (_c *MockClientInterface_UpdatePermissionTemplate_Call) RunAndReturn(run func(context.Context, *sonar.PermissionTemplate) error) *MockClientInterface_UpdatePermissionTemplate_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
+// UpdateProject provides a mock function with given fields: ctx, project
+func (_m *MockClientInterface) UpdateProject(ctx context.Context, project *sonar.Project) error {
+	ret := _m.Called(ctx, project)
+
+	if len(ret) == 0 {
+		panic("no return value specified for UpdateProject")
+	}
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func(context.Context, *sonar.Project) error); ok {
+		r0 = rf(ctx, project)
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	return r0
+}
+
+// MockClientInterface_UpdateProject_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'UpdateProject'
+type MockClientInterface_UpdateProject_Call struct {
+	*mock.Call
+}
+
+// UpdateProject is a helper method to define mock.On call
+//   - ctx context.Context
+//   - project *sonar.Project
+func (_e *MockClientInterface_Expecter) UpdateProject(ctx interface{}, project interface{}) *MockClientInterface_UpdateProject_Call {
+	return &MockClientInterface_UpdateProject_Call{Call: _e.mock.On("UpdateProject", ctx, project)}
+}
+
+func (_c *MockClientInterface_UpdateProject_Call) Run(run func(ctx context.Context, project *sonar.Project)) *MockClientInterface_UpdateProject_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run(args[0].(context.Context), args[1].(*sonar.Project))
+	})
+	return _c
+}
+
+func (_c *MockClientInterface_UpdateProject_Call) Return(_a0 error) *MockClientInterface_UpdateProject_Call {
+	_c.Call.Return(_a0)
+	return _c
+}
+
+func (_c *MockClientInterface_UpdateProject_Call) RunAndReturn(run func(context.Context, *sonar.Project) error) *MockClientInterface_UpdateProject_Call {
 	_c.Call.Return(run)
 	return _c
 }

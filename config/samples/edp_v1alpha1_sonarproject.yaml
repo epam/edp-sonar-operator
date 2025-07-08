@@ -1,0 +1,15 @@
+apiVersion: edp.epam.com/v1alpha1
+kind: SonarProject
+metadata:
+  labels:
+    app.kubernetes.io/name: sonar-operator
+    app.kubernetes.io/managed-by: kustomize
+  name: sample-project
+  namespace: sonar-operator-system
+spec:
+  key: "sample-project"
+  name: "Sample Project"
+  visibility: "private"
+  mainBranch: "develop"
+  sonarRef:
+    name: "sonar-sample"

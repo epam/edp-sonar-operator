@@ -6,4 +6,5 @@ resources:
 - edp_v1alpha1_sonarqualityprofile.yaml
 - edp_v1alpha1_sonargroup.yaml
 - edp_v1alpha1_sonarpermissiontemplate.yaml
+- edp_v1alpha1_sonarproject.yaml
 #+kubebuilder:scaffold:manifestskustomizesamples

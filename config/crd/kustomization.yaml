@@ -8,6 +8,7 @@ resources:
 - bases/edp.epam.com_sonarqualityprofiles.yaml
 - bases/edp.epam.com_sonargroups.yaml
 - bases/edp.epam.com_sonarpermissiontemplates.yaml
+- bases/edp.epam.com_sonarprojects.yaml
 #+kubebuilder:scaffold:crdkustomizeresource
 
 patches:

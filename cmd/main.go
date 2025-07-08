@@ -6,6 +6,7 @@ import (
 
 	"github.com/epam/edp-sonar-operator/internal/controller/group"
 	"github.com/epam/edp-sonar-operator/internal/controller/permission_template"
+	"github.com/epam/edp-sonar-operator/internal/controller/project"
 	"github.com/epam/edp-sonar-operator/internal/controller/qualitygate"
 	"github.com/epam/edp-sonar-operator/internal/controller/qualityprofile"
 	"github.com/epam/edp-sonar-operator/internal/controller/sonar"
@@ -31,11 +32,12 @@ import (
 
 	buildInfo "github.com/epam/edp-common/pkg/config"
 
+	metricsserver "sigs.k8s.io/controller-runtime/pkg/metrics/server"
+	ctrlwebhook "sigs.k8s.io/controller-runtime/pkg/webhook"
+
 	sonarApi "github.com/epam/edp-sonar-operator/api/v1alpha1"
 	sonarclient "github.com/epam/edp-sonar-operator/pkg/client/sonar"
 	"github.com/epam/edp-sonar-operator/pkg/helper"
-	metricsserver "sigs.k8s.io/controller-runtime/pkg/metrics/server"
-	ctrlwebhook "sigs.k8s.io/controller-runtime/pkg/webhook"
 )
 
 var (
@@ -208,6 +210,14 @@ func main() {
 		os.Exit(1)
 	}
 
+	if err = project.NewSonarProjectReconciler(
+		mgr.GetClient(),
+		mgr.GetScheme(),
+		apiClientProvider,
+	).SetupWithManager(mgr); err != nil {
+		setupLog.Error(err, "failed to setup sonar project reconcile")
+		os.Exit(1)
+	}
 	// +kubebuilder:scaffold:builder
 
 	if err = mgr.AddHealthzCheck("healthz", healthz.Ping); err != nil {
