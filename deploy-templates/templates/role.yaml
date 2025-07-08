@@ -170,3 +170,29 @@ rules:
   - get
   - patch
   - update
+- apiGroups:
+  - edp.epam.com
+  resources:
+  - sonarprojects
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - edp.epam.com
+  resources:
+  - sonarprojects/finalizers
+  verbs:
+  - update
+- apiGroups:
+  - edp.epam.com
+  resources:
+  - sonarprojects/status
+  verbs:
+  - get
+  - patch
+  - update

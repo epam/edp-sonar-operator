@@ -10,6 +10,7 @@ const (
 	watchNamespaceEnvVar   = "WATCH_NAMESPACE"
 	debugModeEnvVar        = "DEBUG_MODE"
 	inClusterNamespacePath = "/var/run/secrets/kubernetes.io/serviceaccount/namespace"
+	FinalizerName          = "edp.epam.com/finalizer"
 )
 
 // GetWatchNamespace returns the namespace the operator should be watching for changes.

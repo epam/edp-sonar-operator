@@ -57,6 +57,11 @@ annotations:
       name: sonaruser
       displayName: SonarUser
       description: Sonar user management
+    - kind: SonarProject
+      version: edp.epam.com/v1alpha1
+      name: sonarproject
+      displayName: SonarProject
+      description: Sonar project management
   artifacthub.io/crdsExamples: |
     - apiVersion: edp.epam.com/v1alpha1
       kind: Sonar
@@ -137,6 +142,16 @@ annotations:
           - sonar-administrators
         permissions:
           - scan
+        sonarRef:
+          name: sonar
+    - apiVersion: edp.epam.com/v1alpha1
+      kind: SonarProject
+      metadata:
+        name: sample-project
+      spec:
+        key: "sample-project"
+        name: "Sample Project"
+        visibility: "private"
         sonarRef:
           name: sonar
 

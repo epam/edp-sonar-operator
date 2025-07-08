@@ -1,0 +1,11 @@
+apiVersion: edp.epam.com/v1alpha1
+kind: SonarProject
+metadata:
+  name: sample-project
+spec:
+  key: "sample-project"
+  name: "Sample Project"
+  visibility: "public"
+  mainBranch: "develop"
+  sonarRef:
+    name: sonar

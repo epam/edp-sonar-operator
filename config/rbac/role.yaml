@@ -18,6 +18,7 @@ rules:
   resources:
   - sonargroups
   - sonarpermissiontemplates
+  - sonarprojects
   - sonarqualitygates
   - sonarqualityprofiles
   - sonars
@@ -35,6 +36,7 @@ rules:
   resources:
   - sonargroups/finalizers
   - sonarpermissiontemplates/finalizers
+  - sonarprojects/finalizers
   - sonarqualitygates/finalizers
   - sonarqualityprofiles/finalizers
   - sonars/finalizers
@@ -46,6 +48,7 @@ rules:
   resources:
   - sonargroups/status
   - sonarpermissiontemplates/status
+  - sonarprojects/status
   - sonarqualitygates/status
   - sonarqualityprofiles/status
   - sonars/status

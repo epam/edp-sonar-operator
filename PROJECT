@@ -65,4 +65,13 @@ resources:
   kind: SonarQualityProfile
   path: github.com/epam/edp-sonar-operator/api/v1alpha1
   version: v1alpha1
+- api:
+    crdVersion: v1
+    namespaced: true
+  controller: true
+  domain: epam.com
+  group: edp
+  kind: SonarProject
+  path: github.com/epam/edp-sonar-operator/api/v1alpha1
+  version: v1alpha1
 version: "3"

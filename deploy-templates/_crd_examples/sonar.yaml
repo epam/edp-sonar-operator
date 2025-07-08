@@ -23,6 +23,16 @@ spec:
           key: password
           name: sonar-smtp
 
+
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: sonar-admin
+data:
+  user: YWRtaW4=
+  password: YWRtaW4x
+
 ---
 apiVersion: v1
 kind: Secret
