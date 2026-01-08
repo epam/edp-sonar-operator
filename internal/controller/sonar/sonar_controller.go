@@ -27,12 +27,12 @@ type apiClientProvider interface {
 }
 
 func NewReconcileSonar(
-	client client.Client,
+	k8sClient client.Client,
 	scheme *runtime.Scheme,
 	apiClientProvider apiClientProvider,
 ) *ReconcileSonar {
 	return &ReconcileSonar{
-		client:            client,
+		client:            k8sClient,
 		scheme:            scheme,
 		apiClientProvider: apiClientProvider,
 	}

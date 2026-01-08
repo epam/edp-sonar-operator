@@ -50,14 +50,16 @@ func TestClient_UpdatePermissionTemplate(t *testing.T) {
 	httpmock.RegisterResponder("POST", "/api/permissions/update_template",
 		httpmock.NewStringResponder(http.StatusOK, ""))
 
-	if err := cs.UpdatePermissionTemplate(context.Background(), &PermissionTemplate{PermissionTemplateData: PermissionTemplateData{Name: "foo"}}); err != nil {
+	err := cs.UpdatePermissionTemplate(context.Background(),
+		&PermissionTemplate{PermissionTemplateData: PermissionTemplateData{Name: "foo"}})
+	if err != nil {
 		t.Fatal(err)
 	}
 
 	httpmock.RegisterResponder("POST", "/api/permissions/update_template",
 		httpmock.NewStringResponder(http.StatusInternalServerError, "update fatal"))
 
-	err := cs.UpdatePermissionTemplate(context.Background(), &PermissionTemplate{
+	err = cs.UpdatePermissionTemplate(context.Background(), &PermissionTemplate{
 		PermissionTemplateData: PermissionTemplateData{
 			Name: "foo",
 		},
@@ -154,7 +156,9 @@ func TestClient_GetPermissionTemplate(t *testing.T) {
 	_, err = cs.GetPermissionTemplate(context.Background(), "test")
 	require.Error(t, err, "no error returned")
 
-	if err.Error() != "failed to search for permission templates: failed to search for permission templates: status: 500, body: search fatal" {
+	expectedErr := "failed to search for permission templates: " +
+		"failed to search for permission templates: status: 500, body: search fatal"
+	if err.Error() != expectedErr {
 		t.Fatalf("wrong error returned: %s", err.Error())
 	}
 }

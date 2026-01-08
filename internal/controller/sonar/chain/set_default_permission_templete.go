@@ -18,17 +18,17 @@ func NewSetDefaultPermissionTemplate(sonarApiClient sonar.PermissionTemplateInte
 	return &SetDefaultPermissionTemplate{sonarApiClient: sonarApiClient}
 }
 
-func (h *SetDefaultPermissionTemplate) ServeRequest(ctx context.Context, sonar *sonarApi.Sonar) error {
+func (h *SetDefaultPermissionTemplate) ServeRequest(ctx context.Context, sonarCR *sonarApi.Sonar) error {
 	log := ctrl.LoggerFrom(ctx)
 	log.Info("Start updating default permission template to sonar")
 
-	if sonar.Spec.DefaultPermissionTemplate == "" {
+	if sonarCR.Spec.DefaultPermissionTemplate == "" {
 		log.Info("Default permission template is not set")
 		return nil
 	}
 
-	if err := h.sonarApiClient.SetDefaultPermissionTemplate(ctx, sonar.Spec.DefaultPermissionTemplate); err != nil {
-		return fmt.Errorf("failed to set default permission template %s: %w", sonar.Spec.DefaultPermissionTemplate, err)
+	if err := h.sonarApiClient.SetDefaultPermissionTemplate(ctx, sonarCR.Spec.DefaultPermissionTemplate); err != nil {
+		return fmt.Errorf("failed to set default permission template %s: %w", sonarCR.Spec.DefaultPermissionTemplate, err)
 	}
 
 	log.Info("Sonar default permission template have been updated")

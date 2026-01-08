@@ -141,5 +141,7 @@ func TestSonarClient_GetUserToken(t *testing.T) {
 	_, err = cs.GetUserToken(context.Background(), "userNameNotFound", "someToken")
 	require.Error(t, err)
 
-	assert.Equal(t, "failed to search for user tokens: failed to search for user tokens: status: 500, body: search fatal", err.Error())
+	expectedErr := "failed to search for user tokens: " +
+		"failed to search for user tokens: status: 500, body: search fatal"
+	assert.Equal(t, expectedErr, err.Error())
 }

@@ -32,9 +32,12 @@ type userTokenSearchResponse struct {
 }
 
 // SearchUsers searches for users by login, name, and email.
-// The parameter userQuery can either be case-sensitive and perform an exact match or case-insensitive and perform a partial match (contains), depending on the scenario:
-// - If the search query is less or equal to 15 characters, then the query is case-insensitive and will match any login, name, or email that contains the search query.
-// - If the search query is greater than 15 characters, then the query becomes case-sensitive and will match any login, name, or email that exactly matches the search query.
+// The parameter userQuery can either be case-sensitive and perform an exact match or
+// case-insensitive and perform a partial match (contains), depending on the scenario:
+//   - If the search query is less or equal to 15 characters, then the query is case-insensitive
+//     and will match any login, name, or email that contains the search query.
+//   - If the search query is greater than 15 characters, then the query becomes case-sensitive
+//     and will match any login, name, or email that exactly matches the search query.
 func (sc *Client) SearchUsers(ctx context.Context, userQuery string) ([]User, error) {
 	var userResponse userSearchResponse
 	rsp, err := sc.startRequest(ctx).SetResult(&userResponse).

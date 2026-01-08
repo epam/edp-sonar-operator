@@ -18,27 +18,28 @@ resources:
   - metrics_auth_role.yaml
   - metrics_auth_role_binding.yaml
   - metrics_reader_role.yaml
-  # For each CRD, "Editor" and "Viewer" roles are scaffolded by
+  # For each CRD, "Admin", "Editor" and "Viewer" roles are scaffolded by
   # default, aiding admins in cluster management. Those roles are
   # not used by the Project itself. You can comment the following lines
   # if you do not want those helpers be installed with your Project.
+  - sonar_admin_role.yaml
   - sonar_editor_role.yaml
   - sonar_viewer_role.yaml
+  - sonargroup_admin_role.yaml
   - sonargroup_editor_role.yaml
   - sonargroup_viewer_role.yaml
+  - sonarpermissiontemplate_admin_role.yaml
   - sonarpermissiontemplate_editor_role.yaml
   - sonarpermissiontemplate_viewer_role.yaml
+  - sonarproject_admin_role.yaml
+  - sonarproject_editor_role.yaml
+  - sonarproject_viewer_role.yaml
+  - sonarqualitygate_admin_role.yaml
   - sonarqualitygate_editor_role.yaml
   - sonarqualitygate_viewer_role.yaml
+  - sonarqualityprofile_admin_role.yaml
   - sonarqualityprofile_editor_role.yaml
   - sonarqualityprofile_viewer_role.yaml
+  - sonaruser_admin_role.yaml
   - sonaruser_editor_role.yaml
   - sonaruser_viewer_role.yaml
-
-# For each CRD, "Admin", "Editor" and "Viewer" roles are scaffolded by
-# default, aiding admins in cluster management. Those roles are
-# not used by the {{ .ProjectName }} itself. You can comment the following lines
-# if you do not want those helpers be installed with your Project.
-- sonarproject_admin_role.yaml
-- sonarproject_editor_role.yaml
-- sonarproject_viewer_role.yaml

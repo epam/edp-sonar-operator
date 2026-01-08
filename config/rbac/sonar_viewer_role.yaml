@@ -1,9 +1,15 @@
-# permissions for end users to view sonars.
+# This rule is not used by the project sonar-operator itself.
+# It is provided to allow the cluster admin to help manage permissions for users.
+#
+# Grants read-only access to edp.epam.com resources.
+# This role is intended for users who need visibility into these resources
+# without permissions to modify them. It is ideal for monitoring purposes and limited-access viewing.
+
 apiVersion: rbac.authorization.k8s.io/v1
-kind: Role
+kind: ClusterRole
 metadata:
   labels:
-    app.kubernetes.io/name: role
+    app.kubernetes.io/name: sonar-operator
     app.kubernetes.io/managed-by: kustomize
   name: sonar-viewer-role
 rules:

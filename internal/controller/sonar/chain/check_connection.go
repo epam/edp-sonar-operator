@@ -18,7 +18,7 @@ func NewCheckConnection(sonarApiClient sonar.System) *CheckConnection {
 	return &CheckConnection{sonarApiClient: sonarApiClient}
 }
 
-func (h *CheckConnection) ServeRequest(ctx context.Context, sonar *sonarApi.Sonar) error {
+func (h *CheckConnection) ServeRequest(ctx context.Context, sonarCR *sonarApi.Sonar) error {
 	log := ctrl.LoggerFrom(ctx)
 	log.Info("Start checking connection to sonar")
 
@@ -27,8 +27,8 @@ func (h *CheckConnection) ServeRequest(ctx context.Context, sonar *sonarApi.Sona
 		return fmt.Errorf("failed to get health: %w", err)
 	}
 
-	sonar.Status.Connected = true
-	sonar.Status.Value = systemHealth.Health
+	sonarCR.Status.Connected = true
+	sonarCR.Status.Value = systemHealth.Health
 
 	log.Info("Connection to sonar is established")
 

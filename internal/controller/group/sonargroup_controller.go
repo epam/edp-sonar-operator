@@ -35,12 +35,12 @@ type SonarGroupReconciler struct {
 }
 
 func NewSonarGroupReconciler(
-	client client.Client,
+	k8sClient client.Client,
 	scheme *runtime.Scheme,
 	apiClientProvider apiClientProvider,
 ) *SonarGroupReconciler {
 	return &SonarGroupReconciler{
-		client:            client,
+		client:            k8sClient,
 		scheme:            scheme,
 		apiClientProvider: apiClientProvider,
 	}
