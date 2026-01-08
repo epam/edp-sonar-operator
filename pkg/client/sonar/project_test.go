@@ -40,9 +40,10 @@ func TestClient_CreateProject(t *testing.T) {
 				Visibility: "private",
 			},
 			serverResponse: http.StatusBadRequest,
-			serverBody:     `{"errors":[{"msg":"Could not create project. A project with key 'existing-project' already exists."}]}`,
-			wantErr:        true,
-			errContains:    "failed to create project",
+			serverBody: `{"errors":[{"msg":"Could not create project. ` +
+				`A project with key 'existing-project' already exists."}]}`,
+			wantErr:     true,
+			errContains: "failed to create project",
 		},
 		{
 			name: "invalid project key",
@@ -77,8 +78,9 @@ func TestClient_CreateProject(t *testing.T) {
 				MainBranch: "develop",
 			},
 			serverResponse: http.StatusOK,
-			serverBody:     `{"project":{"key":"test-project-with-branch","name":"Test Project With Branch","visibility":"private"}}`,
-			wantErr:        false,
+			serverBody: `{"project":{"key":"test-project-with-branch",` +
+				`"name":"Test Project With Branch","visibility":"private"}}`,
+			wantErr: false,
 		},
 	}
 

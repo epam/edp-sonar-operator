@@ -35,11 +35,11 @@ type SonarQualityGateReconciler struct {
 }
 
 func NewSonarQualityGateReconciler(
-	client client.Client,
+	k8sClient client.Client,
 	scheme *runtime.Scheme,
 	apiClientProvider apiClientProvider,
 ) *SonarQualityGateReconciler {
-	return &SonarQualityGateReconciler{client: client, scheme: scheme, apiClientProvider: apiClientProvider}
+	return &SonarQualityGateReconciler{client: k8sClient, scheme: scheme, apiClientProvider: apiClientProvider}
 }
 
 // +kubebuilder:rbac:groups=edp.epam.com,namespace=placeholder,resources=sonarqualitygates,verbs=get;list;watch;create;update;patch;delete

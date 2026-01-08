@@ -25,17 +25,17 @@ func NewUpdateSettings(sonarApiClient sonar.Settings, k8sClient client.Client) *
 	return &UpdateSettings{sonarApiClient: sonarApiClient, k8sClient: k8sClient}
 }
 
-func (h *UpdateSettings) ServeRequest(ctx context.Context, sonar *sonarApi.Sonar) error {
+func (h *UpdateSettings) ServeRequest(ctx context.Context, sonarCR *sonarApi.Sonar) error {
 	log := ctrl.LoggerFrom(ctx)
 	log.Info("Start updating settings to sonar")
 
 	// if the user removes a setting from the CR, we need to reset it in Sonar
-	settingsToReset := getSettingsKeysMap(sonar.Status)
+	settingsToReset := getSettingsKeysMap(sonarCR.Status)
 	// we need to save processed settings to know which settings we need to reset
-	processedSettings := make([]string, 0, len(sonar.Spec.Settings))
+	processedSettings := make([]string, 0, len(sonarCR.Spec.Settings))
 
-	for _, s := range sonar.Spec.Settings {
-		setting, err := h.makeSetting(ctx, s, sonar.Namespace)
+	for _, s := range sonarCR.Spec.Settings {
+		setting, err := h.makeSetting(ctx, s, sonarCR.Namespace)
 		if err != nil {
 			return err
 		}
@@ -54,7 +54,7 @@ func (h *UpdateSettings) ServeRequest(ctx context.Context, sonar *sonarApi.Sonar
 		}
 	}
 
-	setProcessedSettings(&sonar.Status, processedSettings)
+	setProcessedSettings(&sonarCR.Status, processedSettings)
 
 	log.Info("Sonar settings have been updated")
 

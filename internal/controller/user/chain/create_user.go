@@ -20,8 +20,8 @@ type CreateUser struct {
 }
 
 // NewCreateUser returns CreateUser handler.
-func NewCreateUser(sonarApiClient sonar.UserInterface, client client.Client) *CreateUser {
-	return &CreateUser{sonarApiClient: sonarApiClient, client: client}
+func NewCreateUser(sonarApiClient sonar.UserInterface, k8sClient client.Client) *CreateUser {
+	return &CreateUser{sonarApiClient: sonarApiClient, client: k8sClient}
 }
 
 // ServeRequest handles sonar user creation.

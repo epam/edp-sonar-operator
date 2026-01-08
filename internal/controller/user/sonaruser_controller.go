@@ -36,11 +36,11 @@ type SonarUserReconciler struct {
 
 // NewSonarUserReconciler returns a new SonarUserReconciler instance.
 func NewSonarUserReconciler(
-	client client.Client,
+	k8sClient client.Client,
 	scheme *runtime.Scheme,
 	apiClientProvider apiClientProvider,
 ) *SonarUserReconciler {
-	return &SonarUserReconciler{client: client, scheme: scheme, apiClientProvider: apiClientProvider}
+	return &SonarUserReconciler{client: k8sClient, scheme: scheme, apiClientProvider: apiClientProvider}
 }
 
 // +kubebuilder:rbac:groups=edp.epam.com,namespace=placeholder,resources=sonarusers,verbs=get;list;watch;create;update;patch;delete

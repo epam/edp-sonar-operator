@@ -35,12 +35,12 @@ type SonarPermissionTemplateReconciler struct {
 }
 
 func NewSonarPermissionTemplateReconciler(
-	client client.Client,
+	k8sClient client.Client,
 	scheme *runtime.Scheme,
 	apiClientProvider apiClientProvider,
 ) *SonarPermissionTemplateReconciler {
 	return &SonarPermissionTemplateReconciler{
-		client:            client,
+		client:            k8sClient,
 		scheme:            scheme,
 		apiClientProvider: apiClientProvider,
 	}

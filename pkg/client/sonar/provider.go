@@ -46,7 +46,11 @@ func (p *ApiClientProvider) GetSonarApiClientFromSonar(ctx context.Context, sona
 }
 
 // GetSonarApiClientFromSonarRef returns sonar api client from sonar ref.
-func (p *ApiClientProvider) GetSonarApiClientFromSonarRef(ctx context.Context, namespace string, sonarRef common.HasSonarRef) (*Client, error) {
+func (p *ApiClientProvider) GetSonarApiClientFromSonarRef(
+	ctx context.Context,
+	namespace string,
+	sonarRef common.HasSonarRef,
+) (*Client, error) {
 	sonar := &sonarApi.Sonar{}
 	if err := p.k8sClient.Get(ctx, types.NamespacedName{
 		Name:      sonarRef.GetSonarRef().Name,

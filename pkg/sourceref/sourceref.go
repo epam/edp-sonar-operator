@@ -12,7 +12,12 @@ import (
 )
 
 // GetValueFromSourceRef retries value from ConfigMap or Secret by SourceRef.
-func GetValueFromSourceRef(ctx context.Context, sourceRef *common.SourceRef, namespace string, k8sClient client.Client) (string, error) {
+func GetValueFromSourceRef(
+	ctx context.Context,
+	sourceRef *common.SourceRef,
+	namespace string,
+	k8sClient client.Client,
+) (string, error) {
 	if sourceRef == nil {
 		return "", nil
 	}

@@ -45,9 +45,9 @@ type Client struct {
 	resty *resty.Client
 }
 
-func NewClient(url string, user string, password string) *Client {
-	u := strings.TrimSuffix(url, "/")
-	if !strings.HasSuffix(url, "api") {
+func NewClient(sonarURL string, user string, password string) *Client {
+	u := strings.TrimSuffix(sonarURL, "/")
+	if !strings.HasSuffix(sonarURL, "api") {
 		u = fmt.Sprintf("%s/api", u)
 	}
 
@@ -103,7 +103,8 @@ func (sc *Client) ChangePassword(ctx context.Context, user string, oldPassword s
 
 	// make sure that Sonar is up and running
 	if systemHealthResponse.Health != "GREEN" {
-		return fmt.Errorf("sonar is not in green state, current state - %s; %v", systemHealthResponse.Health, systemHealthResponse)
+		return fmt.Errorf("sonar is not in green state, current state - %s; %v",
+			systemHealthResponse.Health, systemHealthResponse)
 	}
 
 	resp, err = sc.startRequest(ctx).
@@ -121,7 +122,8 @@ func (sc *Client) ChangePassword(ctx context.Context, user string, oldPassword s
 	// so starting from SonarQube 8.9.9 they changed flow of "/api/users/change_password" endpoint
 	// after successful change of password, Sonar refresh JWT token in cookie,
 	// so we need to update cookie to get new token
-	// https://github.com/SonarSource/sonarqube/commit/eb6741754b2b35172012bc5b30f5b0d53a61f7be#diff-be83bcff4cfc3fb4d04542ca6eea91cfe7738b7bd754d86eb366ce3e18b0aa34
+	// https://github.com/SonarSource/sonarqube/commit/
+	// eb6741754b2b35172012bc5b30f5b0d53a61f7be#diff-be83bcff4cfc3fb4d04542ca6eea91cfe7738b7bd754d86eb366ce3e18b0aa34
 	sc.resty.SetCookies(resp.Cookies())
 
 	return nil
@@ -339,7 +341,8 @@ func (sc Client) UploadProfile(profileName string, profilePath string) (string, 
 		return "", err
 	}
 
-	log.Info(fmt.Sprintf("Profile %s in Sonar from path %v has been uploaded and is set as default", profileName, profilePath))
+	log.Info(fmt.Sprintf("Profile %s in Sonar from path %v has been uploaded and is set as default",
+		profileName, profilePath))
 
 	return profileId, nil
 }
@@ -376,7 +379,9 @@ type ProfileActions struct {
 	AssociateProjects bool `json:"associateProjects"`
 }
 
-func (sc Client) checkProfileExist(requiredProfileName string) (exits bool, profileId string, isDefault bool, error error) {
+func (sc Client) checkProfileExist(
+	requiredProfileName string,
+) (exits bool, profileId string, isDefault bool, error error) {
 	resp, err := sc.resty.R().
 		Get(fmt.Sprintf("/qualityprofiles/search?qualityProfile=%v", strings.ReplaceAll(requiredProfileName, " ", "+")))
 	if err != nil {
@@ -409,15 +414,15 @@ func (sc Client) checkProfileExist(requiredProfileName string) (exits bool, prof
 	return false, "", false, nil
 }
 
-func (sc Client) setDefaultProfile(language string, profileName string) error {
+func (sc Client) setDefaultProfile(lang string, profileName string) error {
 	resp, err := sc.jsonTypeRequest().
 		SetQueryParams(map[string]string{
 			"qualityProfile": profileName,
-			"language":       language,
+			"language":       lang,
 		}).
 		Post("/qualityprofiles/set_default")
 	if err != nil {
-		return errors.New("failed to send request to set default quality profile!")
+		return errors.New("failed to send request to set default quality profile")
 	}
 
 	if resp.IsError() {

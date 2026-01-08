@@ -1,12 +1,11 @@
-with-expecter: True
-inpackage: False
-dir: "{{.InterfaceDir}}/mocks"
-mockname: "Mock{{.InterfaceName}}"
-outpkg: "mocks"
-filename: "{{.InterfaceName | lower}}_mock.go"
-issue-845-fix: True
-resolve-type-alias: false
-disable-version-string: true
+all: true
+dir: '{{.InterfaceDir}}/mocks'
+structname: Mock{{.InterfaceName}}
+pkgname: mocks
+template: testify
+filename: "{{ .InterfaceName | snakecase }}_generated.mock.go"
+template-data:
+  unroll-variadic: true
 packages:
   github.com/epam/edp-sonar-operator/pkg/client/sonar:
     interfaces:

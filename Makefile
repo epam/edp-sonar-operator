@@ -67,7 +67,7 @@ CONTAINER_REGISTRY_URL?="repo"
 CONTAINER_REGISTRY_SPACE?="edp"
 START_KIND_CLUSTER?=true
 KIND_CLUSTER_NAME?="sonar-operator"
-KUBE_VERSION?=1.31
+KUBE_VERSION?=1.34
 KIND_CONFIG?=./hack/kind-$(KUBE_VERSION).yaml
 
 E2E_IMAGE_REPOSITORY?="sonar-image"
@@ -91,7 +91,7 @@ validate-docs: api-docs helm-docs  ## Validate helm and api docs
 
 # Run tests
 .PHONY: test
-test: envtest
+test: setup-envtest
 	KUBEBUILDER_ASSETS="$(shell $(ENVTEST) use $(ENVTEST_K8S_VERSION) --bin-dir $(LOCALBIN) -p path)" \
 	TEST_SONAR_URL=${TEST_SONAR_URL} \
 	TEST_SONAR_USER=${TEST_SONAR_USER} \
@@ -113,12 +113,12 @@ vet:  ## Run go vet
 	go vet ./...
 
 .PHONY: lint
-lint: golangci-lint ## Run go lint
-	${GOLANGCI_LINT} run -v -c .golangci.yaml ./...
+lint: golangci-lint ## Run golangci-lint linter
+	$(GOLANGCI_LINT) run
 
 .PHONY: lint-fix
 lint-fix: golangci-lint ## Run golangci-lint linter and perform fixes
-	$(GOLANGCI_LINT) run --fix -v -c .golangci.yaml ./...
+	$(GOLANGCI_LINT) run --fix
 
 .PHONY: build
 build: fmt vet ## build operator's binary
@@ -153,6 +153,7 @@ install: manifests kustomize ## Install CRDs into the K8s cluster specified in ~
 manifests: controller-gen ## Generate WebhookConfiguration, ClusterRole and CustomResourceDefinition objects.
 	$(CONTROLLER_GEN) rbac:roleName=manager-role crd webhook paths="./..." output:crd:artifacts:config=deploy-templates/crds
 	$(CONTROLLER_GEN) rbac:roleName=manager-role crd webhook paths="./..." output:crd:artifacts:config=config/crd/bases
+	$(MAKE) api-docs
 
 mocks: mockery
 	$(MOCKERY)
@@ -165,16 +166,16 @@ $(LOCALBIN):
 	mkdir -p $(LOCALBIN)
 
 ## Tool Versions
-KUSTOMIZE_VERSION ?= v5.4.3
-CONTROLLER_TOOLS_VERSION ?= v0.16.5
-ENVTEST_VERSION ?= release-0.19
-GOLANGCI_LINT_VERSION ?= v1.64.7
-MOCKERY_VERSION ?= v2.53.2
+KUSTOMIZE_VERSION ?= v5.6.0
+CONTROLLER_TOOLS_VERSION ?= v0.18.0
+ENVTEST_VERSION := $(shell go list -m -f "{{ .Version }}" sigs.k8s.io/controller-runtime | awk -F'[v.]' '{printf "release-%d.%d", $$2, $$3}')
+ENVTEST_K8S_VERSION := $(shell go list -m -f "{{ .Version }}" k8s.io/api | awk -F'[v.]' '{printf "1.%d", $$3}')
+GOLANGCI_LINT_VERSION ?= v2.1.6
+MOCKERY_VERSION ?= v3.6.1
 HELMDOCS_VERSION ?= v1.14.2
 GITCHGLOG_VERSION ?= v0.15.4
 CRDOC_VERSION ?= v0.6.4
-ENVTEST_K8S_VERSION = 1.31.0
-OPERATOR_SDK_VERSION ?= v1.39.2
+OPERATOR_SDK_VERSION ?= v1.41.1
 
 KUSTOMIZE ?= $(LOCALBIN)/kustomize
 .PHONY: kustomize
@@ -205,18 +206,26 @@ controller-gen: ## Download controller-gen locally if necessary.
 GOLANGCI_LINT = ${CURRENT_DIR}/bin/golangci-lint
 .PHONY: golangci-lint
 golangci-lint: ## Download golangci-lint locally if necessary.
-	$(call go-install-tool,$(GOLANGCI_LINT),github.com/golangci/golangci-lint/cmd/golangci-lint,$(GOLANGCI_LINT_VERSION))
+	$(call go-install-tool,$(GOLANGCI_LINT),github.com/golangci/golangci-lint/v2/cmd/golangci-lint,$(GOLANGCI_LINT_VERSION))
 
-ENVTEST=$(LOCALBIN)/setup-envtest
+.PHONY: setup-envtest
+setup-envtest: envtest ## Download the binaries required for ENVTEST in the local bin directory.
+	@echo "Setting up envtest binaries for Kubernetes version $(ENVTEST_K8S_VERSION)..."
+	@$(ENVTEST) use $(ENVTEST_K8S_VERSION) --bin-dir $(LOCALBIN) -p path || { \
+		echo "Error: Failed to set up envtest binaries for version $(ENVTEST_K8S_VERSION)."; \
+		exit 1; \
+	}
+
+ENVTEST ?= $(LOCALBIN)/setup-envtest
 .PHONY: envtest
-envtest: $(ENVTEST) ## Download envtest-setup locally if necessary.
+envtest: $(ENVTEST) ## Download setup-envtest locally if necessary.
 $(ENVTEST): $(LOCALBIN)
 	$(call go-install-tool,$(ENVTEST),sigs.k8s.io/controller-runtime/tools/setup-envtest,$(ENVTEST_VERSION))
 
 MOCKERY = $(LOCALBIN)/mockery
 .PHONY: mockery
 mockery: ## Download mockery locally if necessary.
-	$(call go-install-tool,$(MOCKERY),github.com/vektra/mockery/v2,$(MOCKERY_VERSION))
+	$(call go-install-tool,$(MOCKERY),github.com/vektra/mockery/v3,$(MOCKERY_VERSION))
 
 # go-install-tool will 'go install' any package with custom target and name of binary, if it doesn't exist
 # $1 - target path with name of binary

@@ -82,7 +82,8 @@ func TestClient_Reboot_PostErr(t *testing.T) {
 func TestClient_Reboot_NotFoundStatus(t *testing.T) {
 	restClient := CreateMockResty()
 
-	httpmock.RegisterResponder(http.MethodPost, "https://domain/system/restart", httpmock.NewStringResponder(http.StatusNotFound, ""))
+	httpmock.RegisterResponder(http.MethodPost, "https://domain/system/restart",
+		httpmock.NewStringResponder(http.StatusNotFound, ""))
 
 	client := Client{resty: restClient}
 	err := client.Reboot()
@@ -93,7 +94,8 @@ func TestClient_Reboot_NotFoundStatus(t *testing.T) {
 func TestClient_Reboot(t *testing.T) {
 	restClient := CreateMockResty()
 
-	httpmock.RegisterResponder(http.MethodPost, "https://domain/system/restart", httpmock.NewStringResponder(http.StatusOK, ""))
+	httpmock.RegisterResponder(http.MethodPost, "https://domain/system/restart",
+		httpmock.NewStringResponder(http.StatusOK, ""))
 
 	client := Client{resty: restClient}
 	err := client.Reboot()
@@ -113,7 +115,8 @@ func TestClient_GetInstalledPlugins_GetErr(t *testing.T) {
 func TestClient_GetInstalledPlugins_UnmarshalErr(t *testing.T) {
 	restClient := CreateMockResty()
 
-	httpmock.RegisterResponder(http.MethodGet, "https://domain/plugins/installed", httpmock.NewStringResponder(http.StatusOK, ""))
+	httpmock.RegisterResponder(http.MethodGet, "https://domain/plugins/installed",
+		httpmock.NewStringResponder(http.StatusOK, ""))
 
 	client := Client{resty: restClient}
 	plugins, err := client.GetInstalledPlugins()
@@ -129,7 +132,8 @@ func TestClient_GetInstalledPlugins(t *testing.T) {
 	body := InstalledPluginsResponse{Plugins: []Plugin{plugin}}
 	raw, err := json.Marshal(body)
 	require.NoError(t, err)
-	httpmock.RegisterResponder(http.MethodGet, "https://domain/plugins/installed", httpmock.NewBytesResponder(http.StatusOK, raw))
+	httpmock.RegisterResponder(http.MethodGet, "https://domain/plugins/installed",
+		httpmock.NewBytesResponder(http.StatusOK, raw))
 
 	client := Client{resty: restClient}
 	plugins, err := client.GetInstalledPlugins()
@@ -154,7 +158,8 @@ func TestClient_InstallPlugins_PostErr(t *testing.T) {
 	body := InstalledPluginsResponse{Plugins: []Plugin{plugin}}
 	raw, err := json.Marshal(body)
 	require.NoError(t, err)
-	httpmock.RegisterResponder(http.MethodGet, "https://domain/plugins/installed", httpmock.NewBytesResponder(http.StatusOK, raw))
+	httpmock.RegisterResponder(http.MethodGet, "https://domain/plugins/installed",
+		httpmock.NewBytesResponder(http.StatusOK, raw))
 
 	client := Client{resty: restClient}
 	err = client.InstallPlugins(plugins)
@@ -169,8 +174,10 @@ func TestClient_InstallPlugins_RebootErr(t *testing.T) {
 	body := InstalledPluginsResponse{Plugins: []Plugin{plugin}}
 	raw, err := json.Marshal(body)
 	require.NoError(t, err)
-	httpmock.RegisterResponder(http.MethodGet, "https://domain/plugins/installed", httpmock.NewBytesResponder(http.StatusOK, raw))
-	httpmock.RegisterResponder(http.MethodPost, "https://domain/plugins/install", httpmock.NewStringResponder(http.StatusOK, ""))
+	httpmock.RegisterResponder(http.MethodGet, "https://domain/plugins/installed",
+		httpmock.NewBytesResponder(http.StatusOK, raw))
+	httpmock.RegisterResponder(http.MethodPost, "https://domain/plugins/install",
+		httpmock.NewStringResponder(http.StatusOK, ""))
 
 	client := Client{resty: restClient}
 	err = client.InstallPlugins(plugins)
@@ -190,10 +197,14 @@ func TestClient_InstallPlugins(t *testing.T) {
 	raw, err := json.Marshal(body)
 	require.NoError(t, err)
 
-	httpmock.RegisterResponder(http.MethodGet, "https://domain/plugins/installed", httpmock.NewBytesResponder(http.StatusOK, raw))
-	httpmock.RegisterResponder(http.MethodPost, "https://domain/plugins/install", httpmock.NewStringResponder(http.StatusOK, ""))
-	httpmock.RegisterResponder(http.MethodPost, "https://domain/system/restart", httpmock.NewStringResponder(http.StatusOK, ""))
-	httpmock.RegisterResponder(http.MethodGet, "https://domain/system/status", httpmock.NewBytesResponder(http.StatusOK, rawStatus))
+	httpmock.RegisterResponder(http.MethodGet, "https://domain/plugins/installed",
+		httpmock.NewBytesResponder(http.StatusOK, raw))
+	httpmock.RegisterResponder(http.MethodPost, "https://domain/plugins/install",
+		httpmock.NewStringResponder(http.StatusOK, ""))
+	httpmock.RegisterResponder(http.MethodPost, "https://domain/system/restart",
+		httpmock.NewStringResponder(http.StatusOK, ""))
+	httpmock.RegisterResponder(http.MethodGet, "https://domain/system/status",
+		httpmock.NewBytesResponder(http.StatusOK, rawStatus))
 
 	client := Client{resty: restClient}
 	err = client.InstallPlugins(plugins)
@@ -212,7 +223,8 @@ func TestClient_AddUserToGroup_BadStatus(t *testing.T) {
 	restClient := CreateMockResty()
 	client := Client{resty: restClient}
 
-	httpmock.RegisterResponder(http.MethodPost, "https://domain/user_groups/add_user?login=user&name=name", httpmock.NewStringResponder(http.StatusNotFound, ""))
+	httpmock.RegisterResponder(http.MethodPost, "https://domain/user_groups/add_user?login=user&name=name",
+		httpmock.NewStringResponder(http.StatusNotFound, ""))
 
 	err := client.AddUserToGroup(context.Background(), user, name)
 	assert.Error(t, err)
@@ -223,7 +235,8 @@ func TestClient_AddUserToGroup(t *testing.T) {
 	restClient := CreateMockResty()
 	client := Client{resty: restClient}
 
-	httpmock.RegisterResponder(http.MethodPost, "https://domain/user_groups/add_user?login=user&name=name", httpmock.NewStringResponder(http.StatusOK, ""))
+	httpmock.RegisterResponder(http.MethodPost, "https://domain/user_groups/add_user?login=user&name=name",
+		httpmock.NewStringResponder(http.StatusOK, ""))
 
 	err := client.AddUserToGroup(context.Background(), user, name)
 	assert.NoError(t, err)
@@ -256,7 +269,8 @@ func TestClient_AddPermissionsToUser(t *testing.T) {
 	restClient := CreateMockResty()
 	client := Client{resty: restClient}
 
-	httpmock.RegisterResponder(http.MethodPost, "https://domain/permissions/add_user", httpmock.NewStringResponder(http.StatusOK, ""))
+	httpmock.RegisterResponder(http.MethodPost, "https://domain/permissions/add_user",
+		httpmock.NewStringResponder(http.StatusOK, ""))
 
 	err := client.AddPermissionToUser(context.Background(), name, user)
 	assert.NoError(t, err)
@@ -274,7 +288,9 @@ func TestClient_AddPermissionsToGroup_BadStatus(t *testing.T) {
 	restClient := CreateMockResty()
 	client := Client{resty: restClient}
 
-	httpmock.RegisterResponder(http.MethodPost, "https://domain/permissions/add_group?groupName=name&permission=user", httpmock.NewStringResponder(http.StatusNotFound, ""))
+	httpmock.RegisterResponder(http.MethodPost,
+		"https://domain/permissions/add_group?groupName=name&permission=user",
+		httpmock.NewStringResponder(http.StatusNotFound, ""))
 
 	err := client.AddPermissionsToGroup(name, user)
 	assert.Error(t, err)
@@ -285,7 +301,9 @@ func TestClient_AddPermissionsToGroup(t *testing.T) {
 	restClient := CreateMockResty()
 	client := Client{resty: restClient}
 
-	httpmock.RegisterResponder(http.MethodPost, "https://domain/permissions/add_group?groupName=name&permission=user", httpmock.NewStringResponder(http.StatusOK, ""))
+	httpmock.RegisterResponder(http.MethodPost,
+		"https://domain/permissions/add_group?groupName=name&permission=user",
+		httpmock.NewStringResponder(http.StatusOK, ""))
 
 	err := client.AddPermissionsToGroup(name, user)
 	assert.NoError(t, err)
@@ -303,7 +321,8 @@ func TestClient_SetProjectsDefaultVisibility_PostErr(t *testing.T) {
 func TestClient_SetProjectsDefaultVisibility_BadStatus(t *testing.T) {
 	restClient := CreateMockResty()
 
-	httpmock.RegisterResponder(http.MethodPost, "https://domain/projects/update_default_visibility", httpmock.NewStringResponder(http.StatusNotFound, ""))
+	httpmock.RegisterResponder(http.MethodPost, "https://domain/projects/update_default_visibility",
+		httpmock.NewStringResponder(http.StatusNotFound, ""))
 
 	client := Client{resty: restClient}
 	err := client.SetProjectsDefaultVisibility(visibility)
@@ -314,7 +333,8 @@ func TestClient_SetProjectsDefaultVisibility_BadStatus(t *testing.T) {
 func TestClient_SetProjectsDefaultVisibility(t *testing.T) {
 	restClient := CreateMockResty()
 
-	httpmock.RegisterResponder(http.MethodPost, "https://domain/projects/update_default_visibility", httpmock.NewStringResponder(http.StatusOK, ""))
+	httpmock.RegisterResponder(http.MethodPost, "https://domain/projects/update_default_visibility",
+		httpmock.NewStringResponder(http.StatusOK, ""))
 
 	client := Client{resty: restClient}
 	err := client.SetProjectsDefaultVisibility(visibility)
@@ -335,7 +355,8 @@ func TestClient_AddWebhook_ExistWebHook(t *testing.T) {
 	raw, err := json.Marshal(body)
 	require.NoError(t, err)
 
-	httpmock.RegisterResponder(http.MethodGet, "https://domain/webhooks/list", httpmock.NewBytesResponder(http.StatusOK, raw))
+	httpmock.RegisterResponder(http.MethodGet, "https://domain/webhooks/list",
+		httpmock.NewBytesResponder(http.StatusOK, raw))
 
 	client := Client{resty: restClient}
 	err = client.AddWebhook(name, testUrl)
@@ -348,7 +369,8 @@ func TestClient_AddWebhook_PostErr(t *testing.T) {
 	raw, err := json.Marshal(body)
 	require.NoError(t, err)
 
-	httpmock.RegisterResponder(http.MethodGet, "https://domain/webhooks/list", httpmock.NewBytesResponder(http.StatusOK, raw))
+	httpmock.RegisterResponder(http.MethodGet, "https://domain/webhooks/list",
+		httpmock.NewBytesResponder(http.StatusOK, raw))
 
 	client := Client{resty: restClient}
 	err = client.AddWebhook(name, testUrl)
@@ -362,8 +384,11 @@ func TestClient_AddWebhook_BadStatus(t *testing.T) {
 	raw, err := json.Marshal(body)
 	require.NoError(t, err)
 
-	httpmock.RegisterResponder(http.MethodGet, "https://domain/webhooks/list", httpmock.NewBytesResponder(http.StatusOK, raw))
-	httpmock.RegisterResponder(http.MethodPost, "https://domain/webhooks/create?name=name&url=https%3A%2F%2Fdomain", httpmock.NewStringResponder(http.StatusNotFound, ""))
+	httpmock.RegisterResponder(http.MethodGet, "https://domain/webhooks/list",
+		httpmock.NewBytesResponder(http.StatusOK, raw))
+	httpmock.RegisterResponder(http.MethodPost,
+		"https://domain/webhooks/create?name=name&url=https%3A%2F%2Fdomain",
+		httpmock.NewStringResponder(http.StatusNotFound, ""))
 
 	client := Client{resty: restClient}
 	err = client.AddWebhook(name, testUrl)
@@ -377,8 +402,11 @@ func TestClient_AddWebhook(t *testing.T) {
 	raw, err := json.Marshal(body)
 	require.NoError(t, err)
 
-	httpmock.RegisterResponder(http.MethodGet, "https://domain/webhooks/list", httpmock.NewBytesResponder(http.StatusOK, raw))
-	httpmock.RegisterResponder(http.MethodPost, "https://domain/webhooks/create?name=name&url=https%3A%2F%2Fdomain", httpmock.NewStringResponder(http.StatusOK, ""))
+	httpmock.RegisterResponder(http.MethodGet, "https://domain/webhooks/list",
+		httpmock.NewBytesResponder(http.StatusOK, raw))
+	httpmock.RegisterResponder(http.MethodPost,
+		"https://domain/webhooks/create?name=name&url=https%3A%2F%2Fdomain",
+		httpmock.NewStringResponder(http.StatusOK, ""))
 
 	client := Client{resty: restClient}
 	err = client.AddWebhook(name, testUrl)
@@ -397,7 +425,9 @@ func TestClient_GenerateUserToken_PostErr(t *testing.T) {
 func TestClient_GenerateUserToken_BadStatus(t *testing.T) {
 	restClient := CreateMockResty()
 
-	httpmock.RegisterResponder(http.MethodPost, "https://domain/user_tokens/generate?login=user&name=User", httpmock.NewStringResponder(http.StatusNotFound, ""))
+	httpmock.RegisterResponder(http.MethodPost,
+		"https://domain/user_tokens/generate?login=user&name=User",
+		httpmock.NewStringResponder(http.StatusNotFound, ""))
 
 	client := Client{resty: restClient}
 	token, err := client.GenerateUserToken(user)
@@ -409,7 +439,9 @@ func TestClient_GenerateUserToken_BadStatus(t *testing.T) {
 func TestClient_GenerateUserToken_UnmarshallErr(t *testing.T) {
 	restClient := CreateMockResty()
 
-	httpmock.RegisterResponder(http.MethodPost, "https://domain/user_tokens/generate?login=user&name=User", httpmock.NewStringResponder(http.StatusOK, ""))
+	httpmock.RegisterResponder(http.MethodPost,
+		"https://domain/user_tokens/generate?login=user&name=User",
+		httpmock.NewStringResponder(http.StatusOK, ""))
 
 	client := Client{resty: restClient}
 	token, err := client.GenerateUserToken(user)
@@ -424,7 +456,9 @@ func TestClient_GenerateUserToken(t *testing.T) {
 	raw, err := json.Marshal(body)
 	require.NoError(t, err)
 
-	httpmock.RegisterResponder(http.MethodPost, "https://domain/user_tokens/generate?login=user&name=User", httpmock.NewBytesResponder(http.StatusOK, raw))
+	httpmock.RegisterResponder(http.MethodPost,
+		"https://domain/user_tokens/generate?login=user&name=User",
+		httpmock.NewBytesResponder(http.StatusOK, raw))
 
 	client := Client{resty: restClient}
 	token, err := client.GenerateUserToken(user)
@@ -481,7 +515,9 @@ func TestClient_UploadProfile_NotDefault(t *testing.T) {
 	require.NoError(t, err)
 
 	httpmock.RegisterResponder(http.MethodGet, "https://domain/qualityprofiles/search?qualityProfile=name", response)
-	httpmock.RegisterResponder(http.MethodPost, "https://domain/qualityprofiles/set_default?language=java&qualityProfile=name", httpmock.NewStringResponder(http.StatusOK, ""))
+	httpmock.RegisterResponder(http.MethodPost,
+		"https://domain/qualityprofiles/set_default?language=java&qualityProfile=name",
+		httpmock.NewStringResponder(http.StatusOK, ""))
 
 	profile, err := client.UploadProfile(name, path)
 	assert.NoError(t, err)
@@ -547,7 +583,8 @@ func TestClient_UploadProfile_PostBadStatus(t *testing.T) {
 	}()
 
 	httpmock.RegisterResponder(http.MethodGet, "https://domain/qualityprofiles/search?qualityProfile=new", response)
-	httpmock.RegisterResponder(http.MethodPost, "https://domain/qualityprofiles/restore", httpmock.NewStringResponder(http.StatusNotFound, ""))
+	httpmock.RegisterResponder(http.MethodPost, "https://domain/qualityprofiles/restore",
+		httpmock.NewStringResponder(http.StatusNotFound, ""))
 
 	profile, err := client.UploadProfile(newName, path)
 	assert.Error(t, err)
@@ -575,7 +612,8 @@ func TestClient_UploadProfile_checkProfileExistErr2(t *testing.T) {
 	}()
 
 	httpmock.RegisterResponder(http.MethodGet, "https://domain/qualityprofiles/search?qualityProfile=new", response)
-	httpmock.RegisterResponder(http.MethodPost, "https://domain/qualityprofiles/restore", httpmock.NewStringResponder(http.StatusOK, ""))
+	httpmock.RegisterResponder(http.MethodPost, "https://domain/qualityprofiles/restore",
+		httpmock.NewStringResponder(http.StatusOK, ""))
 
 	profile, err := client.UploadProfile(newName, path)
 	assert.Error(t, err)
@@ -599,8 +637,11 @@ func TestClient_UploadProfile_setDefaultProfileErr(t *testing.T) {
 	}()
 
 	httpmock.RegisterResponder(http.MethodGet, "https://domain/qualityprofiles/search?qualityProfile=new", response)
-	httpmock.RegisterResponder(http.MethodPost, "https://domain/qualityprofiles/restore", httpmock.NewStringResponder(http.StatusOK, ""))
-	httpmock.RegisterResponder(http.MethodPost, "https://domain/qualityprofiles/set_default?language=java&qualityProfile=new", httpmock.NewStringResponder(http.StatusNotFound, ""))
+	httpmock.RegisterResponder(http.MethodPost, "https://domain/qualityprofiles/restore",
+		httpmock.NewStringResponder(http.StatusOK, ""))
+	httpmock.RegisterResponder(http.MethodPost,
+		"https://domain/qualityprofiles/set_default?language=java&qualityProfile=new",
+		httpmock.NewStringResponder(http.StatusNotFound, ""))
 
 	profile, err := client.UploadProfile(newName, path)
 	assert.Error(t, err)
@@ -626,8 +667,11 @@ func TestClient_UploadProfile(t *testing.T) {
 	}()
 
 	httpmock.RegisterResponder(http.MethodGet, "https://domain/qualityprofiles/search?qualityProfile=new", response)
-	httpmock.RegisterResponder(http.MethodPost, "https://domain/qualityprofiles/restore", httpmock.NewStringResponder(http.StatusOK, ""))
-	httpmock.RegisterResponder(http.MethodPost, "https://domain/qualityprofiles/set_default?language=java&qualityProfile=new", httpmock.NewStringResponder(http.StatusOK, ""))
+	httpmock.RegisterResponder(http.MethodPost, "https://domain/qualityprofiles/restore",
+		httpmock.NewStringResponder(http.StatusOK, ""))
+	httpmock.RegisterResponder(http.MethodPost,
+		"https://domain/qualityprofiles/set_default?language=java&qualityProfile=new",
+		httpmock.NewStringResponder(http.StatusOK, ""))
 
 	profile, err := client.UploadProfile(newName, path)
 	assert.NoError(t, err)
@@ -706,7 +750,8 @@ func TestClient_ConfigureGeneralSettings_PostBadStatus(t *testing.T) {
 	require.NoError(t, err)
 
 	httpmock.RegisterResponder(http.MethodGet, "https://domain/settings/values", response)
-	httpmock.RegisterResponder(http.MethodPost, "https://domain/settings/set?key=key&string=name", httpmock.NewStringResponder(http.StatusNotFound, ""))
+	httpmock.RegisterResponder(http.MethodPost, "https://domain/settings/set?key=key&string=name",
+		httpmock.NewStringResponder(http.StatusNotFound, ""))
 
 	err = client.ConfigureGeneralSettings([]SettingRequest{{Key: key, Value: name, ValueType: valueType}}...)
 	assert.Error(t, err)
@@ -725,7 +770,8 @@ func TestClient_ConfigureGeneralSettings(t *testing.T) {
 	require.NoError(t, err)
 
 	httpmock.RegisterResponder(http.MethodGet, "https://domain/settings/values", response)
-	httpmock.RegisterResponder(http.MethodPost, "https://domain/settings/set?key=key&string=name", httpmock.NewStringResponder(http.StatusOK, ""))
+	httpmock.RegisterResponder(http.MethodPost, "https://domain/settings/set?key=key&string=name",
+		httpmock.NewStringResponder(http.StatusOK, ""))
 
 	err = client.ConfigureGeneralSettings([]SettingRequest{{Key: key, Value: name, ValueType: valueType}}...)
 	assert.NoError(t, err)
@@ -748,7 +794,8 @@ func TestClient_ChangePassword(t *testing.T) {
 	sc := initClient()
 
 	systemHealthResponse := SystemHealthResponse{Health: "GREEN", Causes: []any{}, Nodes: []any{}}
-	httpmock.RegisterResponder("GET", "/api/system/health", httpmock.NewJsonResponderOrPanic(http.StatusOK, systemHealthResponse))
+	httpmock.RegisterResponder("GET", "/api/system/health",
+		httpmock.NewJsonResponderOrPanic(http.StatusOK, systemHealthResponse))
 	httpmock.RegisterResponder("POST", "/api/users/change_password", httpmock.NewStringResponder(http.StatusOK, ""))
 
 	if err := sc.ChangePassword(context.Background(), "foo", "bar", "baz"); err != nil {
@@ -763,8 +810,10 @@ func TestClient_ChangePassword(t *testing.T) {
 		t.Fatal("no error or wrong type")
 	}
 
-	httpmock.RegisterResponder("GET", "/api/system/health", httpmock.NewJsonResponderOrPanic(http.StatusOK, systemHealthResponse))
-	httpmock.RegisterResponder("POST", "/api/users/change_password", httpmock.NewStringResponder(http.StatusInternalServerError, ""))
+	httpmock.RegisterResponder("GET", "/api/system/health",
+		httpmock.NewJsonResponderOrPanic(http.StatusOK, systemHealthResponse))
+	httpmock.RegisterResponder("POST", "/api/users/change_password",
+		httpmock.NewStringResponder(http.StatusInternalServerError, ""))
 
 	if err := sc.ChangePassword(context.Background(),
 		"foo", "bar", "baz"); !IsHTTPErrorCode(err, http.StatusInternalServerError) {

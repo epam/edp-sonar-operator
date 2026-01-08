@@ -55,7 +55,10 @@ type getGroupPermissionResponse struct {
 	} `json:"groups"`
 }
 
-func (sc *Client) CreatePermissionTemplate(ctx context.Context, tpl *PermissionTemplateData) (*PermissionTemplate, error) {
+func (sc *Client) CreatePermissionTemplate(
+	ctx context.Context,
+	tpl *PermissionTemplateData,
+) (*PermissionTemplate, error) {
 	var result createPermissionTemplateResponse
 	rsp, err := sc.startRequest(ctx).SetResult(&result).SetFormData(map[string]string{
 		"name":              tpl.Name,
@@ -97,7 +100,10 @@ func (sc *Client) DeletePermissionTemplate(ctx context.Context, id string) error
 	return nil
 }
 
-func (sc *Client) searchPermissionTemplates(ctx context.Context, name string) (*searchPermissionTemplatesResponse, error) {
+func (sc *Client) searchPermissionTemplates(
+	ctx context.Context,
+	name string,
+) (*searchPermissionTemplatesResponse, error) {
 	var result searchPermissionTemplatesResponse
 
 	rsp, err := sc.startRequest(ctx).SetQueryParam("q", name).SetResult(&result).
@@ -169,7 +175,10 @@ func (sc *Client) GetPermissionTemplateGroups(ctx context.Context, templateID st
 	return result, nil
 }
 
-func (sc *Client) RemoveGroupFromPermissionTemplate(ctx context.Context, templateID, groupName, permission string) error {
+func (sc *Client) RemoveGroupFromPermissionTemplate(
+	ctx context.Context,
+	templateID, groupName, permission string,
+) error {
 	rsp, err := sc.startRequest(ctx).
 		SetFormData(map[string]string{
 			templateIdName: templateID,
