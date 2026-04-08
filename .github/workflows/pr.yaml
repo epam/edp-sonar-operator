@@ -10,7 +10,7 @@ concurrency:
   cancel-in-progress: true
 
 env:
-  GOLANG_VERSION: '1.24'
+  GOLANG_VERSION: '1.25'
 
 jobs:
 
@@ -115,6 +115,11 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v6
+
+      - name: Set up Go
+        uses: actions/setup-go@v6
+        with:
+          go-version: ${{ env.GOLANG_VERSION }}
 
       - name: Start SonarQube server
         run: docker run -d --name sonarqube -p 9000:9000 sonarqube:lts-community
