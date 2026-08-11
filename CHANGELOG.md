@@ -3,7 +3,7 @@
 
 
 <a name="v3.4.0"></a>
-## v3.4.0 - 2026-07-25
+## v3.4.0 - 2026-08-11
 ### Features
 
 - Introduce SonarProject CRD ([#51](https://github.com/epam/edp-sonar-operator/issues/51))
