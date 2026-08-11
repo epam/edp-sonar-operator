@@ -2,6 +2,29 @@
 ## [Unreleased]
 
 
+<a name="v3.4.0"></a>
+## [v3.4.0] - 2026-08-11
+### Features
+
+- Introduce SonarProject CRD ([#51](https://github.com/epam/edp-sonar-operator/issues/51))
+
+### Routine
+
+- Update Operator SDK from v1.39.2 to v1.42.0 ([#57](https://github.com/epam/edp-sonar-operator/issues/57))
+- Update KubeRocketAI ([#55](https://github.com/epam/edp-sonar-operator/issues/55))
+- Setup KubeRocketAI ([#54](https://github.com/epam/edp-sonar-operator/issues/54))
+- Update codeql and codecov scan gh actions ([#48](https://github.com/epam/edp-sonar-operator/issues/48))
+- Allow overriding securityContext ([#46](https://github.com/epam/edp-sonar-operator/issues/46))
+- Add multi-architecture build support ([#44](https://github.com/epam/edp-sonar-operator/issues/44))
+- Publish on the OperatorHub ([#38](https://github.com/epam/edp-sonar-operator/issues/38))
+- Bump GitHub Actions runner image to 22.04([#40](https://github.com/epam/edp-sonar-operator/issues/40))
+- Update current development version ([#38](https://github.com/epam/edp-sonar-operator/issues/38))
+
+### Documentation
+
+- add CLAUDE.md with repository guidance
+
+
 <a name="v3.3.0"></a>
 ## [v3.3.0] - 2025-04-02
 ### Routine
@@ -76,7 +99,8 @@
 <a name="v2.14.1"></a>
 ## [v2.14.1] - 2023-08-17
 
-[Unreleased]: https://github.com/epam/edp-sonar-operator/compare/v3.3.0...HEAD
+[Unreleased]: https://github.com/epam/edp-sonar-operator/compare/v3.4.0...HEAD
+[v3.4.0]: https://github.com/epam/edp-sonar-operator/compare/v3.3.0...v3.4.0
 [v3.3.0]: https://github.com/epam/edp-sonar-operator/compare/v3.2.0...v3.3.0
 [v3.2.0]: https://github.com/epam/edp-sonar-operator/compare/v3.1.1...v3.2.0
 [v3.1.1]: https://github.com/epam/edp-sonar-operator/compare/v3.1.0...v3.1.1
