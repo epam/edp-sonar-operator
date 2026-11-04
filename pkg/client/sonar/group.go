@@ -59,8 +59,8 @@ func (sc *Client) CreateGroup(ctx context.Context, group *Group) error {
 	rsp, err := sc.startRequest(ctx).
 		SetResult(&createGroupRsp).
 		SetFormData(map[string]string{
-			"name":        group.Name,
-			"description": group.Description,
+			nameField:        group.Name,
+			descriptionField: group.Description,
 		}).
 		Post("/user_groups/create")
 
@@ -75,12 +75,12 @@ func (sc *Client) CreateGroup(ctx context.Context, group *Group) error {
 
 func (sc *Client) UpdateGroup(ctx context.Context, currentName string, group *Group) error {
 	rqParams := map[string]string{
-		"currentName": currentName,
-		"description": group.Description,
+		"currentName":    currentName,
+		descriptionField: group.Description,
 	}
 
 	if group.Name != currentName {
-		rqParams["name"] = group.Name
+		rqParams[nameField] = group.Name
 	}
 
 	rsp, err := sc.startRequest(ctx).SetFormData(rqParams).Post("/user_groups/update")
@@ -93,7 +93,7 @@ func (sc *Client) UpdateGroup(ctx context.Context, currentName string, group *Gr
 
 func (sc *Client) DeleteGroup(ctx context.Context, groupName string) error {
 	rsp, err := sc.startRequest(ctx).SetFormData(map[string]string{
-		"name": groupName,
+		nameField: groupName,
 	}).Post("/user_groups/delete")
 	if err = sc.checkError(rsp, err); err != nil {
 		return fmt.Errorf("failed to delete group: %w", err)

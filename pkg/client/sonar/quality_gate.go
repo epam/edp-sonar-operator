@@ -26,10 +26,10 @@ type QualityGateCondition struct {
 
 func (q *QualityGateCondition) ToQueryParamMap() map[string]string {
 	conditionMap := map[string]string{
-		"gateID": q.ID,
-		"error":  q.Error,
-		"metric": q.Metric,
-		"op":     q.OP,
+		"gateID":    q.ID,
+		errorField:  q.Error,
+		metricField: q.Metric,
+		"op":        q.OP,
 	}
 
 	return conditionMap
@@ -113,10 +113,10 @@ func (sc *Client) SetAsDefaultQualityGate(ctx context.Context, name string) erro
 func (sc *Client) CreateQualityGateCondition(ctx context.Context, gate string, condition QualityGateCondition) error {
 	resp, err := sc.startRequest(ctx).
 		SetFormData(map[string]string{
-			"gateName": gate,
-			"error":    condition.Error,
-			"metric":   condition.Metric,
-			"op":       condition.OP,
+			"gateName":  gate,
+			errorField:  condition.Error,
+			metricField: condition.Metric,
+			"op":        condition.OP,
 		}).
 		Post("/qualitygates/create_condition")
 
@@ -131,10 +131,10 @@ func (sc *Client) CreateQualityGateCondition(ctx context.Context, gate string, c
 func (sc *Client) UpdateQualityGateCondition(ctx context.Context, condition QualityGateCondition) error {
 	resp, err := sc.startRequest(ctx).
 		SetFormData(map[string]string{
-			"id":     condition.ID,
-			"metric": condition.Metric,
-			"error":  condition.Error,
-			"op":     condition.OP,
+			"id":        condition.ID,
+			metricField: condition.Metric,
+			errorField:  condition.Error,
+			"op":        condition.OP,
 		}).
 		Post("/qualitygates/update_condition")
 

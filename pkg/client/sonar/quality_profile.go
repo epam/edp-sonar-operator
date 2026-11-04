@@ -21,8 +21,8 @@ func (sc *Client) CreateQualityProfile(ctx context.Context, name, language strin
 
 	resp, err := sc.startRequest(ctx).
 		SetFormData(map[string]string{
-			nameField:  name,
-			"language": language,
+			nameField:     name,
+			languageField: language,
 		}).
 		SetResult(&profile).
 		Post("/qualityprofiles/create")
@@ -61,8 +61,8 @@ func (sc *Client) GetQualityProfile(ctx context.Context, name string) (*QualityP
 func (sc *Client) DeleteQualityProfile(ctx context.Context, name, language string) error {
 	resp, err := sc.startRequest(ctx).
 		SetFormData(map[string]string{
-			nameField:  name,
-			"language": language,
+			nameField:     name,
+			languageField: language,
 		}).
 		Post("/qualityprofiles/delete")
 
@@ -78,7 +78,7 @@ func (sc *Client) SetAsDefaultQualityProfile(ctx context.Context, name, language
 	resp, err := sc.startRequest(ctx).
 		SetFormData(map[string]string{
 			"qualityProfile": name,
-			"language":       language,
+			languageField:    language,
 		}).
 		Post("/qualityprofiles/set_default")
 
@@ -93,7 +93,7 @@ func (sc *Client) SetAsDefaultQualityProfile(ctx context.Context, name, language
 func (sc *Client) ActivateQualityProfileRule(ctx context.Context, profileKey string, rule Rule) error {
 	resp, err := sc.startRequest(ctx).
 		SetFormData(map[string]string{
-			"key":      profileKey,
+			keyField:   profileKey,
 			"rule":     rule.Rule,
 			"severity": rule.Severity,
 			"params":   rule.Params,
@@ -111,8 +111,8 @@ func (sc *Client) ActivateQualityProfileRule(ctx context.Context, profileKey str
 func (sc *Client) DeactivateQualityProfileRule(ctx context.Context, profileKey, ruleKey string) error {
 	resp, err := sc.startRequest(ctx).
 		SetFormData(map[string]string{
-			"key":  profileKey,
-			"rule": ruleKey,
+			keyField: profileKey,
+			"rule":   ruleKey,
 		}).
 		Post("/qualityprofiles/deactivate_rule")
 

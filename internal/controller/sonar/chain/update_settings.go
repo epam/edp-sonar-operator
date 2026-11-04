@@ -16,6 +16,8 @@ import (
 	"github.com/epam/edp-sonar-operator/pkg/sourceref"
 )
 
+const settingKeyParam = "key"
+
 type UpdateSettings struct {
 	sonarApiClient sonar.Settings
 	k8sClient      client.Client
@@ -96,15 +98,15 @@ func (h *UpdateSettings) makeSetting(
 		fv, _ := json.Marshal(setting.FieldValues)
 
 		return url.Values{
-			"key":         []string{setting.Key},
-			"fieldValues": []string{string(fv)},
+			settingKeyParam: []string{setting.Key},
+			"fieldValues":   []string{string(fv)},
 		}, nil
 	}
 
 	if setting.Values != nil {
 		return url.Values{
-			"key":    []string{setting.Key},
-			"values": setting.Values,
+			settingKeyParam: []string{setting.Key},
+			"values":        setting.Values,
 		}, nil
 	}
 
@@ -122,8 +124,8 @@ func (h *UpdateSettings) makeSetting(
 
 func newSettingValue(key, value string) url.Values {
 	return url.Values{
-		"key":   []string{key},
-		"value": []string{value},
+		settingKeyParam: []string{key},
+		"value":         []string{value},
 	}
 }
 

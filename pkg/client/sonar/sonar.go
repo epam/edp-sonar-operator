@@ -22,6 +22,14 @@ const (
 	cantUnmarshalMsg = "failed to unmarshal %s: %w"
 	nameField        = "name"
 	loginField       = "login"
+	descriptionField = "description"
+	groupNameField   = "groupName"
+	permissionField  = "permission"
+	projectField     = "project"
+	errorField       = "error"
+	metricField      = "metric"
+	languageField    = "language"
+	keyField         = "key"
 	jsonContentType  = "application/json"
 	contentTypeField = "Content-Type"
 	retryCount       = 60
@@ -418,7 +426,7 @@ func (sc Client) setDefaultProfile(lang string, profileName string) error {
 	resp, err := sc.jsonTypeRequest().
 		SetQueryParams(map[string]string{
 			"qualityProfile": profileName,
-			"language":       lang,
+			languageField:    lang,
 		}).
 		Post("/qualityprofiles/set_default")
 	if err != nil {
@@ -438,8 +446,8 @@ func (sc Client) AddPermissionsToGroup(groupName string, permissions string) err
 
 	resp, err := sc.jsonTypeRequest().
 		SetQueryParams(map[string]string{
-			"groupName":  groupName,
-			"permission": permissions,
+			groupNameField:  groupName,
+			permissionField: permissions,
 		}).
 		Post("/permissions/add_group")
 	if err != nil {
@@ -588,7 +596,7 @@ func (sc Client) configureGeneralSetting(setting SettingRequest) error {
 	resp, err := sc.jsonTypeRequest().
 		SetQueryParams(
 			map[string]string{
-				"key":             setting.Key,
+				keyField:          setting.Key,
 				setting.ValueType: setting.Value,
 			}).
 		Post("/settings/set")

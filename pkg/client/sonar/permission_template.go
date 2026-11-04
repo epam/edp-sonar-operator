@@ -61,8 +61,8 @@ func (sc *Client) CreatePermissionTemplate(
 ) (*PermissionTemplate, error) {
 	var result createPermissionTemplateResponse
 	rsp, err := sc.startRequest(ctx).SetResult(&result).SetFormData(map[string]string{
-		"name":              tpl.Name,
-		"description":       tpl.Description,
+		nameField:           tpl.Name,
+		descriptionField:    tpl.Description,
 		"projectKeyPattern": tpl.ProjectKeyPattern,
 	}).Post("/permissions/create_template")
 
@@ -76,8 +76,8 @@ func (sc *Client) CreatePermissionTemplate(
 func (sc *Client) UpdatePermissionTemplate(ctx context.Context, tpl *PermissionTemplate) error {
 	rsp, err := sc.startRequest(ctx).SetFormData(map[string]string{
 		"id":                tpl.ID,
-		"name":              tpl.Name,
-		"description":       tpl.Description,
+		nameField:           tpl.Name,
+		descriptionField:    tpl.Description,
 		"projectKeyPattern": tpl.ProjectKeyPattern,
 	}).Post("/permissions/update_template")
 
@@ -139,9 +139,9 @@ func (sc *Client) GetPermissionTemplate(ctx context.Context, name string) (*Perm
 
 func (sc *Client) AddGroupToPermissionTemplate(ctx context.Context, templateID, groupName, permission string) error {
 	rsp, err := sc.startRequest(ctx).SetFormData(map[string]string{
-		templateIdName: templateID,
-		"groupName":    groupName,
-		"permission":   permission,
+		templateIdName:  templateID,
+		groupNameField:  groupName,
+		permissionField: permission,
 	}).Post("/permissions/add_group_to_template")
 
 	if err = sc.checkError(rsp, err); err != nil {
@@ -181,9 +181,9 @@ func (sc *Client) RemoveGroupFromPermissionTemplate(
 ) error {
 	rsp, err := sc.startRequest(ctx).
 		SetFormData(map[string]string{
-			templateIdName: templateID,
-			"groupName":    groupName,
-			"permission":   permission,
+			templateIdName:  templateID,
+			groupNameField:  groupName,
+			permissionField: permission,
 		}).
 		Post("/permissions/remove_group_from_template")
 
@@ -238,8 +238,8 @@ func (sc *Client) GetUserPermissions(ctx context.Context, userLogin string) ([]s
 func (sc *Client) AddPermissionToUser(ctx context.Context, userLogin, permission string) error {
 	rsp, err := sc.startRequest(ctx).
 		SetFormData(map[string]string{
-			"login":      userLogin,
-			"permission": permission,
+			loginField:      userLogin,
+			permissionField: permission,
 		}).
 		Post("/permissions/add_user")
 
@@ -254,8 +254,8 @@ func (sc *Client) AddPermissionToUser(ctx context.Context, userLogin, permission
 func (sc *Client) RemovePermissionFromUser(ctx context.Context, userLogin, permission string) error {
 	rsp, err := sc.startRequest(ctx).
 		SetFormData(map[string]string{
-			"login":      userLogin,
-			"permission": permission,
+			loginField:      userLogin,
+			permissionField: permission,
 		}).
 		Post("/permissions/remove_user")
 
@@ -296,8 +296,8 @@ func (sc *Client) GetGroupPermissions(ctx context.Context, groupName string) ([]
 func (sc *Client) AddPermissionToGroup(ctx context.Context, groupName, permission string) error {
 	rsp, err := sc.startRequest(ctx).
 		SetFormData(map[string]string{
-			"groupName":  groupName,
-			"permission": permission,
+			groupNameField:  groupName,
+			permissionField: permission,
 		}).
 		Post("/permissions/add_group")
 
@@ -312,8 +312,8 @@ func (sc *Client) AddPermissionToGroup(ctx context.Context, groupName, permissio
 func (sc *Client) RemovePermissionFromGroup(ctx context.Context, groupName, permission string) error {
 	rsp, err := sc.startRequest(ctx).
 		SetFormData(map[string]string{
-			"groupName":  groupName,
-			"permission": permission,
+			groupNameField:  groupName,
+			permissionField: permission,
 		}).
 		Post("/permissions/remove_group")
 
