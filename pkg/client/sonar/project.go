@@ -26,8 +26,8 @@ type projectSearchResponse struct {
 // CreateProject creates a new project in SonarQube.
 func (sc *Client) CreateProject(ctx context.Context, project *Project) error {
 	formData := map[string]string{
-		"project":    project.Key,
-		"name":       project.Name,
+		projectField: project.Key,
+		nameField:    project.Name,
 		"visibility": project.Visibility,
 	}
 
@@ -77,7 +77,7 @@ func (sc *Client) UpdateProject(ctx context.Context, project *Project) error {
 	if project.Visibility != "" {
 		resp, err := sc.startRequest(ctx).
 			SetFormData(map[string]string{
-				"project":    project.Key,
+				projectField: project.Key,
 				"visibility": project.Visibility,
 			}).
 			Post("/projects/update_visibility")
@@ -94,7 +94,7 @@ func (sc *Client) UpdateProject(ctx context.Context, project *Project) error {
 func (sc *Client) DeleteProject(ctx context.Context, projectKey string) error {
 	resp, err := sc.startRequest(ctx).
 		SetFormData(map[string]string{
-			"project": projectKey,
+			projectField: projectKey,
 		}).
 		Post("/projects/delete")
 

@@ -75,8 +75,8 @@ func (sc *Client) CreateUser(ctx context.Context, user *User) error {
 	rsp, err := sc.startRequest(ctx).
 		SetResult(&createUserRsp).
 		SetFormData(map[string]string{
-			"login":    user.Login,
-			"name":     user.Name,
+			loginField: user.Login,
+			nameField:  user.Name,
 			"password": user.Password,
 		}).
 		Post("/users/create")
@@ -91,9 +91,9 @@ func (sc *Client) CreateUser(ctx context.Context, user *User) error {
 func (sc *Client) UpdateUser(ctx context.Context, user *User) error {
 	rsp, err := sc.startRequest(ctx).
 		SetFormData(map[string]string{
-			"login": user.Login,
-			"name":  user.Name,
-			"email": user.Email,
+			loginField: user.Login,
+			nameField:  user.Name,
+			"email":    user.Email,
 		}).
 		Post("/users/update")
 	if err = sc.checkError(rsp, err); err != nil {
@@ -136,8 +136,8 @@ func (sc *Client) GetUserGroups(ctx context.Context, userLogin string) ([]Group,
 	rsp, err := sc.startRequest(ctx).
 		SetResult(groups).
 		SetQueryParams(map[string]string{
-			"login": userLogin,
-			"ps":    "500",
+			loginField: userLogin,
+			"ps":       "500",
 		}).
 		Get("/users/groups")
 
@@ -151,7 +151,7 @@ func (sc *Client) GetUserGroups(ctx context.Context, userLogin string) ([]Group,
 func (sc *Client) DeactivateUser(ctx context.Context, userLogin string) error {
 	rsp, err := sc.startRequest(ctx).
 		SetFormData(map[string]string{
-			"login": userLogin,
+			loginField: userLogin,
 		}).
 		Post("/users/deactivate")
 
